@@ -1,1 +1,465 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Athletic Cloud</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    font-family:Arial,sans-serif;
+    color:white;
+}
+
+/* =====================
+   Hero
+===================== */
+
+.hero{
+
+    height:100vh;
+
+    background:
+        linear-gradient(
+            rgba(0,0,0,.55),
+            rgba(0,0,0,.55)
+        ),
+        url("YOUR_BACKGROUND.jpg");
+
+    background-size:cover;
+    background-position:center;
+
+    display:flex;
+    flex-direction:column;
+}
+
+/* =====================
+   Navbar
+===================== */
+
+nav{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:25px 60px;
+}
+
+.logo{
+
+    font-size:1.8rem;
+    font-weight:bold;
+    letter-spacing:2px;
+}
+
+.nav-links{
+
+    display:flex;
+    gap:30px;
+}
+
+.nav-links a{
+
+    color:white;
+    text-decoration:none;
+    font-weight:bold;
+}
+
+.nav-links a:hover{
+
+    opacity:.7;
+}
+
+/* =====================
+   Hero Content
+===================== */
+
+.hero-content{
+
+    flex:1;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    text-align:center;
+    padding:20px;
+}
+
+.hero-content h1{
+
+    font-size:4rem;
+    margin-bottom:20px;
+}
+
+.hero-content p{
+
+    font-size:1.3rem;
+    max-width:800px;
+    margin:auto;
+    line-height:1.7;
+}
+
+.hero-buttons{
+
+    margin-top:40px;
+
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    flex-wrap:wrap;
+}
+
+.btn{
+
+    padding:15px 35px;
+
+    border-radius:8px;
+
+    text-decoration:none;
+
+    font-weight:bold;
+
+    transition:.3s;
+}
+
+.btn-primary{
+
+    background:white;
+    color:#111;
+}
+
+.btn-primary:hover{
+
+    transform:translateY(-3px);
+}
+
+.btn-secondary{
+
+    border:2px solid white;
+    color:white;
+}
+
+.btn-secondary:hover{
+
+    background:white;
+    color:#111;
+}
+
+/* =====================
+   Features
+===================== */
+
+.features{
+
+    background:white;
+    color:#111;
+
+    padding:100px 10%;
+}
+
+.section-title{
+
+    text-align:center;
+    margin-bottom:60px;
+}
+
+.section-title h2{
+
+    font-size:2.5rem;
+    margin-bottom:15px;
+}
+
+.feature-grid{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(auto-fit,minmax(280px,1fr));
+
+    gap:30px;
+}
+
+.feature-card{
+
+    background:#f8f8f8;
+
+    padding:40px 30px;
+
+    border-radius:15px;
+
+    text-align:center;
+
+    transition:.3s;
+}
+
+.feature-card:hover{
+
+    transform:translateY(-5px);
+}
+
+.feature-card i{
+
+    font-size:3rem;
+    margin-bottom:20px;
+}
+
+.feature-card h3{
+
+    margin-bottom:15px;
+}
+
+/* =====================
+   Vision
+===================== */
+
+.vision{
+
+    background:#111;
+    color:white;
+
+    text-align:center;
+
+    padding:100px 10%;
+}
+
+.vision h2{
+
+    font-size:2.5rem;
+    margin-bottom:25px;
+}
+
+.vision p{
+
+    max-width:900px;
+
+    margin:auto;
+
+    line-height:1.9;
+
+    font-size:1.1rem;
+}
+
+/* =====================
+   Footer
+===================== */
+
+footer{
+
+    background:#000;
+
+    text-align:center;
+
+    padding:30px;
+}
+
+/* =====================
+   Mobile
+===================== */
+
+@media(max-width:768px){
+
+    nav{
+
+        flex-direction:column;
+        gap:20px;
+
+        padding:20px;
+    }
+
+    .hero-content h1{
+
+        font-size:2.5rem;
+    }
+
+    .hero-content p{
+
+        font-size:1rem;
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- HERO -->
+
+<section class="hero">
+
+<nav>
+
+<div class="logo">
+Athletic Cloud
+</div>
+
+<div class="nav-links">
+
+<a href="#features">Features</a>
+<a href="#vision">Vision</a>
+<a href="Contact.html">Contact</a>
+
+</div>
+
+</nav>
+
+<div class="hero-content">
+
+<div>
+
+<h1>
+The Cloud Platform for Sports Teams
+</h1>
+
+<p>
+
+Share playbooks, manage team knowledge,
+analyze strategy, and collaborate through
+video and data — all in one place.
+
+</p>
+
+<div class="hero-buttons">
+
+<a href="#features" class="btn btn-primary">
+Learn More
+</a>
+
+<a href="Contact.html" class="btn btn-secondary">
+Contact
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- FEATURES -->
+
+<section class="features" id="features">
+
+<div class="section-title">
+
+<h2>Core Features</h2>
+
+<p>
+Everything your team needs in one platform.
+</p>
+
+</div>
+
+<div class="feature-grid">
+
+<div class="feature-card">
+
+<i class="fas fa-chess-board"></i>
+
+<h3>Playbook Cloud</h3>
+
+<p>
+
+Create, organize and search offensive,
+defensive and special teams concepts.
+
+</p>
+
+</div>
+
+<div class="feature-card">
+
+<i class="fas fa-video"></i>
+
+<h3>Video Sharing</h3>
+
+<p>
+
+Upload, organize and share practice and game
+film with coaches and players.
+
+</p>
+
+</div>
+
+<div class="feature-card">
+
+<i class="fas fa-users"></i>
+
+<h3>Team Workspace</h3>
+
+<p>
+
+Private team environments with role-based
+permissions and collaboration.
+
+</p>
+
+</div>
+
+<div class="feature-card">
+
+<i class="fas fa-chart-line"></i>
+
+<h3>Sports Analytics</h3>
+
+<p>
+
+Leverage searchable data and analytics
+to improve performance.
+
+</p>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- VISION -->
+
+<section class="vision" id="vision">
+
+<h2>
+Building the Future of Sports DX
+</h2>
+
+<p>
+
+Athletic Cloud aims to become the operating
+system for sports organizations. From playbook
+management and film sharing to team collaboration
+and analytics, our goal is to provide every team
+with professional-level digital infrastructure.
+
+</p>
+
+</section>
+
+<footer>
+
+© 2026 Athletic Cloud
+
+</footer>
+
+</body>
+</html>
