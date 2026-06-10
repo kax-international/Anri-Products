@@ -189,6 +189,29 @@ nav{
     transform:translateY(-3px);
 }
 
+    .btn-hero-primary{
+
+    background:white;
+    color:#111;
+}
+
+.btn-hero-primary:hover{
+
+    transform:translateY(-3px);
+}
+
+.btn-hero-secondary{
+
+    border:2px solid white;
+    color:white;
+}
+
+.btn-hero-secondary:hover{
+
+    background:white;
+    color:#111;
+}
+    
 /* =====================
    Features
 ===================== */
@@ -259,6 +282,7 @@ nav{
 .vision{
 
     background:#111;
+    border-bottom:4px solid #222;
     color:white;
 
     text-align:center;
@@ -306,6 +330,52 @@ nav{
 
     margin:0 auto 40px;
     line-height:1.8;
+}
+
+.cta-buttons{
+
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    margin-top:40px;
+    flex-wrap:wrap;
+}
+
+.cta-btn-primary{
+
+    background:#111;
+    color:white;
+
+    padding:15px 35px;
+
+    border-radius:8px;
+    text-decoration:none;
+
+    font-weight:bold;
+}
+
+.cta-btn-primary:hover{
+
+    background:#333;
+}
+
+.cta-btn-secondary{
+
+    border:2px solid #111;
+    color:#111;
+
+    padding:15px 35px;
+
+    border-radius:8px;
+    text-decoration:none;
+
+    font-weight:bold;
+}
+
+.cta-btn-secondary:hover{
+
+    background:#111;
+    color:white;
 }
     
 /* =====================
@@ -449,7 +519,7 @@ video and data — all in one place.
 Learn More
 </a>
 
-<a href="Contact.html" class="btn btn-dark">
+<a href="Contact.html" class="btn btn-hero-secondary">
 Contact
 </a>
 
@@ -581,7 +651,7 @@ to improve performance.
         </a>
 
         <a href="login.html"
-           class="btn btn-dark">
+           class="cta-btn-secondary">
             Login
         </a>
 
