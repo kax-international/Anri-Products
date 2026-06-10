@@ -63,11 +63,22 @@ nav{
 
 .logo{
 
-    font-size:1.8rem;
+    font-size:2.5rem;
     font-weight:bold;
-    letter-spacing:2px;
+    letter-spacing:3px;
+}
+    
+.brand{
+    display:flex;
+    align-items:center;
+    gap:20px;
 }
 
+.tagline{
+    font-size:1rem;
+    opacity:.9;
+}
+    
 .nav-links{
 
     display:flex;
@@ -137,8 +148,14 @@ nav{
     font-weight:bold;
 
     transition:.3s;
-}
 
+    color:white;
+}
+    
+.btn:hover{
+    opacity:.8;
+}
+    
 .btn-primary{
 
     background:white;
@@ -255,7 +272,31 @@ nav{
 
     font-size:1.1rem;
 }
+    
+.cta{
 
+    background:white;
+    color:#111;
+
+    text-align:center;
+
+    padding:100px 20px;
+}
+
+.cta h2{
+
+    font-size:3rem;
+    margin-bottom:20px;
+}
+
+.cta p{
+
+    font-size:1.2rem;
+    max-width:700px;
+
+    margin:0 auto 40px;
+    line-height:1.8;
+}
 /* =====================
    Footer
 ===================== */
@@ -326,16 +367,17 @@ h1{
 
 <nav>
 
-<div class="logo">
-Athletic Cloud
+<div class="brand">
+
+    <div class="logo">
+        ATHLETIC CLOUD
+    </div>
+
+    <div class="tagline">
+        Built for Coaches. Built for Players.
+    </div>
+
 </div>
-
-  <p class="subtitle">
-        Built for Coaches.<br>
-        Built for Players.
-    </p>
-
-
 <div class="nav-links">
 
 <a href="#features">Features</a>
@@ -468,7 +510,26 @@ to improve performance.
 
 </div>
 
-</div>
+    <section class="cta">
+
+    <h2>Let's Get Started</h2>
+
+    <p>
+        Create your team workspace and begin
+        building your organization's digital future.
+    </p>
+
+    <div class="hero-buttons">
+
+        <a href="signup.html" class="btn btn-primary">
+            Sign Up
+        </a>
+
+        <a href="login.html" class="btn btn-secondary">
+            Login
+        </a>
+
+    </div>
 
 </section>
 
