@@ -297,6 +297,28 @@ nav{
     margin:0 auto 40px;
     line-height:1.8;
 }
+    
+.dual-section{
+
+    display:flex;
+    min-height:500px;
+}
+
+.dual-section .vision,
+.dual-section .cta{
+
+    flex:1;
+
+    display:flex;
+    flex-direction:column;
+
+    justify-content:center;
+    align-items:center;
+
+    padding:80px 50px;
+
+    text-align:center;
+}
 /* =====================
    Footer
 ===================== */
@@ -352,6 +374,22 @@ h1{
     color:white;
     margin-bottom:30px;
     line-height:1.8;
+}
+    .dual-section{
+    flex-direction:column;
+}
+
+.brand{
+    flex-direction:column;
+    gap:10px;
+}
+
+.logo{
+    font-size:2rem;
+}
+
+.tagline{
+    text-align:center;
 }
 }
 
