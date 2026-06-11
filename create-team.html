@@ -1,51 +1,60 @@
-<form id="createTeamForm">
-
-    <input
-        type="text"
-        id="teamName"
-        placeholder="Team Name"
-        required
-    >
-
-    <button type="submit">
-        Create Team
-    </button>
-
-</form>
-<script type="module">
-import {
-collection,
-addDoc
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f7fb;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-document
-.getElementById("createTeamForm")
-.addEventListener("submit", async(e)=>{
+/* フォーム全体 */
+#createTeamForm {
+    background: white;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    width: 320px;
+}
 
-    e.preventDefault();
+/* 入力欄 */
+#teamName {
+    width: 100%;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    border: 1px solid #e0e6f0;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: 0.2s;
+}
 
-    const teamName =
-    document.getElementById("teamName").value;
+#teamName:focus {
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 3px rgba(74,108,247,0.15);
+}
 
-    const user =
-    auth.currentUser;
+/* ボタン */
+button {
+    width: 100%;
+    padding: 12px;
+    background: #4a6cf7;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
 
-    const teamRef =
-    await addDoc(
-        collection(db,"teams"),
-        {
-            name: teamName,
-            ownerId: user.uid,
-            createdAt: new Date()
-        }
-    );
+button:hover {
+    background: #3b5be0;
+}
 
-    alert("Team Created");
-
-    window.location.href =
-    "dashboard.html";
-
-});
-
-</script>
+/* スマホ対応 */
+@media (max-width: 480px) {
+    #createTeamForm {
+        width: 90%;
+    }
+}
+</style>
