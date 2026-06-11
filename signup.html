@@ -323,8 +323,6 @@ document
         const user =
         userCredential.user;
 
-        alert("Auth Success");
-
         await setDoc(
             doc(db, "users", user.uid),
             {
@@ -335,7 +333,6 @@ document
             }
         );
 
-        alert("Firestore Success");
 
         // window.location.href = "dashboard.html";
 
