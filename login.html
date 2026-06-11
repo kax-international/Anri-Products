@@ -1,26 +1,240 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Login | Athletic Cloud</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+
+    min-height:100vh;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    font-family:Arial,sans-serif;
+
+    background:
+    linear-gradient(
+        rgba(0,0,0,.55),
+        rgba(0,0,0,.55)
+    ),
+    url("IMG_3359.jpeg");
+
+    background-size:cover;
+    background-position:center;
+}
+
+.login-container{
+
+    width:100%;
+    max-width:450px;
+
+    background:white;
+
+    padding:50px;
+
+    border-radius:20px;
+
+    box-shadow:
+    0 15px 40px rgba(0,0,0,.25);
+}
+
+.logo{
+
+    text-align:center;
+
+    font-size:2rem;
+
+    font-weight:bold;
+
+    letter-spacing:2px;
+
+    margin-bottom:10px;
+
+    color:#111;
+}
+
+.subtitle{
+
+    text-align:center;
+
+    color:#666;
+
+    margin-bottom:35px;
+}
+
+.input-group{
+
+    margin-bottom:20px;
+}
+
+.input-group label{
+
+    display:block;
+
+    margin-bottom:8px;
+
+    font-weight:bold;
+
+    color:#333;
+}
+
+.input-group input{
+
+    width:100%;
+
+    padding:14px;
+
+    border:1px solid #ccc;
+
+    border-radius:8px;
+
+    font-size:1rem;
+}
+
+.input-group input:focus{
+
+    outline:none;
+
+    border-color:#111;
+}
+
+.login-btn{
+
+    width:100%;
+
+    padding:15px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:#111;
+
+    color:white;
+
+    font-size:1rem;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    transition:.3s;
+}
+
+.login-btn:hover{
+
+    background:#333;
+}
+
+.error{
+
+    color:red;
+
+    text-align:center;
+
+    margin-top:15px;
+}
+
+.signup-link{
+
+    text-align:center;
+
+    margin-top:25px;
+}
+
+.signup-link a{
+
+    color:#111;
+
+    font-weight:bold;
+
+    text-decoration:none;
+}
+
+.signup-link a:hover{
+
+    opacity:.7;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="login-container">
+
+```
+<div class="logo">
+    ATHLETIC CLOUD
+</div>
+
+<div class="subtitle">
+    Login to your account
+</div>
+
 <form id="loginForm">
 
-    <input
-        type="email"
-        id="email"
-        placeholder="Email"
-        required
-    >
+    <div class="input-group">
+        <label>Email</label>
+        <input
+            type="email"
+            id="email"
+            required
+        >
+    </div>
 
-    <input
-        type="password"
-        id="password"
-        placeholder="Password"
-        required
-    >
+    <div class="input-group">
+        <label>Password</label>
+        <input
+            type="password"
+            id="password"
+            required
+        >
+    </div>
 
-    <button type="submit">
+    <button
+        type="submit"
+        class="login-btn">
         Login
     </button>
 
 </form>
 
-<div id="errorMessage"></div>
+<div
+    id="errorMessage"
+    class="error">
+</div>
+
+<div class="signup-link">
+
+    Don't have an account?
+
+    <br><br>
+
+    <a href="signup.html">
+        Sign Up
+    </a>
+
+</div>
+```
+
+</div>
+
+<script type="module">
 
 import { initializeApp }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
@@ -30,6 +244,15 @@ import {
     signInWithEmailAndPassword
 }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
+  authDomain: "athletic-cloud-33538.firebaseapp.com",
+  projectId: "athletic-cloud-33538",
+  storageBucket: "athletic-cloud-33538.firebasestorage.app",
+  messagingSenderId: "1020993809301",
+  appId: "1:1020993809301:web:a31e28377788bef965249c"
+};
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -46,6 +269,9 @@ document
     const password =
     document.getElementById("password").value;
 
+    const errorMessage =
+    document.getElementById("errorMessage");
+
     try {
 
         await signInWithEmailAndPassword(
@@ -61,11 +287,30 @@ document
 
     catch(error){
 
-        document
-        .getElementById("errorMessage")
-        .textContent =
-        "Email または Password が違います";
+        if(
+            error.code ===
+            "auth/invalid-credential"
+        ){
+
+            errorMessage.textContent =
+            "EmailまたはPasswordが違います";
+
+        }
+
+        else{
+
+            errorMessage.textContent =
+            error.message;
+
+        }
+
+        console.error(error);
 
     }
 
 });
+
+</script>
+
+</body>
+</html>
