@@ -143,17 +143,17 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebas
 import {
     getFirestore,
     doc,
-    getDoc
+    getDoc,
+    updateDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-// 🔥 Firebase設定（create-teamと同じものを使う）
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
-  authDomain: "athletic-cloud-33538.firebaseapp.com",
-  projectId: "athletic-cloud-33538",
-  storageBucket: "athletic-cloud-33538.firebasestorage.app",
-  messagingSenderId: "1020993809301",
-  appId: "1:1020993809301:web:a31e28377788bef965249c",
+    authDomain: "athletic-cloud-33538.firebaseapp.com",
+    projectId: "athletic-cloud-33538",
+    storageBucket: "athletic-cloud-33538.firebasestorage.app",
+    messagingSenderId: "1020993809301",
+    appId: "1:1020993809301:web:a31e28377788bef965249c"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -163,39 +163,53 @@ const db = getFirestore(app);
 const params = new URLSearchParams(window.location.search);
 const teamId = params.get("teamId");
 
-// 表示
+// 表示（即時）
 document.getElementById("teamId").textContent = teamId;
 
-// Firestoreから取得
-async function loadTeam(){
+// 🔥 チーム取得
+async function loadTeam() {
+
     try {
         const ref = doc(db, "teams", teamId);
         const snap = await getDoc(ref);
 
-        if (snap.exists()) {
-            const data = snap.data();
-            document.getElementById("teamName").textContent = data.name;
-        } else {
+        if (!snap.exists()) {
             document.getElementById("teamName").textContent = "Not Found";
+            return;
         }
 
+        const data = snap.data();
+
+        // team info
+        document.getElementById("teamName").textContent = data.name;
+
+        // members
+        const memberList = document.getElementById("memberList");
+        memberList.innerHTML = "";
+
+        const members = data.members || {};
+
+        Object.entries(members).forEach(([uid, role]) => {
+            const li = document.createElement("li");
+            li.textContent = `${uid} (${role})`;
+            memberList.appendChild(li);
+        });
+
     } catch (err) {
-        console.error(err);
+        console.error("loadTeam error:", err);
         document.getElementById("teamName").textContent = "Error";
     }
 }
 
 loadTeam();
 
-import { doc, getDoc, updateDoc } 
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
+// 🔥 メンバー追加
 document.getElementById("addMemberBtn").addEventListener("click", async () => {
 
     const uid = document.getElementById("inviteUid").value;
     const role = document.getElementById("role").value;
 
-    if (!uid) return alert("User UID is required");
+    if (!uid) return alert("User UID required");
 
     const ref = doc(db, "teams", teamId);
     const snap = await getDoc(ref);
@@ -203,7 +217,6 @@ document.getElementById("addMemberBtn").addEventListener("click", async () => {
     if (!snap.exists()) return;
 
     const data = snap.data();
-
     const members = data.members || {};
 
     members[uid] = role;
@@ -214,9 +227,8 @@ document.getElementById("addMemberBtn").addEventListener("click", async () => {
 
     alert("Member added!");
 
-    loadTeam(); // 再読み込み
+    loadTeam();
 });
-
 </script>
 
 </body>
