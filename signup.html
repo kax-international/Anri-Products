@@ -340,13 +340,16 @@ alert("Firestore Success");
 console.log("Firestore Success");
 }
     
-catch(error){
+catch(error){catch(error)
 
-    errorMessage.style.display =
-    "block";
+    console.log(error);
 
-    errorMessage.textContent =
-    error.message;
+    alert(error.code);
+    alert(error.message);
+
+    errorMessage.style.display = "block";
+    errorMessage.textContent = error.message;
+}
 
 }
 
