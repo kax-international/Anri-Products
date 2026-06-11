@@ -231,11 +231,9 @@ document.getElementById("addMemberBtn").addEventListener("click", async () => {
     const data = snap.data();
     const members = data.members || {};
 
-    members[uid] = role;
-
     await updateDoc(ref, {
-        members: members
-    });
+    [`members.${uid}`]: role
+});
 
     alert("Member added!");
 
