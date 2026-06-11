@@ -1,1 +1,290 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Sign Up | Athletic Cloud</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+
+    min-height:100vh;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    font-family:Arial,sans-serif;
+
+    background:
+    linear-gradient(
+        rgba(0,0,0,.55),
+        rgba(0,0,0,.55)
+    ),
+    url("IMG_3359.jpeg");
+
+    background-size:cover;
+    background-position:center;
+}
+
+.signup-container{
+
+    width:100%;
+    max-width:450px;
+
+    background:white;
+
+    padding:50px;
+
+    border-radius:20px;
+
+    box-shadow:
+    0 15px 40px rgba(0,0,0,.25);
+}
+
+.logo{
+
+    text-align:center;
+
+    font-size:2rem;
+
+    font-weight:bold;
+
+    letter-spacing:2px;
+
+    margin-bottom:10px;
+
+    color:#111;
+}
+
+.subtitle{
+
+    text-align:center;
+
+    color:#666;
+
+    margin-bottom:35px;
+}
+
+.input-group{
+
+    margin-bottom:20px;
+}
+
+.input-group label{
+
+    display:block;
+
+    margin-bottom:8px;
+
+    font-weight:bold;
+
+    color:#333;
+}
+
+.input-group input{
+
+    width:100%;
+
+    padding:14px;
+
+    border:1px solid #ccc;
+
+    border-radius:8px;
+
+    font-size:1rem;
+}
+
+.input-group input:focus{
+
+    outline:none;
+
+    border-color:#111;
+}
+
+.signup-btn{
+
+    width:100%;
+
+    padding:15px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:#111;
+
+    color:white;
+
+    font-size:1rem;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    transition:.3s;
+}
+
+.signup-btn:hover{
+
+    background:#333;
+}
+
+.login-link{
+
+    text-align:center;
+
+    margin-top:25px;
+}
+
+.login-link a{
+
+    color:#111;
+
+    font-weight:bold;
+
+    text-decoration:none;
+}
+
+.login-link a:hover{
+
+    opacity:.7;
+}
+
+.error{
+
+    color:red;
+
+    text-align:center;
+
+    margin-bottom:15px;
+
+    display:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="signup-container">
+
+    <div class="logo">
+        ATHLETIC CLOUD
+    </div>
+
+    <div class="subtitle">
+        Create your account
+    </div>
+
+    <div id="errorMessage" class="error"></div>
+
+    <form id="signupForm">
+
+        <div class="input-group">
+            <label>Name</label>
+            <input
+                type="text"
+                id="name"
+                required
+            >
+        </div>
+
+        <div class="input-group">
+            <label>Email</label>
+            <input
+                type="email"
+                id="email"
+                required
+            >
+        </div>
+
+        <div class="input-group">
+            <label>Password</label>
+            <input
+                type="password"
+                id="password"
+                required
+            >
+        </div>
+
+        <div class="input-group">
+            <label>Confirm Password</label>
+            <input
+                type="password"
+                id="confirmPassword"
+                required
+            >
+        </div>
+
+        <button
+            type="submit"
+            class="signup-btn">
+            Create Account
+        </button>
+
+    </form>
+
+    <div class="login-link">
+
+        Already have an account?
+
+        <br><br>
+
+        <a href="login.html">
+            Login
+        </a>
+
+    </div>
+
+</div>
+
+<script>
+
+document
+.getElementById("signupForm")
+.addEventListener("submit", function(e){
+
+    e.preventDefault();
+
+    const password =
+    document.getElementById("password").value;
+
+    const confirmPassword =
+    document.getElementById("confirmPassword").value;
+
+    const errorMessage =
+    document.getElementById("errorMessage");
+
+    if(password !== confirmPassword){
+
+        errorMessage.style.display="block";
+        errorMessage.textContent=
+        "Passwords do not match.";
+
+        return;
+    }
+
+    errorMessage.style.display="none";
+
+    alert(
+        "Signup successful. Firebase connection coming next."
+    );
+
+});
+
+</script>
+
+</body>
+</html>
