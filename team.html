@@ -159,14 +159,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// URLからteamId取得
+// teamId取得
 const params = new URLSearchParams(window.location.search);
 const teamId = params.get("teamId");
 
-// 表示（即時）
 document.getElementById("teamId").textContent = teamId;
 
-// 🔥 チーム取得
+// =====================
+// 🔥 チーム読み込み
+// =====================
 async function loadTeam() {
 
     try {
@@ -185,7 +186,37 @@ async function loadTeam() {
         const memberList = document.getElementById("memberList");
         memberList.innerHTML = "";
 
-        document.getElementById("addMemberBtn").addEventListener("click", async () => {
+        const members = data.members || {};
+
+        for (const [uid, role] of Object.entries(members)) {
+
+            // ユーザー名取得
+            let name = uid;
+
+            try {
+                const userRef = doc(db, "users", uid);
+                const userSnap = await getDoc(userRef);
+
+                if (userSnap.exists()) {
+                    name = userSnap.data().name;
+                }
+            } catch (e) {}
+
+            const li = document.createElement("li");
+            li.textContent = `${name} (${role})`;
+            memberList.appendChild(li);
+        }
+
+    } catch (err) {
+        console.error(err);
+        document.getElementById("teamName").textContent = "Error";
+    }
+}
+
+// =====================
+// 🔥 メンバー追加
+// =====================
+document.getElementById("addMemberBtn").addEventListener("click", async () => {
 
     const uid = document.getElementById("inviteUid").value;
     const role = document.getElementById("role").value;
@@ -211,38 +242,9 @@ async function loadTeam() {
     loadTeam();
 });
 
-    } catch (err) {
-        console.error(err);
-        document.getElementById("teamName").textContent = "Error";
-    }
-}
-
+// 初期ロード
 loadTeam();
 
-// 🔥 メンバー追加
-document.getElementById("addMemberBtn").addEventListener("click", async () => {
-
-    const members = data.members || {};
-
-for (const [uid, role] of Object.entries(members)) {
-
-    const userRef = doc(db, "users", uid);
-    const userSnap = await getDoc(userRef);
-
-    let name = uid; // fallback
-
-    if (userSnap.exists()) {
-        name = userSnap.data().name;
-    }
-
-    const li = document.createElement("li");
-    li.textContent = `${name} (${role})`;
-
-    memberList.appendChild(li);
-}
-
-    loadTeam();
-});
 </script>
 
 </body>
