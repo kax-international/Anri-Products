@@ -193,6 +193,75 @@ body{
     <div id="message" class="message"></div>
 
 </div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import {
+    getFirestore,
+    collection,
+    addDoc
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+// 🔥 Firebase設定（←自分のやつに置き換え）
+const firebaseConfig = {
+  apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
+  authDomain: "athletic-cloud-33538.firebaseapp.com",
+  projectId: "athletic-cloud-33538",
+  storageBucket: "athletic-cloud-33538.firebasestorage.app",
+  messagingSenderId: "1020993809301",
+  appId: "1:1020993809301:web:a31e28377788bef965249c",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+
+// 👇 フォーム処理
+document.getElementById("createTeamForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const teamName = document.getElementById("teamName").value;
+    const message = document.getElementById("message");
+
+    // ログインチェック
+    const user = auth.currentUser;
+
+    if (!user) {
+        message.textContent = "Need to login";
+        message.className = "message error";
+        return;
+    }
+
+    try {
+        // 🔥 Firestoreに保存
+        const teamRef = await addDoc(collection(db, "teams"), {
+            name: teamName,
+            ownerId: user.uid,
+            members: [user.uid],   // ←最初は作成者がメンバー
+            createdAt: new Date()
+        });
+
+        // 成功メッセージ
+        message.textContent = "Team Created!";
+        message.className = "message success";
+
+        // 👉 少し待って遷移（UX改善）
+        setTimeout(() => {
+            window.location.href = `team.html?teamId=${teamRef.id}`;
+        }, 500);
+
+    } catch (err) {
+        console.error(err);
+        message.textContent = "Error creating team";
+        message.className = "message error";
+    }
+});
+</script>
 </body>
 </html>
