@@ -12,3 +12,38 @@
     </button>
 
 </form>
+
+import {
+collection,
+addDoc
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+document
+.getElementById("createTeamForm")
+.addEventListener("submit", async(e)=>{
+
+    e.preventDefault();
+
+    const teamName =
+    document.getElementById("teamName").value;
+
+    const user =
+    auth.currentUser;
+
+    const teamRef =
+    await addDoc(
+        collection(db,"teams"),
+        {
+            name: teamName,
+            ownerId: user.uid,
+            createdAt: new Date()
+        }
+    );
+
+    alert("Team Created");
+
+    window.location.href =
+    "dashboard.html";
+
+});
