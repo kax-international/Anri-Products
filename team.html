@@ -63,6 +63,20 @@ h1{
 
 </div>
 
+<hr>
+
+<h2>Add Member</h2>
+
+<input id="inviteUid" placeholder="User UID">
+
+<select id="role">
+    <option value="player">Player</option>
+    <option value="coach">Coach</option>
+    <option value="staff">Staff</option>
+</select>
+
+<button id="addMemberBtn">Add Member</button>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
@@ -111,6 +125,36 @@ async function loadTeam(){
 }
 
 loadTeam();
+
+import { doc, getDoc, updateDoc } 
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+document.getElementById("addMemberBtn").addEventListener("click", async () => {
+
+    const uid = document.getElementById("inviteUid").value;
+    const role = document.getElementById("role").value;
+
+    if (!uid) return alert("User UID is required");
+
+    const ref = doc(db, "teams", teamId);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) return;
+
+    const data = snap.data();
+
+    const members = data.members || {};
+
+    members[uid] = role;
+
+    await updateDoc(ref, {
+        members: members
+    });
+
+    alert("Member added!");
+
+    loadTeam(); // 再読み込み
+});
 
 </script>
 
