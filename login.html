@@ -242,8 +242,15 @@ from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
     getAuth,
     signInWithEmailAndPassword
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+    getFirestore,
+    doc,
+    setDoc
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
@@ -256,6 +263,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 document
 .getElementById("loginForm")
@@ -280,15 +288,18 @@ document
             password
         );
 
-        await setDoc(doc(db, "users", user.uid), {
+       const result = await signInWithEmailAndPassword(auth, email, password);
+
+const user = result.user;
+
+// users作成（ここが重要）
+await setDoc(doc(db, "users", user.uid), {
     name: user.displayName || "No Name",
     email: user.email
 });
-        
-        window.location.href =
-        "dashboard.html";
 
-    }
+window.location.href = "dashboard.html";
+        }
 
     catch(error){
 
