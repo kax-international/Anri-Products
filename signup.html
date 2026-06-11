@@ -313,32 +313,22 @@ document
 
     try {
 
-        const userCredential =
-        await createUserWithEmailAndPassword(
-            auth,
-            email,
-            password
-        );
+        const userCredential = await createUserWithEmailAndPassword(
+    auth,
+    email,
+    password
+);
 
-        const user =
-        userCredential.user;
+const user = userCredential.user;
 
-        await setDoc(
-            doc(db, "users", user.uid),
-            {
-                name: name,
-                email: email,
-                role: "user",
-                createdAt: new Date()
-            }
-        );
-
-        await setDoc(doc(db, "users", user.uid), {
-    name: user.displayName || "No Name",
-    email: user.email
+await setDoc(doc(db, "users", user.uid), {
+    name: name,
+    email: email,
+    role: "user",
+    createdAt: new Date()
 });
 
-  window.location.href = "dashboard.html";
+window.location.href = "dashboard.html";
 
     }
     catch(error){
