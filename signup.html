@@ -333,6 +333,10 @@ document
             }
         );
 
+        await setDoc(doc(db, "users", user.uid), {
+    name: user.displayName || "No Name",
+    email: user.email
+});
 
   window.location.href = "dashboard.html";
 
