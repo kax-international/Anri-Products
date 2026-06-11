@@ -180,23 +180,39 @@ async function loadTeam() {
 
         const data = snap.data();
 
-        // team info
         document.getElementById("teamName").textContent = data.name;
 
-        // members
         const memberList = document.getElementById("memberList");
         memberList.innerHTML = "";
 
-        const members = data.members || {};
+        document.getElementById("addMemberBtn").addEventListener("click", async () => {
 
-        Object.entries(members).forEach(([uid, role]) => {
-            const li = document.createElement("li");
-            li.textContent = `${uid} (${role})`;
-            memberList.appendChild(li);
-        });
+    const uid = document.getElementById("inviteUid").value;
+    const role = document.getElementById("role").value;
+
+    if (!uid) return alert("User UID required");
+
+    const ref = doc(db, "teams", teamId);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) return;
+
+    const data = snap.data();
+    const members = data.members || {};
+
+    members[uid] = role;
+
+    await updateDoc(ref, {
+        members: members
+    });
+
+    alert("Member added!");
+
+    loadTeam();
+});
 
     } catch (err) {
-        console.error("loadTeam error:", err);
+        console.error(err);
         document.getElementById("teamName").textContent = "Error";
     }
 }
