@@ -156,6 +156,8 @@ class="logout-btn">
 Logout
 </button>
 
+<h2>My Teams</h2>
+<div id="teamList"></div>
 </header>
 
 <div class="main">
@@ -320,7 +322,65 @@ document
     "join-team.html";
 
 });
-    
+
+import {
+    collection,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+import {
+    getAuth
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+const auth = getAuth();
+
+async function loadMyTeams() {
+
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const teamList = document.getElementById("teamList");
+    teamList.innerHTML = "";
+
+    const snapshot = await getDocs(collection(db, "teams"));
+
+    snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+
+        const members = data.members || [];
+
+        // 👉 自分が入っているteamだけ表示
+        if (members.includes(user.uid)) {
+
+            const div = document.createElement("div");
+
+            div.style.padding = "12px";
+            div.style.margin = "10px 0";
+            div.style.background = "#fff";
+            div.style.borderRadius = "8px";
+            div.style.cursor = "pointer";
+            div.style.boxShadow = "0 2px 10px rgba(0,0,0,0.05)";
+
+            div.innerHTML = `
+                <strong>${data.name}</strong>
+            `;
+
+            div.addEventListener("click", () => {
+                window.location.href = `team.html?teamId=${docSnap.id}`;
+            });
+
+            teamList.appendChild(div);
+        }
+    });
+}
+
+// ログイン確定後に実行
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        loadMyTeams();
+    }
+});
+
 </script>
 
 </body>
