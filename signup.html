@@ -251,19 +251,21 @@ body{
 </div>
 
 <script type="module">
+<script type="module">
+
 import { initializeApp }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
 import {
-    getAuth,
-    createUserWithEmailAndPassword
+  getAuth,
+  createUserWithEmailAndPassword
 }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 import {
-getFirestore,
-doc,
-setDoc
+  getFirestore,
+  doc,
+  setDoc
 }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
@@ -277,16 +279,20 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
-
 const db = getFirestore(app);
 
 document
 .getElementById("signupForm")
-.addEventListener("submit", async function(e){
+.addEventListener("submit", async (e) => {
 
     e.preventDefault();
+
+    const errorMessage =
+    document.getElementById("errorMessage");
+
+    const email =
+    document.getElementById("email").value;
 
     const password =
     document.getElementById("password").value;
@@ -294,67 +300,62 @@ document
     const confirmPassword =
     document.getElementById("confirmPassword").value;
 
-    const errorMessage =
-    document.getElementById("errorMessage");
+    const name =
+    document.getElementById("name").value;
 
     if(password !== confirmPassword){
 
-        errorMessage.style.display="block";
-        errorMessage.textContent=
+        errorMessage.style.display = "block";
+        errorMessage.textContent =
         "Passwords do not match.";
 
         return;
     }
 
-    errorMessage.style.display="none";
+    try {
 
-    try{
+        const userCredential =
+        await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+        );
 
-    const userCredential =
-await createUserWithEmailAndPassword(
-    auth,
-    email,
-    password
-);
+        const user =
+        userCredential.user;
 
-alert("Auth Success");
+        alert("Auth Success");
 
-const user = userCredential.user;
+        await setDoc(
+            doc(db, "users", user.uid),
+            {
+                name: name,
+                email: email,
+                role: "owner",
+                createdAt: new Date()
+            }
+        );
 
-const name =
-document.getElementById("name").value;
+        alert("Firestore Success");
 
-console.log("Before Firestore");
+        // window.location.href = "dashboard.html";
 
-await setDoc(
-    doc(db, "users", user.uid),
-    {
-        name: name,
-        email: email,
-        role: "owner",
-        createdAt: new Date()
     }
-);
+    catch(error){
 
-alert("Firestore Success");
-console.log("Firestore Success");
-}
-    
-catch(error){catch(error)
+        console.log(error);
 
-    console.log(error);
+        alert(error.code);
+        alert(error.message);
 
-    alert(error.code);
-    alert(error.message);
+        errorMessage.style.display =
+        "block";
 
-    errorMessage.style.display = "block";
-    errorMessage.textContent = error.message;
-}
-
-}
+        errorMessage.textContent =
+        error.message;
+    }
 
 });
-
 
 </script>
 
