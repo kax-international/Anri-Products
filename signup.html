@@ -257,6 +257,31 @@ from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
 getAuth,
 createUserWithEmailAndPassword
+
+---delate below later---
+console.log("Auth Success");
+
+const user = userCredential.user;
+
+console.log(user.uid);
+
+const name =
+document.getElementById("name").value;
+
+console.log("Before Firestore");
+
+await setDoc(
+    doc(db, "users", user.uid),
+    {
+        name: name,
+        email: email,
+        role: "owner",
+        createdAt: new Date()
+    }
+);
+
+console.log("Firestore Success");
+---delate above later---
 }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
