@@ -55,6 +55,11 @@ h1{
         <span class="label">Team Name:</span>
         <span id="teamName">loading...</span>
     </div>
+<hr>
+
+<h2>Members</h2>
+
+<ul id="memberList"></ul>
 
 </div>
 
@@ -106,7 +111,38 @@ async function loadTeam(){
 }
 
 loadTeam();
+async function loadTeam(){
+    try {
+        const ref = doc(db, "teams", teamId);
+        const snap = await getDoc(ref);
 
+        if (snap.exists()) {
+            const data = snap.data();
+
+            // チーム名
+            document.getElementById("teamName").textContent = data.name;
+
+            // メンバー表示
+            const memberList = document.getElementById("memberList");
+            memberList.innerHTML = "";
+
+            const members = data.members || [];
+
+            members.forEach(uid => {
+                const li = document.createElement("li");
+                li.textContent = uid; // ←今はUID表示（後で名前にできる）
+                memberList.appendChild(li);
+            });
+
+        } else {
+            document.getElementById("teamName").textContent = "Not Found";
+        }
+
+    } catch (err) {
+        console.error(err);
+        document.getElementById("teamName").textContent = "Error";
+    }
+}
 </script>
 
 </body>
