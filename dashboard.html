@@ -60,6 +60,8 @@ header{
     margin:50px auto;
 
     padding:0 20px;
+
+    display:none;
 }
 
 .welcome{
@@ -218,28 +220,43 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     const docRef =
-    doc(db,"users",user.uid);
+doc(db,"users",user.uid);
 
-    const docSnap =
-    await getDoc(docRef);
+const docSnap =
+await getDoc(docRef);
 
-    if(docSnap.exists()){
+if(!docSnap.exists()){
 
-        const data =
-        docSnap.data();
+    alert(
+        "User profile not found"
+    );
 
-        document.getElementById(
-        "username"
-        ).innerText =
-        `Welcome, ${data.name}`;
+    await signOut(auth);
 
-        document.getElementById(
-        "email"
-        ).innerText =
-        data.email;
-    }
+    window.location.href =
+    "login.html";
 
-});
+    return;
+}
+
+const data =
+docSnap.data();
+
+document.getElementById(
+"username"
+).innerText =
+`Welcome, ${data.name}`;
+
+document.getElementById(
+"email"
+).innerText =
+data.email;
+document.querySelector(
+".main"
+).style.display =
+"block";
+}
+);
 
 document
 .getElementById("logoutBtn")
