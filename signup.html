@@ -258,10 +258,6 @@ import {
 getAuth,
 createUserWithEmailAndPassword
 
-/* =====================
-   delate below
-===================== */
-console.log("Auth Success");
 
 const user = userCredential.user;
 
@@ -369,8 +365,6 @@ await setDoc(
     }
 );
 alert("Firestore Success");
-window.location.href =
-"dashboard.html";
 
 }
 catch(error){
