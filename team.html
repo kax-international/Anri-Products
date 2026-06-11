@@ -206,26 +206,24 @@ loadTeam();
 // 🔥 メンバー追加
 document.getElementById("addMemberBtn").addEventListener("click", async () => {
 
-    const uid = document.getElementById("inviteUid").value;
-    const role = document.getElementById("role").value;
-
-    if (!uid) return alert("User UID required");
-
-    const ref = doc(db, "teams", teamId);
-    const snap = await getDoc(ref);
-
-    if (!snap.exists()) return;
-
-    const data = snap.data();
     const members = data.members || {};
 
-    members[uid] = role;
+for (const [uid, role] of Object.entries(members)) {
 
-    await updateDoc(ref, {
-        members: members
-    });
+    const userRef = doc(db, "users", uid);
+    const userSnap = await getDoc(userRef);
 
-    alert("Member added!");
+    let name = uid; // fallback
+
+    if (userSnap.exists()) {
+        name = userSnap.data().name;
+    }
+
+    const li = document.createElement("li");
+    li.textContent = `${name} (${role})`;
+
+    memberList.appendChild(li);
+}
 
     loadTeam();
 });
