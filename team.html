@@ -1,1 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Team | Athletic Cloud</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 40px;
+    background: #f5f7fb;
+}
+
+.container{
+    max-width: 600px;
+    margin: auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+h1{
+    margin-bottom: 20px;
+}
+
+.info{
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.label{
+    font-weight: bold;
+    color: #666;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Team Page</h1>
+
+    <div class="info">
+        <span class="label">Team ID:</span>
+        <span id="teamId">loading...</span>
+    </div>
+
+    <div class="info">
+        <span class="label">Team Name:</span>
+        <span id="teamName">loading...</span>
+    </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import {
+    getFirestore,
+    doc,
+    getDoc
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+// 🔥 Firebase設定（create-teamと同じものを使う）
+const firebaseConfig = {
+    apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
+  authDomain: "athletic-cloud-33538.firebaseapp.com",
+  projectId: "athletic-cloud-33538",
+  storageBucket: "athletic-cloud-33538.firebasestorage.app",
+  messagingSenderId: "1020993809301",
+  appId: "1:1020993809301:web:a31e28377788bef965249c",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// URLからteamId取得
+const params = new URLSearchParams(window.location.search);
+const teamId = params.get("teamId");
+
+// 表示
+document.getElementById("teamId").textContent = teamId;
+
+// Firestoreから取得
+async function loadTeam(){
+    try {
+        const ref = doc(db, "teams", teamId);
+        const snap = await getDoc(ref);
+
+        if (snap.exists()) {
+            const data = snap.data();
+            document.getElementById("teamName").textContent = data.name;
+        } else {
+            document.getElementById("teamName").textContent = "Not Found";
+        }
+
+    } catch (err) {
+        console.error(err);
+        document.getElementById("teamName").textContent = "Error";
+    }
+}
+
+loadTeam();
+
+</script>
+
+</body>
+</html>
