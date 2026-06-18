@@ -340,10 +340,12 @@ import {
     collection,
     getDocs,
     query,
-    where
+    where,
+    doc,
+    getDoc,
+    updateDoc
 }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
 
 async function loadMyTeams(user) {
 
@@ -378,18 +380,155 @@ else{
 }
 
 div.innerHTML = `
-    <strong>${data.name}</strong>
+    <strong>
+    ${req.requesterEmail}
+    </strong>
+
     <br>
-    <small>${badge}</small>
+
+    Team:
+    ${ownerTeam.name}
+
+    <br>
+
+    Role:
+    ${req.requestedRole}
+
+    <br><br>
+
+    <button
+    class="approve-btn">
+    Approve
+    </button>
+
+    <button
+    class="reject-btn">
+    Reject
+    </button>
 `;
 
-            div.addEventListener("click", () => {
-                window.location.href = `team.html?teamId=${docSnap.id}`;
-            });
+const approveBtn =
+div.querySelector(
+".approve-btn"
+);
 
-            teamList.appendChild(div);
+approveBtn.addEventListener(
+"click",
+async ()=>{
+
+    try{
+
+        const teamRef =
+        doc(
+            db,
+            "teams",
+            req.teamId
+        );
+
+        const teamSnap =
+        await getDoc(
+            teamRef
+        );
+
+        if(!teamSnap.exists()){
+
+            alert(
+                "Team not found"
+            );
+
+            return;
         }
-    });
+
+        const teamData =
+        teamSnap.data();
+
+        const members =
+        teamData.members || {};
+
+        members[
+            req.requesterUid
+        ] =
+        req.requestedRole;
+
+        await updateDoc(
+            teamRef,
+            {
+                members
+            }
+        );
+
+        await updateDoc(
+            doc(
+                db,
+                "joinRequests",
+                reqDoc.id
+            ),
+            {
+                status:
+                "approved"
+            }
+        );
+
+        alert(
+            "Approved"
+        );
+
+        loadJoinRequests(
+            user
+        );
+
+    }
+
+    catch(err){
+
+        console.error(err);
+
+    }
+
+});
+
+const rejectBtn =
+div.querySelector(
+".reject-btn"
+);
+
+rejectBtn.addEventListener(
+"click",
+async ()=>{
+
+    try{
+
+        await updateDoc(
+            doc(
+                db,
+                "joinRequests",
+                reqDoc.id
+            ),
+            {
+                status:
+                "rejected"
+            }
+        );
+
+        alert(
+            "Rejected"
+        );
+
+        loadJoinRequests(
+            user
+        );
+
+    }
+
+    catch(err){
+
+        console.error(err);
+
+    }
+
+});
+
+    
 }
 
 // ログイン確定後に実行
