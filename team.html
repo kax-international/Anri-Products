@@ -146,7 +146,11 @@ import {
     getDoc,
     updateDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
+import {
+    getAuth,
+    onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
     authDomain: "athletic-cloud-33538.firebaseapp.com",
@@ -157,6 +161,8 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
 const db = getFirestore(app);
 
 // teamId取得
@@ -214,7 +220,10 @@ async function loadTeam() {
         console.log("Members:",
         members);
 
-       for (const uid of members) {
+for (
+    const [uid, role]
+    of Object.entries(members)
+) {
 
     console.log(
         "Loading User:",
@@ -264,7 +273,7 @@ async function loadTeam() {
     document.createElement("li");
 
     li.textContent =
-    `${name}`;
+`${name} (${role})`;
 
     memberList.appendChild(li);
 }
@@ -305,8 +314,23 @@ document.getElementById("addMemberBtn").addEventListener("click", async () => {
     await loadTeam();
 });
 
-// 初期ロード
-loadTeam();
+onAuthStateChanged(auth, (user) => {
+
+    console.log("AUTH USER:", user);
+
+    if(!user){
+
+        alert("Login required");
+
+        window.location.href =
+        "login.html";
+
+        return;
+    }
+
+    loadTeam();
+
+});
 
 </script>
 
