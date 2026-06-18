@@ -262,7 +262,17 @@ Dashboard
 </div>
 
 <script type="module">
-
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    serverTimestamp,
+    query,
+    where,
+    getDocs
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+    
 import { initializeApp }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
@@ -308,7 +318,10 @@ onAuthStateChanged(auth,(user)=>{
     }
 
 });
-
+    
+const db =
+getFirestore(app);
+    
 document
 .getElementById("backBtn")
 .addEventListener("click",()=>{
@@ -320,28 +333,116 @@ document
 
 document
 .getElementById("requestBtn")
-.addEventListener("click",()=>{
+.addEventListener("click", async ()=>{
 
     const teamId =
-    document.getElementById("teamId").value;
+    document.getElementById("teamId").value.trim();
 
     const role =
     document.getElementById("role").value;
 
-    console.log(
-        "TEAM ID:",
-        teamId
-    );
+    const message =
+    document.getElementById("message");
 
-    console.log(
-        "ROLE:",
-        role
-    );
+    const user =
+    auth.currentUser;
 
-    document
-    .getElementById("message")
-    .textContent =
-    "Request logic coming next...";
+    if(!teamId){
+
+        message.textContent =
+        "Team ID required";
+
+        message.className =
+        "message error";
+
+        return;
+    }
+
+    try{
+
+        // チーム存在確認
+
+        const teamQuery =
+        query(
+            collection(db,"teams")
+        );
+
+        const teamSnapshot =
+        await getDocs(teamQuery);
+
+        let teamExists =
+        false;
+
+        teamSnapshot.forEach(doc=>{
+
+            if(doc.id === teamId){
+
+                teamExists = true;
+
+            }
+
+        });
+
+        if(!teamExists){
+
+            message.textContent =
+            "Team not found";
+
+            message.className =
+            "message error";
+
+            return;
+        }
+
+        // Join Request保存
+
+        await addDoc(
+            collection(
+                db,
+                "joinRequests"
+            ),
+            {
+
+                teamId:
+                teamId,
+
+                requesterUid:
+                user.uid,
+
+                requesterEmail:
+                user.email,
+
+                requestedRole:
+                role,
+
+                status:
+                "pending",
+
+                createdAt:
+                serverTimestamp()
+
+            }
+        );
+
+        message.textContent =
+        "Request sent";
+
+        message.className =
+        "message success";
+
+    }
+
+    catch(err){
+
+        console.error(err);
+
+        message.textContent =
+        "Request failed";
+
+        message.className =
+        "message error";
+
+    }
 
 });
 
