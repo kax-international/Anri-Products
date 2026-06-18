@@ -1,30 +1,351 @@
-<input
-id="teamId"
-placeholder="Team ID"
-required
->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
-<select id="role">
+<title>Join Team | Athletic Cloud</title>
 
-    <option value="player">
-    Player
-    </option>
+<style>
 
-    <option value="coach">
-    Coach
-    </option>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
-    <option value="staff">
-    Staff
-    </option>
+body{
 
-</select>
+    min-height:100vh;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    font-family:Arial,sans-serif;
+
+    background:
+    linear-gradient(
+        rgba(0,0,0,.55),
+        rgba(0,0,0,.55)
+    ),
+    url("IMG_3359.jpeg");
+
+    background-size:cover;
+    background-position:center;
+}
+
+.join-container{
+
+    width:100%;
+    max-width:450px;
+
+    background:white;
+
+    padding:50px;
+
+    border-radius:20px;
+
+    box-shadow:
+    0 15px 40px rgba(0,0,0,.25);
+}
+
+.logo{
+
+    text-align:center;
+
+    font-size:2rem;
+
+    font-weight:bold;
+
+    letter-spacing:2px;
+
+    margin-bottom:10px;
+
+    color:#111;
+}
+
+.subtitle{
+
+    text-align:center;
+
+    color:#666;
+
+    margin-bottom:35px;
+}
+
+.input-group{
+
+    margin-bottom:20px;
+}
+
+.input-group label{
+
+    display:block;
+
+    margin-bottom:8px;
+
+    font-weight:bold;
+
+    color:#333;
+}
+
+.input-group input,
+.input-group select{
+
+    width:100%;
+
+    padding:14px;
+
+    border:1px solid #ccc;
+
+    border-radius:8px;
+
+    font-size:1rem;
+}
+
+.input-group input:focus,
+.input-group select:focus{
+
+    outline:none;
+
+    border-color:#111;
+}
+
+.join-btn{
+
+    width:100%;
+
+    padding:15px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:#111;
+
+    color:white;
+
+    font-size:1rem;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    transition:.3s;
+}
+
+.join-btn:hover{
+
+    background:#333;
+}
+
+.message{
+
+    margin-top:15px;
+
+    text-align:center;
+
+    font-size:.95rem;
+}
+
+.success{
+
+    color:green;
+}
+
+.error{
+
+    color:red;
+}
+
+.back-btn{
+
+    position:fixed;
+
+    top:20px;
+    right:20px;
+
+    padding:12px 20px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:white;
+
+    color:#111;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    box-shadow:
+    0 4px 10px rgba(0,0,0,.2);
+}
+
+.back-btn:hover{
+
+    background:#f0f0f0;
+}
+
+</style>
+</head>
+
+<body>
 
 <button
-id="requestBtn">
-
-Request Join
-
+id="backBtn"
+class="back-btn">
+Dashboard
 </button>
 
-<div id="message"></div>
+<div class="join-container">
+
+    <div class="logo">
+        ATHLETIC CLOUD
+    </div>
+
+    <div class="subtitle">
+        Request to Join a Team
+    </div>
+
+    <div class="input-group">
+
+        <label>Team ID</label>
+
+        <input
+            id="teamId"
+            type="text"
+            placeholder="Enter Team ID"
+            required
+        >
+
+    </div>
+
+    <div class="input-group">
+
+        <label>Role</label>
+
+        <select id="role">
+
+            <option value="player">
+                Player
+            </option>
+
+            <option value="coach">
+                Coach
+            </option>
+
+            <option value="staff">
+                Staff
+            </option>
+
+        </select>
+
+    </div>
+
+    <button
+        id="requestBtn"
+        class="join-btn">
+
+        Request Join
+
+    </button>
+
+    <div
+        id="message"
+        class="message">
+    </div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+    getAuth,
+    onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
+
+  authDomain:
+  "athletic-cloud-33538.firebaseapp.com",
+
+  projectId:
+  "athletic-cloud-33538",
+
+  storageBucket:
+  "athletic-cloud-33538.firebasestorage.app",
+
+  messagingSenderId:
+  "1020993809301",
+
+  appId:
+  "1:1020993809301:web:a31e28377788bef965249c"
+
+};
+
+const app =
+initializeApp(firebaseConfig);
+
+const auth =
+getAuth(app);
+
+onAuthStateChanged(auth,(user)=>{
+
+    if(!user){
+
+        window.location.href =
+        "login.html";
+    }
+
+});
+
+document
+.getElementById("backBtn")
+.addEventListener("click",()=>{
+
+    window.location.href =
+    "dashboard.html";
+
+});
+
+document
+.getElementById("requestBtn")
+.addEventListener("click",()=>{
+
+    const teamId =
+    document.getElementById("teamId").value;
+
+    const role =
+    document.getElementById("role").value;
+
+    console.log(
+        "TEAM ID:",
+        teamId
+    );
+
+    console.log(
+        "ROLE:",
+        role
+    );
+
+    document
+    .getElementById("message")
+    .textContent =
+    "Request logic coming next...";
+
+});
+
+</script>
+
+</body>
+</html>
