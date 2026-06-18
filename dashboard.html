@@ -378,155 +378,20 @@ else{
     badge =
     role;
 }
-
 div.innerHTML = `
-    <strong>
-    ${req.requesterEmail}
-    </strong>
-
+    <strong>${data.name}</strong>
     <br>
-
-    Team:
-    ${ownerTeam.name}
-
-    <br>
-
-    Role:
-    ${req.requestedRole}
-
-    <br><br>
-
-    <button
-    class="approve-btn">
-    Approve
-    </button>
-
-    <button
-    class="reject-btn">
-    Reject
-    </button>
+    <small>${badge}</small>
 `;
+div.addEventListener("click", () => {
 
-const approveBtn =
-div.querySelector(
-".approve-btn"
-);
-
-approveBtn.addEventListener(
-"click",
-async ()=>{
-
-    try{
-
-        const teamRef =
-        doc(
-            db,
-            "teams",
-            req.teamId
-        );
-
-        const teamSnap =
-        await getDoc(
-            teamRef
-        );
-
-        if(!teamSnap.exists()){
-
-            alert(
-                "Team not found"
-            );
-
-            return;
-        }
-
-        const teamData =
-        teamSnap.data();
-
-        const members =
-        teamData.members || {};
-
-        members[
-            req.requesterUid
-        ] =
-        req.requestedRole;
-
-        await updateDoc(
-            teamRef,
-            {
-                members
-            }
-        );
-
-        await updateDoc(
-            doc(
-                db,
-                "joinRequests",
-                reqDoc.id
-            ),
-            {
-                status:
-                "approved"
-            }
-        );
-
-        alert(
-            "Approved"
-        );
-
-        loadJoinRequests(
-            user
-        );
-
-    }
-
-    catch(err){
-
-        console.error(err);
-
-    }
+    window.location.href =
+    `team.html?teamId=${docSnap.id}`;
 
 });
 
-const rejectBtn =
-div.querySelector(
-".reject-btn"
-);
+teamList.appendChild(div);
 
-rejectBtn.addEventListener(
-"click",
-async ()=>{
-
-    try{
-
-        await updateDoc(
-            doc(
-                db,
-                "joinRequests",
-                reqDoc.id
-            ),
-            {
-                status:
-                "rejected"
-            }
-        );
-
-        alert(
-            "Rejected"
-        );
-
-        loadJoinRequests(
-            user
-        );
-
-    }
-
-    catch(err){
-
-        console.error(err);
-
-    }
-
-});
 
     
 }
