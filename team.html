@@ -214,63 +214,60 @@ async function loadTeam() {
         console.log("Members:",
         members);
 
-        for (
-            const [uid, role]
-            of Object.entries(members)
-        ) {
+       for (const uid of members) {
+
+    console.log(
+        "Loading User:",
+        uid
+    );
+
+    let name = uid;
+
+    try {
+
+        const userRef =
+        doc(db, "users", uid);
+
+        const userSnap =
+        await getDoc(userRef);
+
+        console.log(
+            "User Exists:",
+            userSnap.exists()
+        );
+
+        if(userSnap.exists()){
+
+            const userData =
+            userSnap.data();
 
             console.log(
-                "Loading User:",
-                uid
+                "User Data:",
+                userData
             );
 
-            let name = uid;
-
-            try {
-
-                const userRef =
-                doc(db, "users", uid);
-
-                const userSnap =
-                await getDoc(userRef);
-
-                console.log(
-                    "User Exists:",
-                    userSnap.exists()
-                );
-
-                if(userSnap.exists()){
-
-                    const userData =
-                    userSnap.data();
-
-                    console.log(
-                        "User Data:",
-                        userData
-                    );
-
-                    name =
-                    userData.name ||
-                    uid;
-                }
-
-            }
-            catch(err){
-
-                console.error(
-                    "User Load Error:",
-                    err
-                );
-            }
-
-            const li =
-            document.createElement("li");
-
-            li.textContent =
-            `${name} (${role})`;
-
-            memberList.appendChild(li);
+            name =
+            userData.name ||
+            uid;
         }
+
+    }
+    catch(err){
+
+        console.error(
+            "User Load Error:",
+            err
+        );
+    }
+
+    const li =
+    document.createElement("li");
+
+    li.textContent =
+    `${name}`;
+
+    memberList.appendChild(li);
+}
 
     }
     catch(err){
