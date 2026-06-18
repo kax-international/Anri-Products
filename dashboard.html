@@ -170,6 +170,17 @@ header{
 .owner{
     background:#ffd700;
 }
+
+#uid{
+
+    margin-top:8px;
+
+    font-size:13px;
+
+    color:#666;
+
+    word-break:break-all;
+}
 </style>
 </head>
 
@@ -203,6 +214,10 @@ Loading...
 
 <p id="email">
 Loading...
+</p>
+
+<p id="uid">
+Loading UID...
 </p>
 
 </div>
@@ -385,6 +400,8 @@ onAuthStateChanged(auth, async (user) => {
 
     document.getElementById("username").innerText = `Welcome, ${data.name}`;
     document.getElementById("email").innerText = data.email;
+    document.getElementById("uid").innerText =
+`UID: ${user.uid}`;
 
     document.querySelector(".main").style.display = "block";
 
