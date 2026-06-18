@@ -272,9 +272,11 @@ for (
     const li =
     document.createElement("li");
 
-    li.textContent =
-`${name} (${role})`;
+    const role =
+members[uid];
 
+li.textContent =
+`${name} (${role})`;
     memberList.appendChild(li);
 }
 
