@@ -1,546 +1,241 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Dashboard | Athletic Cloud</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BIGBLUE Coding - Dashboard</title>
 
 <style>
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    display: flex;
+    height: 100vh;
 }
 
-body{
-    font-family:Arial,sans-serif;
-    background:#f5f5f5;
+/* サイドバー */
+.sidebar {
+    width: 240px;
+    background: #1f2937;
+    color: white;
+    padding: 20px;
 }
 
-#teamList {
-    display: grid;
-    gap: 12px;
-    margin-bottom: 30px;
+.sidebar h2 {
+    font-size: 18px;
+    margin-bottom: 20px;
 }
 
-.team-card {
-    padding: 15px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+.menu-item {
+    padding: 10px;
+    margin: 5px 0;
+    background: #374151;
+    border-radius: 6px;
     cursor: pointer;
-    transition: 0.2s;
 }
 
-.team-card:hover {
-    transform: translateY(-3px);
+.menu-item:hover {
+    background: #4b5563;
 }
 
-header{
-
-    background:#111;
-    color:white;
-
-    padding:20px 40px;
-
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+/* メイン */
+.main {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
 }
 
-.logo{
-
-    font-size:1.8rem;
-    font-weight:bold;
-    letter-spacing:2px;
+/* カード */
+.card {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
-.logout-btn{
-
-    background:white;
-    color:#111;
-
-    border:none;
-
-    padding:10px 20px;
-
-    border-radius:8px;
-
-    cursor:pointer;
-
-    font-weight:bold;
+/* ボタン */
+button {
+    border: none;
+    padding: 6px 10px;
+    margin-left: 5px;
+    border-radius: 5px;
+    cursor: pointer;
 }
 
-.main{
-
-    max-width:1200px;
-    margin:50px auto;
-
-    padding:0 20px;
-
-    display:none;
+.approve {
+    background: #16a34a;
+    color: white;
 }
 
-.welcome{
-
-    background:white;
-
-    padding:30px;
-
-    border-radius:15px;
-
-    margin-bottom:30px;
-
-    box-shadow:0 5px 15px rgba(0,0,0,.1);
+.reject {
+    background: #dc2626;
+    color: white;
 }
 
-.welcome h1{
-
-    margin-bottom:10px;
+/* チャット */
+.chat-box {
+    height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    background: #fafafa;
+    margin-bottom: 10px;
 }
 
-    .team-actions{
-
-    display:flex;
-    gap:20px;
-
-    margin-bottom:30px;
+.chat-input {
+    display: flex;
 }
 
-.team-actions button{
-
-    padding:15px 25px;
-
-    border:none;
-    border-radius:10px;
-
-    background:#111;
-    color:white;
-
-    font-weight:bold;
-    cursor:pointer;
+.chat-input input {
+    flex: 1;
+    padding: 8px;
 }
 
-.card-grid{
-
-    display:grid;
-
-    grid-template-columns:
-    repeat(auto-fit,minmax(250px,1fr));
-
-    gap:25px;
-}
-
-.card{
-
-    background:white;
-
-    padding:30px;
-
-    border-radius:15px;
-
-    box-shadow:0 5px 15px rgba(0,0,0,.1);
-
-    cursor:pointer;
-
-    transition:.3s;
-}
-
-.card:hover{
-
-    transform:translateY(-5px);
-}
-
-.card h3{
-
-    margin-bottom:10px;
-}
-.role-badge{
-    display:inline-block;
-    margin-top:8px;
-    padding:4px 8px;
-    border-radius:20px;
-    font-size:12px;
-    font-weight:bold;
-    background:#f0f0f0;
-}
-
-.owner{
-    background:#ffd700;
-}
-
-#uid{
-
-    margin-top:8px;
-
-    font-size:13px;
-
-    color:#666;
-
-    word-break:break-all;
+.chat-input button {
+    background: #2563eb;
+    color: white;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-
-<div class="logo">
-ATHLETIC CLOUD
+<!-- サイドバー -->
+<div class="sidebar">
+    <h2>BIGBLUE Coding</h2>
+    <div class="menu-item" onclick="showSection('dashboard')">Dashboard</div>
+    <div class="menu-item" onclick="showSection('requests')">Join Requests</div>
+    <div class="menu-item" onclick="showSection('chat')">Chat</div>
 </div>
 
-<button
-id="logoutBtn"
-class="logout-btn">
-Logout
-</button>
-
-
-</header>
-
+<!-- メイン -->
 <div class="main">
 
-<h2>My Teams</h2>
-<div id="teamList"></div>
+    <!-- Dashboard -->
+    <div id="dashboard" class="section">
+        <h2>概要</h2>
+        <div class="card">
+            <p>ようこそ！チーム管理ダッシュボードです。</p>
+        </div>
+    </div>
 
-<div class="welcome">
+    <!-- Join Requests -->
+    <div id="requests" class="section" style="display:none;">
+        <h2>参加申請</h2>
 
-<h1 id="username">
-Loading...
-</h1>
-
-<p id="email">
-Loading...
-</p>
-
-<p id="uid">
-Loading UID...
-</p>
-
-</div>
-
-<div class="team-actions">
-
-    <button id="createTeamBtn">
-        Create Team
-    </button>
-
-    <button id="joinTeamBtn">
-        Join Team
-    </button>
-
-</div>
-<div class="welcome">
-
-    <h2>
-        Join Requests
-    </h2>
-
-    <div id="requestList">
-
-        No Requests
+        <div id="requestList"></div>
 
     </div>
 
-</div>
-<div class="card-grid">
+    <!-- Chat -->
+    <div id="chat" class="section" style="display:none;">
+        <h2>チームチャット</h2>
 
-<div class="card">
-<h3>Playbook Cloud</h3>
-<p>Create and search team concepts.</p>
-</div>
+        <div class="chat-box" id="chatBox"></div>
 
-<div class="card">
-<h3>Video Library</h3>
-<p>Upload and share game film.</p>
-</div>
-
-<div class="card">
-<h3>Analytics</h3>
-<p>Searchable team data.</p>
-</div>
-
-<div class="card">
-<h3>Team Workspace</h3>
-<p>Collaborate with players and coaches.</p>
-</div>
+        <div class="chat-input">
+            <input type="text" id="chatInput" placeholder="メッセージを入力...">
+            <button onclick="sendMessage()">送信</button>
+        </div>
+    </div>
 
 </div>
 
-</div>
+<script>
+/* =========================
+   仮データ（API未接続でも動く）
+========================= */
 
-<script type="module">
+let joinRequests = [
+    { id: 1, name: "User A" },
+    { id: 2, name: "User B" },
+    { id: 3, name: "User C" }
+];
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+let chatMessages = [
+    { user: "System", text: "Welcome to BIGBLUE Coding!" }
+];
 
-import {
-getAuth,
-onAuthStateChanged,
-signOut
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+/* =========================
+   画面切替
+========================= */
+function showSection(id) {
+    document.querySelectorAll(".section").forEach(sec => {
+        sec.style.display = "none";
+    });
+    document.getElementById(id).style.display = "block";
 
-import {
-getFirestore,
-doc,
-getDoc
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
-  authDomain: "athletic-cloud-33538.firebaseapp.com",
-  projectId: "athletic-cloud-33538",
-  storageBucket: "athletic-cloud-33538.firebasestorage.app",
-  messagingSenderId: "1020993809301",
-  appId: "1:1020993809301:web:a31e28377788bef965249c"
-};
-
-const app = initializeApp(firebaseConfig);
-
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-
-
-document
-.getElementById("logoutBtn")
-.addEventListener("click", async () => {
-
-    await signOut(auth);
-
-    window.location.href =
-    "login.html";
-
-});
-
-document
-.getElementById("createTeamBtn")
-.addEventListener("click",()=>{
-
-    window.location.href =
-    "create-team.html";
-
-});
-
-document
-.getElementById("joinTeamBtn")
-.addEventListener("click",()=>{
-
-    window.location.href =
-    "join-team.html";
-
-});
-
-import {
-    collection,
-    getDocs,
-    query,
-    where,
-    doc,
-    getDoc,
-    updateDoc
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
-async function loadMyTeams(user) {
-
-    if (!user) return;
-
-    const teamList = document.getElementById("teamList");
-    teamList.innerHTML = "";
-
-    const snapshot = await getDocs(collection(db, "teams"));
-
-    snapshot.forEach(docSnap => {
-
-        const data = docSnap.data();
-        const members = data.members || {};
-
-if (members[user.uid]) {
-            const div = document.createElement("div");
-            div.className = "team-card";
-
-            const role =
-members[user.uid];
-
-let badge = "";
-
-if(role === "owner"){
-    badge =
-    "👑 Owner";
-}
-else{
-    badge =
-    role;
-}
-div.innerHTML = `
-    <strong>${data.name}</strong>
-    <br>
-    <small>${badge}</small>
-`;
-div.addEventListener("click", () => {
-
-    window.location.href =
-    `team.html?teamId=${docSnap.id}`;
-
-});
-
-teamList.appendChild(div);
-
-
-    
+    if (id === "requests") renderRequests();
+    if (id === "chat") renderChat();
 }
 
-// ログイン確定後に実行
-onAuthStateChanged(auth, async (user) => {
+/* =========================
+   参加申請レンダリング
+========================= */
+function renderRequests() {
+    const container = document.getElementById("requestList");
+    container.innerHTML = "";
 
-    if (!user) {
-        window.location.href = "login.html";
-        return;
-    }
+    joinRequests.forEach(req => {
+        const div = document.createElement("div");
+        div.className = "card";
 
-    const docRef = doc(db, "users", user.uid);
-    const docSnap = await getDoc(docRef);
+        div.innerHTML = `
+            <strong>${req.name}</strong>
+            <div style="float:right;">
+                <button class="approve" onclick="approve(${req.id})">Approve</button>
+                <button class="reject" onclick="reject(${req.id})">Reject</button>
+            </div>
+        `;
 
-    if (!docSnap.exists()) {
-        alert("User profile not found");
-        await signOut(auth);
-        window.location.href = "login.html";
-        return;
-    }
+        container.appendChild(div);
+    });
+}
 
-    const data = docSnap.data();
+function approve(id) {
+    joinRequests = joinRequests.filter(r => r.id !== id);
+    renderRequests();
+    alert("Approved");
+}
 
-    document.getElementById("username").innerText = `Welcome, ${data.name}`;
-    document.getElementById("email").innerText = data.email;
-    document.getElementById("uid").innerText =
-`UID: ${user.uid}`;
+function reject(id) {
+    joinRequests = joinRequests.filter(r => r.id !== id);
+    renderRequests();
+    alert("Rejected");
+}
 
-    document.querySelector(".main").style.display = "block";
+/* =========================
+   チャット
+========================= */
+function renderChat() {
+    const box = document.getElementById("chatBox");
+    box.innerHTML = "";
 
-    // 🔥 ここが重要（user確定後に呼ぶ）
-    loadMyTeams(user);
-    loadJoinRequests(user);
-});
-
-async function loadJoinRequests(user){
-
-    const requestList =
-    document.getElementById(
-        "requestList"
-    );
-
-    requestList.innerHTML = "";
-
-    const teamSnapshot =
-    await getDocs(
-        collection(db,"teams")
-    );
-
-    const ownerTeams = [];
-
-    teamSnapshot.forEach(teamDoc=>{
-
-        const team =
-        teamDoc.data();
-
-        const members =
-        team.members || {};
-
-        if(
-            members[user.uid] ===
-            "owner"
-        ){
-
-            ownerTeams.push({
-                id:teamDoc.id,
-                name:team.name
-            });
-
-        }
-
+    chatMessages.forEach(msg => {
+        const div = document.createElement("div");
+        div.textContent = msg.user + ": " + msg.text;
+        box.appendChild(div);
     });
 
-    if(ownerTeams.length === 0){
-
-        requestList.innerHTML =
-        "No Owner Teams";
-
-        return;
-    }
-
-    const requestSnapshot =
-    await getDocs(
-        collection(
-            db,
-            "joinRequests"
-        )
-    );
-
-    let found = false;
-
-    requestSnapshot.forEach(reqDoc=>{
-
-        const req =
-        reqDoc.data();
-
-        const ownerTeam =
-        ownerTeams.find(
-            t => t.id === req.teamId
-        );
-
-        if(
-            ownerTeam &&
-            req.status === "pending"
-        ){
-
-            found = true;
-
-            const div =
-            document.createElement(
-                "div"
-            );
-
-            div.className =
-            "team-card";
-
-            div.innerHTML = `
-                <strong>
-                ${req.requesterEmail}
-                </strong>
-
-                <br>
-
-                Team:
-                ${ownerTeam.name}
-
-                <br>
-
-                Role:
-                ${req.requestedRole}
-            `;
-
-            requestList.appendChild(
-                div
-            );
-
-        }
-
-    });
-
-    if(!found){
-
-        requestList.innerHTML =
-        "No Pending Requests";
-
-    }
-
+    box.scrollTop = box.scrollHeight;
 }
+
+function sendMessage() {
+    const input = document.getElementById("chatInput");
+    const text = input.value.trim();
+
+    if (!text) return;
+
+    chatMessages.push({ user: "You", text });
+    input.value = "";
+
+    renderChat();
+}
+
+/* 初期表示 */
+renderRequests();
 </script>
 
 </body>
