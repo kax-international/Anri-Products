@@ -233,7 +233,19 @@ Loading UID...
     </button>
 
 </div>
+<div class="welcome">
 
+    <h2>
+        Join Requests
+    </h2>
+
+    <div id="requestList">
+
+        No Requests
+
+    </div>
+
+</div>
 <div class="card-grid">
 
 <div class="card">
@@ -326,9 +338,11 @@ document
 
 import {
     collection,
-    getDocs
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
+    getDocs,
+    query,
+    where
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 
 async function loadMyTeams(user) {
@@ -407,7 +421,122 @@ onAuthStateChanged(auth, async (user) => {
 
     // 🔥 ここが重要（user確定後に呼ぶ）
     loadMyTeams(user);
+    loadJoinRequests(user);
 });
+
+async function loadJoinRequests(user){
+
+    const requestList =
+    document.getElementById(
+        "requestList"
+    );
+
+    requestList.innerHTML = "";
+
+    const teamSnapshot =
+    await getDocs(
+        collection(db,"teams")
+    );
+
+    const ownerTeams = [];
+
+    teamSnapshot.forEach(teamDoc=>{
+
+        const team =
+        teamDoc.data();
+
+        const members =
+        team.members || {};
+
+        if(
+            members[user.uid] ===
+            "owner"
+        ){
+
+            ownerTeams.push({
+                id:teamDoc.id,
+                name:team.name
+            });
+
+        }
+
+    });
+
+    if(ownerTeams.length === 0){
+
+        requestList.innerHTML =
+        "No Owner Teams";
+
+        return;
+    }
+
+    const requestSnapshot =
+    await getDocs(
+        collection(
+            db,
+            "joinRequests"
+        )
+    );
+
+    let found = false;
+
+    requestSnapshot.forEach(reqDoc=>{
+
+        const req =
+        reqDoc.data();
+
+        const ownerTeam =
+        ownerTeams.find(
+            t => t.id === req.teamId
+        );
+
+        if(
+            ownerTeam &&
+            req.status === "pending"
+        ){
+
+            found = true;
+
+            const div =
+            document.createElement(
+                "div"
+            );
+
+            div.className =
+            "team-card";
+
+            div.innerHTML = `
+                <strong>
+                ${req.requesterEmail}
+                </strong>
+
+                <br>
+
+                Team:
+                ${ownerTeam.name}
+
+                <br>
+
+                Role:
+                ${req.requestedRole}
+            `;
+
+            requestList.appendChild(
+                div
+            );
+
+        }
+
+    });
+
+    if(!found){
+
+        requestList.innerHTML =
+        "No Pending Requests";
+
+    }
+
+}
 </script>
 
 </body>
