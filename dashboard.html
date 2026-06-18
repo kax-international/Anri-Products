@@ -111,6 +111,27 @@ header{
 .card:hover{
     transform:translateY(-5px);
 }
+
+.approve-btn {
+    background: #16a34a;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.reject-btn {
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+
 </style>
 </head>
 
@@ -163,24 +184,7 @@ header{
         <p>Collaborate with players and coaches.</p>
     </div>
 </div>
-.approve-btn {
-    background: #16a34a;
-    color: white;
-    border: none;
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-}
 
-.reject-btn {
-    background: #dc2626;
-    color: white;
-    border: none;
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-left: 5px;
-}
 </div>
 
 <script type="module">
@@ -302,71 +306,79 @@ async function loadJoinRequests(user) {
         return;
     }
 
-requestSnapshot.forEach(reqDoc => {
+    // ✅ ここが抜けてた（超重要）
+    const requestSnapshot = await getDocs(collection(db, "joinRequests"));
 
-    const req = reqDoc.data();
+    let found = false;
 
-    const ownerTeam = ownerTeams.find(t => t.id === req.teamId);
+    requestSnapshot.forEach(reqDoc => {
 
-    if (ownerTeam && req.status === "pending") {
+        const req = reqDoc.data();
 
-        const div = document.createElement("div");
-        div.className = "team-card";
+        const ownerTeam = ownerTeams.find(t => t.id === req.teamId);
 
-        div.innerHTML = `
-            <strong>${req.requesterEmail}</strong><br>
-            Team: ${ownerTeam.name}<br>
-            Role: ${req.requestedRole}<br><br>
+        if (ownerTeam && req.status === "pending") {
 
-            <button class="approve-btn">Approve</button>
-            <button class="reject-btn">Reject</button>
-        `;
+            found = true;
 
-        // 🔥 ここがあなたのコードの入れ場所
-        const reqRef = doc(db, "joinRequests", reqDoc.id);
+            const div = document.createElement("div");
+            div.className = "team-card";
 
-        div.querySelector(".approve-btn").addEventListener("click", async () => {
+            div.innerHTML = `
+                <strong>${req.requesterEmail}</strong><br>
+                Team: ${ownerTeam.name}<br>
+                Role: ${req.requestedRole}<br><br>
 
-            await updateDoc(reqRef, {
-                status: "approved"
+                <button class="approve-btn">Approve</button>
+                <button class="reject-btn">Reject</button>
+            `;
+
+            const reqRef = doc(db, "joinRequests", reqDoc.id);
+
+            // =====================
+            // APPROVE
+            // =====================
+            div.querySelector(".approve-btn").addEventListener("click", async () => {
+
+                await updateDoc(reqRef, {
+                    status: "approved"
+                });
+
+                const teamRef = doc(db, "teams", req.teamId);
+                const teamSnap = await getDoc(teamRef);
+                const teamData = teamSnap.data();
+
+                const members = teamData.members || {};
+
+                members[req.requesterUid] = req.requestedRole;
+
+                await updateDoc(teamRef, {
+                    members: members
+                });
+
+                alert("Approved");
+
+                loadJoinRequests(user);
+                loadMyTeams(user);
             });
 
-            const teamRef = doc(db, "teams", req.teamId);
-            const teamSnap = await getDoc(teamRef);
-            const teamData = teamSnap.data();
+            // =====================
+            // REJECT
+            // =====================
+            div.querySelector(".reject-btn").addEventListener("click", async () => {
 
-            const members = teamData.members || {};
+                await updateDoc(reqRef, {
+                    status: "rejected"
+                });
 
-            members[req.requesterUid] = req.requestedRole;
+                alert("Rejected");
 
-            await updateDoc(teamRef, {
-                members: members
+                loadJoinRequests(user);
             });
 
-            alert("Approved");
-
-            loadJoinRequests(user);
-            loadMyTeams(user);
-        });
-
-        if (!members[req.requesterUid]) {
-    members[req.requesterUid] = req.requestedRole;
-}
-
-        div.querySelector(".reject-btn").addEventListener("click", async () => {
-
-            await updateDoc(reqRef, {
-                status: "rejected"
-            });
-
-            alert("Rejected");
-
-            loadJoinRequests(user);
-        });
-
-        requestList.appendChild(div);
-    }
-});
+            requestList.appendChild(div);
+        }
+    });
 
     if (!found) {
         requestList.innerHTML = "No Pending Requests";
