@@ -240,13 +240,20 @@ document.getElementById("createTeamForm").addEventListener("submit", async (e) =
 
     try {
         // 🔥 Firestoreに保存
-        const teamRef = await addDoc(collection(db, "teams"), {
-            name: teamName,
-            ownerId: user.uid,
-            members: [user.uid],   // ←最初は作成者がメンバー
-            createdAt: new Date()
-        });
+        const teamRef = await addDoc(
+    collection(db, "teams"),
+    {
+        name: teamName,
 
+        createdBy: user.uid,
+
+        members: {
+            [user.uid]: "owner"
+        },
+
+        createdAt: new Date()
+    }
+);
         // 成功メッセージ
         message.textContent = "Team Created!";
         message.className = "message success";
