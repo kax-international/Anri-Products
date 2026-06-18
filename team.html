@@ -180,7 +180,6 @@ hr {
     <div class="top-actions">
         <button class="nav-btn" onclick="goAssignments()">Assignments</button>
         <button class="nav-btn" onclick="goCreateAssignment()">Create Assignment</button>
-        <button class="nav-btn" onclick="goDashboard()">Dashboard</button>
     </div>
 
     <div class="info">
@@ -227,10 +226,6 @@ function goAssignments() {
 function goCreateAssignment() {
     const teamId = new URLSearchParams(location.search).get("teamId");
     window.location.href = `assignmentCreate.html?teamId=${teamId}`;
-}
-
-function goDashboard() {
-    window.location.href = "dashboard.html";
 }
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
