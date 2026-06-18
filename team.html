@@ -145,6 +145,26 @@ hr {
 .nav-btn:hover {
     background: #333;
 }
+.top-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.nav-btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    background: #111;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.nav-btn:hover {
+    background: #333;
+}
 </style>
 </head>
 
@@ -155,7 +175,8 @@ hr {
 <div class="container">
 
     <h1>Team Page</h1>
-    <!-- 🔥 ナビボタン（追加） -->
+
+    <!-- 🔥 ナビ（これだけに統一） -->
     <div class="top-actions">
         <button class="nav-btn" onclick="goAssignments()">Assignments</button>
         <button class="nav-btn" onclick="goCreateAssignment()">Create Assignment</button>
@@ -165,6 +186,7 @@ hr {
     <div class="info">
         <span class="label">Team ID:</span>
         <span id="teamId">loading...</span>
+    </div>
 
     <div class="info">
         <span class="label">Team Name:</span>
@@ -195,10 +217,7 @@ hr {
     <button id="addMemberBtn">Add Member</button>
 
 </div>
-<div class="team-actions">
-    <button onclick="goAssignments()">Assignments</button>
-    <button onclick="goCreateAssignment()">Create Assignment</button>
-</div>
+
 <script type="module">
 function goAssignments() {
     const teamId = new URLSearchParams(location.search).get("teamId");
