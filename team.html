@@ -165,51 +165,125 @@ const teamId = params.get("teamId");
 
 document.getElementById("teamId").textContent = teamId;
 
-// =====================
-// 🔥 チーム読み込み
-// =====================
 async function loadTeam() {
 
     try {
-        const ref = doc(db, "teams", teamId);
-        const snap = await getDoc(ref);
+
+        console.log("Loading Team...");
+        console.log("Team ID:", teamId);
+
+        const ref =
+        doc(db, "teams", teamId);
+
+        const snap =
+        await getDoc(ref);
+
+        console.log("Team Exists:",
+        snap.exists());
+
+        console.log("Team Data:",
+        snap.data());
 
         if (!snap.exists()) {
-            document.getElementById("teamName").textContent = "Not Found";
+
+            document.getElementById(
+            "teamName"
+            ).textContent = "Not Found";
+
             return;
         }
 
-        const data = snap.data();
+        const data =
+        snap.data();
 
-        document.getElementById("teamName").textContent = data.name;
+        document.getElementById(
+        "teamName"
+        ).textContent =
+        data.name || "No Team Name";
 
-        const memberList = document.getElementById("memberList");
+        const memberList =
+        document.getElementById(
+        "memberList"
+        );
+
         memberList.innerHTML = "";
 
-        const members = data.members || {};
+        const members =
+        data.members || {};
 
-        for (const [uid, role] of Object.entries(members)) {
+        console.log("Members:",
+        members);
 
-            // ユーザー名取得
+        for (
+            const [uid, role]
+            of Object.entries(members)
+        ) {
+
+            console.log(
+                "Loading User:",
+                uid
+            );
+
             let name = uid;
 
             try {
-                const userRef = doc(db, "users", uid);
-                const userSnap = await getDoc(userRef);
 
-                if (userSnap.exists()) {
-                    name = userSnap.data().name;
+                const userRef =
+                doc(db, "users", uid);
+
+                const userSnap =
+                await getDoc(userRef);
+
+                console.log(
+                    "User Exists:",
+                    userSnap.exists()
+                );
+
+                if(userSnap.exists()){
+
+                    const userData =
+                    userSnap.data();
+
+                    console.log(
+                        "User Data:",
+                        userData
+                    );
+
+                    name =
+                    userData.name ||
+                    uid;
                 }
-            } catch (e) {}
 
-            const li = document.createElement("li");
-            li.textContent = `${name} (${role})`;
+            }
+            catch(err){
+
+                console.error(
+                    "User Load Error:",
+                    err
+                );
+            }
+
+            const li =
+            document.createElement("li");
+
+            li.textContent =
+            `${name} (${role})`;
+
             memberList.appendChild(li);
         }
 
-    } catch (err) {
-        console.error(err);
-        document.getElementById("teamName").textContent = "Error";
+    }
+    catch(err){
+
+        console.error(
+            "Team Load Error:",
+            err
+        );
+
+        document.getElementById(
+        "teamName"
+        ).textContent =
+        "Error";
     }
 }
 
@@ -236,8 +310,7 @@ document.getElementById("addMemberBtn").addEventListener("click", async () => {
 
 // 初期ロード
 loadTeam();
-console.log("TEAM SNAP:", snap.exists());
-console.log("TEAM DATA:", snap.data());
+
 </script>
 
 </body>
