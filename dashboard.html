@@ -163,11 +163,31 @@ header{
         <p>Collaborate with players and coaches.</p>
     </div>
 </div>
+.approve-btn {
+    background: #16a34a;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
 
+.reject-btn {
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: 5px;
+}
 </div>
 
 <script type="module">
-
+import {
+  updateDoc,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
 import {
@@ -282,31 +302,71 @@ async function loadJoinRequests(user) {
         return;
     }
 
-    const requestSnapshot = await getDocs(collection(db, "joinRequests"));
+requestSnapshot.forEach(reqDoc => {
 
-    let found = false;
+    const req = reqDoc.data();
 
-    requestSnapshot.forEach(reqDoc => {
-        const req = reqDoc.data();
+    const ownerTeam = ownerTeams.find(t => t.id === req.teamId);
 
-        const ownerTeam = ownerTeams.find(t => t.id === req.teamId);
+    if (ownerTeam && req.status === "pending") {
 
-        if (ownerTeam && req.status === "pending") {
+        const div = document.createElement("div");
+        div.className = "team-card";
 
-            found = true;
+        div.innerHTML = `
+            <strong>${req.requesterEmail}</strong><br>
+            Team: ${ownerTeam.name}<br>
+            Role: ${req.requestedRole}<br><br>
 
-            const div = document.createElement("div");
-            div.className = "team-card";
+            <button class="approve-btn">Approve</button>
+            <button class="reject-btn">Reject</button>
+        `;
 
-            div.innerHTML = `
-                <strong>${req.requesterEmail}</strong><br>
-                Team: ${ownerTeam.name}<br>
-                Role: ${req.requestedRole}
-            `;
+        // 🔥 ここがあなたのコードの入れ場所
+        const reqRef = doc(db, "joinRequests", reqDoc.id);
 
-            requestList.appendChild(div);
-        }
-    });
+        div.querySelector(".approve-btn").addEventListener("click", async () => {
+
+            await updateDoc(reqRef, {
+                status: "approved"
+            });
+
+            const teamRef = doc(db, "teams", req.teamId);
+            const teamSnap = await getDoc(teamRef);
+            const teamData = teamSnap.data();
+
+            const members = teamData.members || {};
+
+            members[req.requesterUid] = req.requestedRole;
+
+            await updateDoc(teamRef, {
+                members: members
+            });
+
+            alert("Approved");
+
+            loadJoinRequests(user);
+            loadMyTeams(user);
+        });
+
+        if (!members[req.requesterUid]) {
+    members[req.requesterUid] = req.requestedRole;
+}
+
+        div.querySelector(".reject-btn").addEventListener("click", async () => {
+
+            await updateDoc(reqRef, {
+                status: "rejected"
+            });
+
+            alert("Rejected");
+
+            loadJoinRequests(user);
+        });
+
+        requestList.appendChild(div);
+    }
+});
 
     if (!found) {
         requestList.innerHTML = "No Pending Requests";
