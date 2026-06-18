@@ -168,13 +168,45 @@ body{
 
     opacity:.7;
 }
+.back-btn{
 
+    position:fixed;
+
+    top:20px;
+    right:20px;
+
+    padding:12px 20px;
+
+    border:none;
+    border-radius:8px;
+
+    background:white;
+    color:#111;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    box-shadow:
+    0 4px 10px rgba(0,0,0,.2);
+
+    transition:.2s;
+}
+
+.back-btn:hover{
+
+    background:#f0f0f0;
+}
 </style>
 
 </head>
 
 <body>
-
+<button
+id="backBtn"
+class="back-btn">
+Home
+</button>
 <div class="login-container">
 
 ```
@@ -213,7 +245,14 @@ body{
     </button>
 
 </form>
+document
+.getElementById("backBtn")
+.addEventListener("click", () => {
 
+    window.location.href =
+    "AthleticCloud.html";
+
+});
 <div
     id="errorMessage"
     class="error">
