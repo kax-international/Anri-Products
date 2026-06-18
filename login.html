@@ -245,14 +245,7 @@ Home
     </button>
 
 </form>
-document
-.getElementById("backBtn")
-.addEventListener("click", () => {
 
-    window.location.href =
-    "AthleticCloud.html";
-
-});
 <div
     id="errorMessage"
     class="error">
@@ -321,21 +314,14 @@ document
 
     try {
 
-        await signInWithEmailAndPassword(
-            auth,
-            email,
-            password
-        );
+       
 
        const result = await signInWithEmailAndPassword(auth, email, password);
 
 const user = result.user;
 
 // users作成（ここが重要）
-await setDoc(doc(db, "users", user.uid), {
-    name: user.displayName || "No Name",
-    email: user.email
-});
+
 
 window.location.href = "dashboard.html";
         }
@@ -364,7 +350,14 @@ window.location.href = "dashboard.html";
     }
 
 });
+document
+.getElementById("backBtn")
+.addEventListener("click", () => {
 
+    window.location.href =
+    "AthleticCloud.html";
+
+});
 </script>
 
 </body>
