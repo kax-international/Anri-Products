@@ -170,8 +170,20 @@ hr {
     <button id="addMemberBtn">Add Member</button>
 
 </div>
-
+<div class="team-actions">
+    <button onclick="goAssignments()">Assignments</button>
+    <button onclick="goCreateAssignment()">Create Assignment</button>
+</div>
 <script type="module">
+function goAssignments() {
+    const teamId = new URLSearchParams(location.search).get("teamId");
+    window.location.href = `assignment.html?teamId=${teamId}`;
+}
+
+function goCreateAssignment() {
+    const teamId = new URLSearchParams(location.search).get("teamId");
+    window.location.href = `assignmentCreate.html?teamId=${teamId}`;
+}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
     getFirestore,
