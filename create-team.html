@@ -241,11 +241,11 @@ document.getElementById("createTeamForm").addEventListener("submit", async (e) =
     try {
         // 🔥 Firestoreに保存
         const teamRef = await addDoc(
-    collection(db, "teams"),
+    collection(db,"teams"),
     {
         name: teamName,
 
-        createdBy: user.uid,
+        ownerId: user.uid,
 
         members: {
             [user.uid]: "owner"
