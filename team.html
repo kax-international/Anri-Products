@@ -191,8 +191,11 @@ header{
 </head>
 <header>
     <span class="logo" id="homeLogo">
-        ATHLETIC CLOUD
+        ATHLETIC CLOUD 
     </span>
+    <button id="logoutBtn" class="logout-btn">
+        Logout
+    </button>
 </header>
 <body>
 <button id="backBtn" class="back-btn">
@@ -256,6 +259,21 @@ window.goCreateAssignment = function () {
     const teamId = new URLSearchParams(location.search).get("teamId");
     window.location.href = `Assignmentcreate.html?teamId=${teamId}`;
 };
+import {
+    getAuth,
+    onAuthStateChanged,
+    signOut
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+document.getElementById("logoutBtn")
+.addEventListener("click", async () => {
+
+    await signOut(auth);
+
+    window.location.href =
+    "login.html";
+});
+
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
