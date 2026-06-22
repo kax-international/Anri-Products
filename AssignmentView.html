@@ -7,6 +7,7 @@
 <title>Assignment View | Athletic Cloud</title>
 
 <style>
+
 body{
     margin:0;
     background:#f5f5f5;
@@ -23,7 +24,6 @@ header{
     font-size:1.8rem;
     font-weight:bold;
     letter-spacing:2px;
-    cursor:pointer;
 }
 
 .container{
@@ -48,19 +48,18 @@ header{
     margin-bottom:10px;
 }
 
-.required{
-    color:red;
-    margin-left:5px;
+.option-row{
+    margin-top:8px;
 }
 
-input,
+input[type=text],
 textarea,
 select{
     width:100%;
     padding:12px;
     border:1px solid #ddd;
     border-radius:8px;
-    font-size:14px;
+    box-sizing:border-box;
 }
 
 textarea{
@@ -72,26 +71,22 @@ button{
     border-radius:8px;
     background:#111;
     color:white;
-    font-weight:bold;
-    cursor:pointer;
     padding:12px 18px;
+    cursor:pointer;
+    font-weight:bold;
 }
 
 button:hover{
     background:#333;
 }
 
-.loading{
-    text-align:center;
-    color:#666;
-}
 </style>
 </head>
 
 <body>
 
 <header>
-    <div class="logo" id="homeLogo">
+    <div class="logo">
         ATHLETIC CLOUD
     </div>
 </header>
@@ -106,14 +101,10 @@ button:hover{
 
     <hr>
 
-    <div id="questionContainer" class="loading">
-        Loading Questions...
-    </div>
+    <div id="formContainer"></div>
 
-    <br>
-
-    <button id="submitBtn">
-        Submit Answers
+    <button id="saveBtn">
+        Save Entry
     </button>
 
 </div>
@@ -126,9 +117,18 @@ from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
     getFirestore,
     doc,
-    getDoc
+    getDoc,
+    collection,
+    addDoc,
+    serverTimestamp
 }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+import {
+    getAuth,
+    onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 const firebaseConfig = {
 
@@ -138,20 +138,25 @@ const firebaseConfig = {
     storageBucket: "athletic-cloud-33538.firebasestorage.app",
     messagingSenderId: "1020993809301",
     appId: "1:1020993809301:web:a31e28377788bef965249c"
+
 };
 
 const app = initializeApp(firebaseConfig);
+
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 const assignmentId =
 new URLSearchParams(location.search)
 .get("assignmentId");
 
+let assignmentData = null;
+
 async function loadAssignment(){
 
     try{
 
-        const assignmentRef =
+        const ref =
         doc(
             db,
             "assignments",
@@ -159,23 +164,18 @@ async function loadAssignment(){
         );
 
         const snap =
-        await getDoc(
-            assignmentRef
-        );
+        await getDoc(ref);
 
         if(!snap.exists()){
 
-            document
-            .getElementById(
-                "questionContainer"
-            )
-            .innerHTML =
-            "Assignment Not Found";
+            alert(
+                "Assignment not found"
+            );
 
             return;
         }
 
-        const data =
+        assignmentData =
         snap.data();
 
         document
@@ -183,163 +183,255 @@ async function loadAssignment(){
             "assignmentTitle"
         )
         .textContent =
-        data.title;
+        assignmentData.title;
 
         document
         .getElementById(
             "assignmentDescription"
         )
         .textContent =
-        data.description || "";
+        assignmentData.description || "";
 
-        const container =
-        document
-        .getElementById(
-            "questionContainer"
-        );
-
-        container.innerHTML = "";
-
-        data.questions.forEach(
-            (question,index) => {
-
-            const card =
-            document.createElement("div");
-
-            card.className =
-            "question-card";
-
-            let html = `
-                <div class="question-title">
-                    ${index+1}.
-                    ${question.text}
-                    ${
-                        question.required
-                        ? '<span class="required">*</span>'
-                        : ''
-                    }
-                </div>
-            `;
-
-            if(
-                question.type === "short"
-            ){
-
-                html += `
-                    <input
-                        type="text"
-                    >
-                `;
-            }
-
-            else if(
-                question.type === "long"
-            ){
-
-                html += `
-                    <textarea
-                        rows="5"
-                    ></textarea>
-                `;
-            }
-
-            else if(
-                question.type === "multiple"
-            ){
-
-                question.options.forEach(
-                    option => {
-
-                    html += `
-                        <label>
-                            <input
-                                type="radio"
-                                name="q${index}"
-                                value="${option}"
-                            >
-                            ${option}
-                        </label>
-                        <br>
-                    `;
-                });
-            }
-
-            else if(
-                question.type === "checkbox"
-            ){
-
-                question.options.forEach(
-                    option => {
-
-                    html += `
-                        <label>
-                            <input
-                                type="checkbox"
-                                value="${option}"
-                            >
-                            ${option}
-                        </label>
-                        <br>
-                    `;
-                });
-            }
-
-            else if(
-                question.type === "image"
-            ){
-
-                html += `
-                    <input
-                        type="file"
-                        accept="image/*"
-                    >
-                `;
-            }
-
-            else if(
-                question.type === "video"
-            ){
-
-                html += `
-                    <input
-                        type="file"
-                        accept="video/*"
-                    >
-                `;
-            }
-
-            card.innerHTML = html;
-
-            container.appendChild(
-                card
-            );
-        });
+        renderQuestions();
 
     }
     catch(err){
 
         console.error(err);
 
-        document
-        .getElementById(
-            "questionContainer"
-        )
-        .innerHTML =
-        "Load Failed";
+        alert(
+            "Load Failed"
+        );
+
     }
+
+}
+
+function renderQuestions(){
+
+    const container =
+    document.getElementById(
+        "formContainer"
+    );
+
+    container.innerHTML = "";
+
+    assignmentData.questions
+    .forEach((question,index) => {
+
+        const card =
+        document.createElement("div");
+
+        card.className =
+        "question-card";
+
+        let html = `
+
+            <div class="question-title">
+
+                ${question.text}
+
+                ${question.required
+                    ? "*"
+                    : ""}
+
+            </div>
+
+        `;
+
+        if(question.type === "short"){
+
+            html += `
+                <input
+                    type="text"
+                    data-question="${index}"
+                >
+            `;
+        }
+
+        else if(
+            question.type === "long"
+        ){
+
+            html += `
+                <textarea
+                    rows="4"
+                    data-question="${index}"
+                ></textarea>
+            `;
+        }
+
+        else if(
+            question.type === "multiple"
+        ){
+
+            html += `
+                <select
+                    data-question="${index}"
+                >
+            `;
+
+            question.options
+            .forEach(option => {
+
+                html += `
+                    <option>
+                        ${option}
+                    </option>
+                `;
+
+            });
+
+            html += `
+                </select>
+            `;
+        }
+
+        else if(
+            question.type === "checkbox"
+        ){
+
+            question.options
+            .forEach(option => {
+
+                html += `
+                    <div class="option-row">
+
+                        <label>
+
+                            <input
+                                type="checkbox"
+                                value="${option}"
+                                data-question="${index}"
+                            >
+
+                            ${option}
+
+                        </label>
+
+                    </div>
+                `;
+
+            });
+
+        }
+
+        card.innerHTML = html;
+
+        container.appendChild(card);
+
+    });
+
 }
 
 document
-.getElementById("submitBtn")
-.addEventListener("click", () => {
+.getElementById("saveBtn")
+.addEventListener("click", saveEntry);
 
-    alert(
-        "回答保存機能は次のステップで実装"
-    );
+async function saveEntry(){
 
-});
+    try{
 
-loadAssignment();
+        const answers = {};
+
+        assignmentData.questions
+        .forEach((question,index) => {
+
+            if(
+                question.type === "checkbox"
+            ){
+
+                const selected = [];
+
+                document
+                .querySelectorAll(
+                    `input[data-question="${index}"]:checked`
+                )
+                .forEach(box => {
+
+                    selected.push(
+                        box.value
+                    );
+
+                });
+
+                answers[
+                    question.text
+                ] = selected;
+
+            }
+
+            else{
+
+                const field =
+                document.querySelector(
+                    `[data-question="${index}"]`
+                );
+
+                answers[
+                    question.text
+                ] = field.value;
+
+            }
+
+        });
+
+        await addDoc(
+
+            collection(
+                db,
+                "assignmentEntries"
+            ),
+
+            {
+
+                assignmentId,
+
+                answers,
+
+                createdBy:
+                auth.currentUser.uid,
+
+                createdAt:
+                serverTimestamp()
+
+            }
+
+        );
+
+        alert(
+            "Entry Saved"
+        );
+
+    }
+    catch(err){
+
+        console.error(err);
+
+        alert(
+            "Save Failed"
+        );
+
+    }
+
+}
+
+onAuthStateChanged(
+    auth,
+    user => {
+
+        if(!user){
+
+            location.href =
+            "login.html";
+
+            return;
+        }
+
+        loadAssignment();
+
+    }
+);
 
 </script>
 
