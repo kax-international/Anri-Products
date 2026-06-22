@@ -13,91 +13,109 @@ body{
     font-family:Arial,sans-serif;
 }
 
+header{
+    background:#111;
+    color:white;
+    padding:20px 40px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 2px 10px rgba(0,0,0,.15);
+}
+
+.logo{
+    font-size:1.8rem;
+    font-weight:bold;
+    letter-spacing:2px;
+    cursor:pointer;
+}
+
+.logout-btn{
+    padding:10px 20px;
+    background:white;
+    color:#111;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.logout-btn:hover{
+    background:#e5e5e5;
+}
+
+.back-btn{
+    position:fixed;
+    top:90px;
+    right:20px;
+    padding:10px 20px;
+    background:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    box-shadow:0 2px 10px rgba(0,0,0,.15);
+}
+
 .container{
     max-width:900px;
     margin:40px auto;
     padding:30px;
-
     background:white;
     border-radius:15px;
-
-    box-shadow:
-        0 5px 15px rgba(0,0,0,.1);
+    box-shadow:0 5px 15px rgba(0,0,0,.1);
 }
-.back-btn{
-    position:fixed;
 
-    top:90px;
-    right:20px;
+.top-actions{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+}
 
-    width:auto;
-
-    padding:10px 20px;
-
-    background:white;
-    color:#111;
-
+.nav-btn{
+    padding:10px 15px;
     border:none;
     border-radius:8px;
-
+    background:#111;
+    color:white;
     cursor:pointer;
-
-    box-shadow:
-        0 2px 10px rgba(0,0,0,.15);
-}
-.back-btn:hover{
-    background:#e5e5e5;
-    color:#111;
-}
-/* タイトル */
-h1 {
-    margin-bottom: 20px;
 }
 
-h2 {
-    margin-top: 20px;
+.nav-btn:hover{
+    background:#333;
 }
 
-/* 情報行 */
-.info {
-    font-size: 14px;
-    color: #333;
-    margin-bottom: 10px;
+.info{
+    font-size:14px;
+    margin-bottom:10px;
 }
 
-.label {
-    font-weight: bold;
-    color: #666;
+.label{
+    font-weight:bold;
+    color:#666;
 }
 
-/* メンバーリスト */
-#memberList {
-    list-style: none;
-    padding: 0;
+#memberList{
+    list-style:none;
+    padding:0;
 }
 
-#memberList li {
-    padding: 10px;
-    margin-bottom: 8px;
-    background: #f8f8f8;
-    border-radius: 8px;
+#memberList li{
+    padding:10px;
+    margin-bottom:8px;
+    background:#f8f8f8;
+    border-radius:8px;
 }
 
-/* フォーム */
-.form-group {
-    margin-bottom: 12px;
+.form-group{
+    margin-bottom:12px;
 }
 
-input, select {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 14px;
-    outline: none;
+input,select{
+    width:100%;
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:8px;
 }
 
-/* ボタン */
 button{
     border:none;
     border-radius:8px;
@@ -105,111 +123,27 @@ button{
     color:white;
     font-weight:bold;
     cursor:pointer;
-    transition:.2s;
-}
-
-button:hover {
-    background: #333;
-}
-
-hr {
-    margin: 20px 0;
-    border: none;
-    border-top: 1px solid #eee;
-}
-.top-actions {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.nav-btn {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 8px;
-    background: #111;
-    color: white;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.2s;
-}
-
-.nav-btn:hover {
-    background: #333;
-}
-.top-actions {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.nav-btn {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 8px;
-    background: #111;
-    color: white;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.2s;
-}
-
-.nav-btn:hover {
-    background: #333;
-}
-.logo{
-    display:inline-block;
-    font-size:1.8rem;
-    font-weight:bold;
-    letter-spacing:2px;
-    cursor:pointer;
-}
-header{
-    background:#111;
-    color:white;
-
-    padding:20px 40px;
-
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-
-    box-shadow:
-        0 2px 10px rgba(0,0,0,.15);
-}
-.logout-btn{
-    width:auto;
-    padding:10px 20px;
-    background:white;
-    color:#111;
-}
-.logout-btn:hover{
-    background:#e5e5e5;
-    color:#111;
 }
 </style>
 </head>
+
 <body>
+
 <header>
-    <span class="logo" id="homeLogo">
-        ATHLETIC CLOUD 
-    </span>
-    <button id="logoutBtn" class="logout-btn">
-        Logout
-    </button>
+    <span class="logo" id="homeLogo">ATHLETIC CLOUD</span>
+    <button id="logoutBtn" class="logout-btn">Logout</button>
 </header>
-<button id="backBtn" class="back-btn">
-← Dashboard
-</button>
+
+<button id="backBtn" class="back-btn">← Dashboard</button>
+
 <div class="container">
 
     <h1>Team Page</h1>
 
-    <!-- 🔥 ナビ（これだけに統一） -->
     <div class="top-actions">
         <button class="nav-btn" onclick="goAssignments()">Assignments</button>
         <button class="nav-btn" onclick="goCreateAssignment()">Creating Assignment Form</button>
-    
+    </div>
 
     <div class="info">
         <span class="label">Team ID:</span>
@@ -247,46 +181,17 @@ header{
 </div>
 
 <script type="module">
-document.getElementById("homeLogo").addEventListener("click", () => {
-    window.location.href = "AthleticCloud.html";
-});
-window.goAssignments = function () {
-    const teamId = new URLSearchParams(location.search).get("teamId");
-    window.location.href = `Assignment.html?teamId=${teamId}`;
-};
-
-window.goCreateAssignment = function () {
-    const teamId = new URLSearchParams(location.search).get("teamId");
-    window.location.href = `Assignmentcreate.html?teamId=${teamId}`;
-};
-window.goAssignmentView = function () {
-
-    const teamId = new URLSearchParams(location.search).get("teamId");
-    window.location.href = `AssignmentView.html?teamId=${teamId}`;
-};
-import {
-    getAuth,
-    onAuthStateChanged,
-    signOut
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-document.getElementById("logoutBtn")
-.addEventListener("click", async () => {
-
-    await signOut(auth);
-
-    window.location.href =
-    "login.html";
-});
-
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } 
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
 import {
     getFirestore,
     doc,
     getDoc,
     updateDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
     authDomain: "athletic-cloud-33538.firebaseapp.com",
@@ -297,186 +202,92 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// teamId取得
-const params = new URLSearchParams(window.location.search);
+const params = new URLSearchParams(location.search);
 const teamId = params.get("teamId");
 
 document.getElementById("teamId").textContent = teamId;
 
-async function loadTeam() {
+// nav
+window.goAssignments = () => {
+    location.href = `Assignment.html?teamId=${teamId}`;
+};
 
-    try {
+window.goCreateAssignment = () => {
+    location.href = `Assignmentcreate.html?teamId=${teamId}`;
+};
 
-        console.log("Loading Team...");
-        console.log("Team ID:", teamId);
+// logout
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await signOut(auth);
+    location.href = "login.html";
+});
 
-        const ref =
-        doc(db, "teams", teamId);
+document.getElementById("homeLogo").onclick = () => {
+    location.href = "AthleticCloud.html";
+};
 
-        const snap =
-        await getDoc(ref);
+document.getElementById("backBtn").onclick = () => {
+    location.href = "dashboard.html";
+};
 
-        console.log("Team Exists:",
-        snap.exists());
+async function loadTeam(){
+    const ref = doc(db, "teams", teamId);
+    const snap = await getDoc(ref);
 
-        console.log("Team Data:",
-        snap.data());
-
-        if (!snap.exists()) {
-
-            document.getElementById(
-            "teamName"
-            ).textContent = "Not Found";
-
-            return;
-        }
-
-        const data =
-        snap.data();
-
-        document.getElementById(
-        "teamName"
-        ).textContent =
-        data.name || "No Team Name";
-
-        const memberList =
-        document.getElementById(
-        "memberList"
-        );
-
-        memberList.innerHTML = "";
-
-        const members =
-        data.members || {};
-
-        console.log("Members:",
-        members);
-
-for (
-    const [uid, role]
-    of Object.entries(members)
-) {
-
-    console.log(
-        "Loading User:",
-        uid
-    );
-
-    let name = uid;
-
-    try {
-
-        const userRef =
-        doc(db, "users", uid);
-
-        const userSnap =
-        await getDoc(userRef);
-
-        console.log(
-            "User Exists:",
-            userSnap.exists()
-        );
-
-        if(userSnap.exists()){
-
-            const userData =
-            userSnap.data();
-
-            console.log(
-                "User Data:",
-                userData
-            );
-
-            name =
-            userData.name ||
-            uid;
-        }
-
-    }
-    catch(err){
-
-        console.error(
-            "User Load Error:",
-            err
-        );
+    if(!snap.exists()){
+        document.getElementById("teamName").textContent = "Not Found";
+        return;
     }
 
-    const li =
-    document.createElement("li");
+    const data = snap.data();
+    document.getElementById("teamName").textContent = data.name || "";
 
-    const role =
-members[uid];
+    const memberList = document.getElementById("memberList");
+    memberList.innerHTML = "";
 
-li.textContent =
-`${name} (${role})`;
-    memberList.appendChild(li);
-}
+    const members = data.members || {};
 
-    }
-    catch(err){
+    for(const [uid, memberRole] of Object.entries(members)){
+        let name = uid;
 
-        console.error(
-            "Team Load Error:",
-            err
-        );
+        try{
+            const userSnap = await getDoc(doc(db, "users", uid));
+            if(userSnap.exists()){
+                name = userSnap.data().name || uid;
+            }
+        }catch(e){}
 
-        document.getElementById(
-        "teamName"
-        ).textContent =
-        "Error";
+        const li = document.createElement("li");
+        li.textContent = `${name} (${memberRole})`;
+        memberList.appendChild(li);
     }
 }
 
-// =====================
-// 🔥 メンバー追加
-// =====================
+// add member
 document.getElementById("addMemberBtn").addEventListener("click", async () => {
-
     const uid = document.getElementById("inviteUid").value;
     const role = document.getElementById("role").value;
 
-    console.log("ADD MEMBER:", uid, role, teamId);
+    if(!uid) return alert("User UID required");
 
-    if (!uid) return alert("User UID required");
-
-    const ref = doc(db, "teams", teamId);
-
-    await updateDoc(ref, {
+    await updateDoc(doc(db, "teams", teamId), {
         [`members.${uid}`]: role
     });
 
     await loadTeam();
 });
 
+// auth
 onAuthStateChanged(auth, (user) => {
-
-    console.log("AUTH USER:", user);
-
     if(!user){
-
-        alert("Login required");
-
-        window.location.href =
-        "login.html";
-
+        location.href = "login.html";
         return;
     }
-
     loadTeam();
-document
-.getElementById("backBtn")
-.addEventListener("click", () => {
-
-    window.location.href =
-    "dashboard.html";
-
 });
-});
-
 </script>
 
 </body>
