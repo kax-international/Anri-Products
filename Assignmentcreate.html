@@ -2,55 +2,270 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Create Assignment</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Create Assignment | Athletic Cloud</title>
+
+<style>
+body{
+    margin:0;
+    background:#f5f5f5;
+    font-family:Arial,sans-serif;
+}
+
+header{
+    background:#111;
+    color:white;
+    padding:20px 40px;
+}
+
+.logo{
+    font-size:1.8rem;
+    font-weight:bold;
+    letter-spacing:2px;
+}
+
+.container{
+    max-width:900px;
+    margin:40px auto;
+    background:white;
+    padding:30px;
+    border-radius:15px;
+    box-shadow:0 5px 15px rgba(0,0,0,.1);
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+.form-group{
+    margin-bottom:20px;
+}
+
+input,
+textarea,
+select{
+    width:100%;
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:8px;
+    font-size:14px;
+}
+
+textarea{
+    resize:vertical;
+}
+
+button{
+    border:none;
+    border-radius:8px;
+    background:#111;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+    padding:12px 18px;
+}
+
+button:hover{
+    background:#333;
+}
+
+.question-card{
+    background:#fafafa;
+    border:1px solid #eee;
+    border-radius:12px;
+    padding:20px;
+    margin-bottom:20px;
+}
+
+.question-card h3{
+    margin-top:0;
+}
+
+.option-box{
+    margin-top:10px;
+}
+
+.option-input{
+    margin-top:8px;
+}
+
+.action-row{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+}
+</style>
 </head>
 
 <body>
 
-<h2>Create Assignment</h2>
+<header>
+    <div class="logo">
+        ATHLETIC CLOUD
+    </div>
+</header>
 
-<input id="title" placeholder="Title"><br><br>
-<textarea id="desc" placeholder="Description"></textarea><br><br>
-<input id="tags" placeholder="tags (comma separated)"><br><br>
+<div class="container">
 
-<button id="createBtn">Create</button>
+    <h1>Create Assignment</h1>
 
-<script type="module">
+    <div class="form-group">
+        <label>Assignment Title</label>
+        <input
+            type="text"
+            id="assignmentTitle"
+            placeholder="Enter title"
+        >
+    </div>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+    <div class="form-group">
+        <label>Description</label>
+        <textarea
+            id="assignmentDescription"
+            rows="4"
+            placeholder="Enter description"
+        ></textarea>
+    </div>
 
-const firebaseConfig = {
-  apiKey: "xxx",
-  authDomain: "xxx",
-  projectId: "xxx"
-};
+    <hr>
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+    <div id="questionContainer"></div>
 
-const teamId = new URLSearchParams(location.search).get("teamId");
+    <div class="action-row">
+        <button id="addQuestionBtn">
+            + Add Question
+        </button>
 
-document.getElementById("createBtn").addEventListener("click", async () => {
+        <button id="saveBtn">
+            Save Assignment
+        </button>
+    </div>
 
-    const title = document.getElementById("title").value;
-    const desc = document.getElementById("desc").value;
-    const tags = document.getElementById("tags").value.split(",");
+</div>
 
-    await addDoc(collection(db, "assignments"), {
-        teamId,
-        title,
-        description: desc,
-        tags,
-        createdAt: Date.now(),
-        createdBy: auth.currentUser.uid
+<script>
+
+let questionCount = 0;
+
+document
+.getElementById("addQuestionBtn")
+.addEventListener("click", addQuestion);
+
+function addQuestion(){
+
+    questionCount++;
+
+    const card =
+    document.createElement("div");
+
+    card.className =
+    "question-card";
+
+    card.innerHTML = `
+        <h3>Question ${questionCount}</h3>
+
+        <div class="form-group">
+            <input
+                type="text"
+                class="question-text"
+                placeholder="Question Text"
+            >
+        </div>
+
+        <div class="form-group">
+            <select class="question-type">
+
+                <option value="short">
+                    Short Paragraph
+                </option>
+
+                <option value="long">
+                    Long Paragraph
+                </option>
+
+                <option value="multiple">
+                    Multiple Choice
+                </option>
+
+                <option value="checkbox">
+                    Checkbox
+                </option>
+
+            </select>
+        </div>
+
+        <div class="option-box"></div>
+    `;
+
+    const typeSelect =
+    card.querySelector(".question-type");
+
+    const optionBox =
+    card.querySelector(".option-box");
+
+    typeSelect.addEventListener("change", () => {
+
+        const type =
+        typeSelect.value;
+
+        optionBox.innerHTML = "";
+
+        if(
+            type === "multiple" ||
+            type === "checkbox"
+        ){
+
+            optionBox.innerHTML = `
+                <div class="options"></div>
+
+                <button
+                    type="button"
+                    class="addOptionBtn"
+                >
+                    + Add Option
+                </button>
+            `;
+
+            const optionsDiv =
+            optionBox.querySelector(".options");
+
+            const addBtn =
+            optionBox.querySelector(".addOptionBtn");
+
+            addBtn.addEventListener("click", () => {
+
+                const input =
+                document.createElement("input");
+
+                input.type = "text";
+
+                input.placeholder =
+                "Option";
+
+                input.className =
+                "option-input";
+
+                optionsDiv.appendChild(input);
+            });
+
+        }
+
     });
 
-    alert("Created");
+    document
+    .getElementById("questionContainer")
+    .appendChild(card);
+}
 
-    window.location.href = `assignment.html?teamId=${teamId}`;
+document
+.getElementById("saveBtn")
+.addEventListener("click", () => {
+
+    alert(
+        "Next step: Firestore Save"
+    );
+
 });
 
 </script>
