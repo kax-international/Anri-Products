@@ -18,11 +18,17 @@ header{
     background:#111;
     color:white;
     padding:20px 40px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
 }
 
 .logo{
     font-size:1.8rem;
     font-weight:bold;
+    letter-spacing:2px;
+    cursor:pointer;
 }
 
 .container{
@@ -31,32 +37,31 @@ header{
     padding:0 20px;
 }
 
-.card{
-    background:white;
-    padding:25px;
-    border-radius:15px;
+.top-bar{
+    display:flex;
+    gap:10px;
     margin-bottom:20px;
-    box-shadow:0 5px 15px rgba(0,0,0,.08);
 }
 
-input,
-textarea,
-select{
+.search-box{
+    flex:1;
+}
+
+.search-box input{
     width:100%;
     padding:12px;
-    margin-top:8px;
-    margin-bottom:15px;
     border:1px solid #ddd;
     border-radius:8px;
-    box-sizing:border-box;
+    font-size:14px;
 }
 
 button{
+    border:none;
+    border-radius:8px;
     background:#111;
     color:white;
-    border:none;
-    padding:12px 20px;
-    border-radius:8px;
+    padding:12px 18px;
+    font-weight:bold;
     cursor:pointer;
 }
 
@@ -64,205 +69,311 @@ button:hover{
     background:#333;
 }
 
-.question-card{
-    border:1px solid #ddd;
-    padding:15px;
-    border-radius:10px;
+.assignment-card{
+
+    background:white;
+
+    border-radius:15px;
+
+    padding:20px;
+
+    margin-bottom:15px;
+
+    box-shadow:
+    0 5px 15px rgba(0,0,0,.08);
+
+}
+
+.assignment-title{
+    font-size:1.2rem;
+    font-weight:bold;
+    margin-bottom:10px;
+}
+
+.assignment-description{
+    color:#666;
     margin-bottom:15px;
 }
 
-.assignment-item{
-    background:white;
-    padding:15px;
-    border-radius:10px;
-    margin-bottom:10px;
-    cursor:pointer;
+.card-actions{
+    display:flex;
+    gap:10px;
 }
 
-.assignment-item:hover{
-    transform:translateY(-2px);
+.empty{
+    text-align:center;
+    color:#777;
+    padding:40px;
 }
 
 </style>
 </head>
+
 <body>
 
 <header>
-    <div class="logo">
+
+    <div class="logo" id="homeLogo">
         ATHLETIC CLOUD
     </div>
+
 </header>
 
 <div class="container">
 
-    <div class="card">
+    <h1>Assignments</h1>
 
-        <h2>Create Assignment</h2>
+    <div class="top-bar">
 
-        <input
-            id="assignmentTitle"
-            placeholder="Assignment Title"
-        >
+        <div class="search-box">
 
-        <div id="questionBuilder"></div>
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Search Assignment..."
+            >
 
-        <button id="addQuestionBtn">
-            Add Question
-        </button>
+        </div>
 
-        <button id="saveAssignmentBtn">
-            Save Assignment
+        <button id="createBtn">
+            Create Assignment
         </button>
 
     </div>
 
-    <div class="card">
+    <div id="assignmentList">
 
-        <h2>Assignments</h2>
-
-        <div id="assignmentList"></div>
+        <div class="empty">
+            Loading...
+        </div>
 
     </div>
 
 </div>
 
-<script>
+<script type="module">
 
-let questions = [];
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
-function renderQuestions(){
+import {
 
-    const container =
-    document.getElementById(
-        "questionBuilder"
+    getFirestore,
+
+    collection,
+
+    getDocs
+
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig = {
+
+    apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
+    authDomain: "athletic-cloud-33538.firebaseapp.com",
+    projectId: "athletic-cloud-33538",
+    storageBucket: "athletic-cloud-33538.firebasestorage.app",
+    messagingSenderId: "1020993809301",
+    appId: "1:1020993809301:web:a31e28377788bef965249c"
+
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+const teamId =
+new URLSearchParams(location.search)
+.get("teamId");
+
+let allAssignments = [];
+
+document
+.getElementById("homeLogo")
+.addEventListener("click", () => {
+
+    window.location.href =
+    "AthleticCloud.html";
+
+});
+
+document
+.getElementById("createBtn")
+.addEventListener("click", () => {
+
+    window.location.href =
+    `Assignmentcreate.html?teamId=${teamId}`;
+
+});
+
+document
+.getElementById("searchInput")
+.addEventListener("input", renderAssignments);
+
+async function loadAssignments(){
+
+    try{
+
+        const snapshot =
+        await getDocs(
+            collection(
+                db,
+                "assignments"
+            )
+        );
+
+        allAssignments = [];
+
+        snapshot.forEach(docSnap => {
+
+            const data =
+            docSnap.data();
+
+            if(
+                data.teamId !== teamId
+            ){
+                return;
+            }
+
+            allAssignments.push({
+
+                id: docSnap.id,
+
+                ...data
+
+            });
+
+        });
+
+        renderAssignments();
+
+    }
+    catch(err){
+
+        console.error(err);
+
+        document
+        .getElementById(
+            "assignmentList"
+        )
+        .innerHTML =
+        "Load Failed";
+
+    }
+
+}
+
+function renderAssignments(){
+
+    const keyword =
+    document
+    .getElementById("searchInput")
+    .value
+    .toLowerCase();
+
+    const list =
+    document
+    .getElementById(
+        "assignmentList"
     );
 
-    container.innerHTML = "";
+    list.innerHTML = "";
 
-    questions.forEach((q,index)=>{
+    const filtered =
+    allAssignments.filter(a => {
 
-        const div =
+        return (
+
+            a.title
+            .toLowerCase()
+            .includes(keyword)
+
+            ||
+
+            (a.description || "")
+            .toLowerCase()
+            .includes(keyword)
+
+        );
+
+    });
+
+    if(filtered.length === 0){
+
+        list.innerHTML = `
+            <div class="empty">
+                No Assignments
+            </div>
+        `;
+
+        return;
+    }
+
+    filtered.forEach(a => {
+
+        const card =
         document.createElement("div");
 
-        div.className =
-        "question-card";
+        card.className =
+        "assignment-card";
 
-        div.innerHTML = `
+        card.innerHTML = `
 
-            <input
-                placeholder="Question"
-                value="${q.question}"
-                onchange="
-                    questions[${index}].question=this.value
-                "
-            >
+            <div class="assignment-title">
 
-            <select
-                onchange="
-                    questions[${index}].type=this.value;
-                    renderQuestions();
-                "
-            >
+                ${a.title}
 
-                <option value="short"
-                ${q.type==="short"?"selected":""}>
-                Short Paragraph
-                </option>
+            </div>
 
-                <option value="long"
-                ${q.type==="long"?"selected":""}>
-                Long Paragraph
-                </option>
+            <div class="assignment-description">
 
-                <option value="multiple"
-                ${q.type==="multiple"?"selected":""}>
-                Multiple Choice
-                </option>
+                ${a.description || ""}
 
-                <option value="checkbox"
-                ${q.type==="checkbox"?"selected":""}>
-                Checkbox
-                </option>
+            </div>
 
-            </select>
+            <div class="card-actions">
+
+                <button
+                    class="open-btn"
+                >
+                    Open
+                </button>
+
+                <button
+                    class="result-btn"
+                >
+                    Results
+                </button>
+
+            </div>
 
         `;
 
-        if(
-            q.type==="multiple" ||
-            q.type==="checkbox"
-        ){
+        card
+        .querySelector(".open-btn")
+        .addEventListener("click", () => {
 
-            const options =
-            document.createElement("textarea");
+            window.location.href =
+            `AssignmentView.html?assignmentId=${a.id}`;
 
-            options.placeholder =
-            "One option per line";
+        });
 
-            options.value =
-            (q.options||[]).join("\n");
+        card
+        .querySelector(".result-btn")
+        .addEventListener("click", () => {
 
-            options.onchange=()=>{
+            window.location.href =
+            `AssignmentResult.html?assignmentId=${a.id}`;
 
-                questions[index].options =
-                options.value
-                .split("\n")
-                .filter(x=>x.trim());
+        });
 
-            };
-
-            div.appendChild(options);
-        }
-
-        container.appendChild(div);
+        list.appendChild(card);
 
     });
 
 }
 
-document
-.getElementById("addQuestionBtn")
-.addEventListener("click",()=>{
-
-    questions.push({
-
-        question:"",
-        type:"short",
-        options:[]
-
-    });
-
-    renderQuestions();
-
-});
-
-document
-.getElementById("saveAssignmentBtn")
-.addEventListener("click",()=>{
-
-    const assignment = {
-
-        title:
-        document.getElementById(
-            "assignmentTitle"
-        ).value,
-
-        questions
-
-    };
-
-    console.log(
-        "SAVE ASSIGNMENT",
-        assignment
-    );
-
-    alert(
-        "Assignment object created. Next step = Firebase save."
-    );
-
-});
-
-renderQuestions();
+loadAssignments();
 
 </script>
 
