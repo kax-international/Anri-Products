@@ -208,7 +208,8 @@ header{
     <!-- 🔥 ナビ（これだけに統一） -->
     <div class="top-actions">
         <button class="nav-btn" onclick="goAssignments()">Assignments</button>
-        <button class="nav-btn" onclick="goCreateAssignment()">Create Assignment Form</button>
+        <button class="nav-btn" onclick="goCreateAssignment()">Creating Assignment Form</button>
+        <button class="nav-btn" onclick="goAssignmentView()">Answering Assignment Form</button>
     </div>
 
     <div class="info">
@@ -258,6 +259,11 @@ window.goAssignments = function () {
 window.goCreateAssignment = function () {
     const teamId = new URLSearchParams(location.search).get("teamId");
     window.location.href = `Assignmentcreate.html?teamId=${teamId}`;
+};
+window.goAssignmentView = function () {
+
+    const teamId = new URLSearchParams(location.search).get("teamId");
+    window.location.href = `AssignmentView.html?teamId=${teamId}`;
 };
 import {
     getAuth,
