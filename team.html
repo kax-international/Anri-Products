@@ -166,17 +166,33 @@ hr {
     background: #333;
 }
 .logo{
+    display:inline-block;
     font-size:1.8rem;
     font-weight:bold;
     letter-spacing:2px;
     cursor:pointer;
 }
+header{
+    background:#111;
+    color:white;
+    padding:20px 40px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.logout-btn{
+    width:auto;
+    background:white;
+    color:#111;
+    padding:10px 20px;
+}
 </style>
 </head>
 <header>
-    <div class="logo" id="homeLogo">
+    <span class="logo" id="homeLogo">
         ATHLETIC CLOUD
-    </div>
+    </span>
 </header>
 <body>
 <button id="backBtn" class="back-btn">
