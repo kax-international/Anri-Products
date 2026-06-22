@@ -209,23 +209,41 @@ function addQuestion(){
         <div class="form-group">
             <select class="question-type">
 
-                <option value="short">
-                    Short Paragraph
-                </option>
+    <option value="short">
+        Short Paragraph
+    </option>
 
-                <option value="long">
-                    Long Paragraph
-                </option>
+    <option value="long">
+        Long Paragraph
+    </option>
 
-                <option value="multiple">
-                    Multiple Choice
-                </option>
+    <option value="multiple">
+        Multiple Choice
+    </option>
 
-                <option value="checkbox">
-                    Checkbox
-                </option>
+    <option value="checkbox">
+        Checkbox
+    </option>
 
-            </select>
+    <option value="image">
+        Image Upload
+    </option>
+
+    <option value="video">
+        Video Upload
+    </option>
+
+</select>
+<label>
+
+        <input
+            type="checkbox"
+            class="question-required"
+        >
+
+        Required
+
+    </label>
         </div>
 
         <div class="option-box"></div>
@@ -343,13 +361,18 @@ document
             )
             .value;
 
-            const question = {
+            const required =
+card.querySelector(
+    ".question-required"
+).checked;
 
-                text,
-                type
+const question = {
 
-            };
+    text,
+    type,
+    required
 
+};
             if(
                 type === "multiple" ||
                 type === "checkbox"
