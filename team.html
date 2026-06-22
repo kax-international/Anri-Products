@@ -165,9 +165,23 @@ hr {
 .nav-btn:hover {
     background: #333;
 }
+.logo{
+    font-size:1.8rem;
+    font-weight:bold;
+    letter-spacing:2px;
+    cursor:pointer;
+}
 </style>
 </head>
+<header>
+    <div class="logo" id="homeLogo">
+        ATHLETIC CLOUD
+    </div>
 
+    <button id="logoutBtn" class="logout-btn">
+        Logout
+    </button>
+</header>
 <body>
 <button id="backBtn" class="back-btn">
 ← Dashboard
@@ -218,6 +232,9 @@ hr {
 </div>
 
 <script type="module">
+document.getElementById("homeLogo").addEventListener("click", () => {
+    window.location.href = "AthleticCloud.html";
+});
 window.goAssignments = function () {
     const teamId = new URLSearchParams(location.search).get("teamId");
     window.location.href = `Assignment.html?teamId=${teamId}`;
