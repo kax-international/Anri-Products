@@ -50,6 +50,7 @@ header{
     font-size:1.8rem;
     font-weight:bold;
     letter-spacing:2px;
+    cursor:pointer;
 }
 
 .logout-btn{
@@ -138,8 +139,13 @@ header{
 <body>
 
 <header>
-    <div class="logo">ATHLETIC CLOUD</div>
-    <button id="logoutBtn" class="logout-btn">Logout</button>
+    <div class="logo" id="homeLogo">
+        ATHLETIC CLOUD
+    </div>
+
+    <button id="logoutBtn" class="logout-btn">
+        Logout
+    </button>
 </header>
 
 <div class="main">
@@ -230,6 +236,10 @@ document.getElementById("logoutBtn").addEventListener("click", async () => {
     window.location.href = "login.html";
 });
 
+document.getElementById("homeLogo").addEventListener("click", () => {
+    window.location.href = "AthleticCloud.html";
+});
+    
 document.getElementById("createTeamBtn").addEventListener("click", () => {
     window.location.href = "create-team.html";
 });
