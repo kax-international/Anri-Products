@@ -95,6 +95,17 @@ button:hover{
     gap:10px;
     margin-top:20px;
 }
+.required-row{
+    display:flex;
+    align-items:center;
+    gap:1em;
+    margin-top:10px;
+    margin-bottom:10px;
+}
+
+.question-required{
+    width:auto;
+}
 </style>
 </head>
 
@@ -245,7 +256,16 @@ function addQuestion(){
 
     </label>
         </div>
+<div class="required-row">
 
+    <span>Required</span>
+
+    <input
+        type="checkbox"
+        class="question-required"
+    >
+
+</div>
         <div class="option-box"></div>
     `;
 
