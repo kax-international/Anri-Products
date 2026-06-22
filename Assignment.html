@@ -182,9 +182,10 @@ const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
 
-const teamId =
+const assignmentId =
 new URLSearchParams(location.search)
-.get("teamId");
+.get("assignmentId");
+console.log("assignmentId:", assignmentId);
 
 let allAssignments = [];
 
@@ -210,58 +211,19 @@ document
 .getElementById("searchInput")
 .addEventListener("input", renderAssignments);
 
-async function loadAssignments(){
+async function loadAssignment(){
 
-    try{
+    const ref =
+    doc(
+        db,
+        "assignments",
+        assignmentId
+    );
 
-        const snapshot =
-        await getDocs(
-            collection(
-                db,
-                "assignments"
-            )
-        );
+    const snap =
+    await getDoc(ref);
 
-        allAssignments = [];
-
-        snapshot.forEach(docSnap => {
-
-            const data =
-            docSnap.data();
-
-            if(
-                data.teamId !== teamId
-            ){
-                return;
-            }
-
-            allAssignments.push({
-
-                id: docSnap.id,
-
-                ...data
-
-            });
-
-        });
-
-        renderAssignments();
-
-    }
-    catch(err){
-
-        console.error(err);
-
-        document
-        .getElementById(
-            "assignmentList"
-        )
-        .innerHTML =
-        "Load Failed";
-
-    }
-
-}
+}}
 
 function renderAssignments(){
 
