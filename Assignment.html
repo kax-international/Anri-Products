@@ -1,1 +1,270 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Assignments | Athletic Cloud</title>
+
+<style>
+
+body{
+    margin:0;
+    background:#f5f5f5;
+    font-family:Arial,sans-serif;
+}
+
+header{
+    background:#111;
+    color:white;
+    padding:20px 40px;
+}
+
+.logo{
+    font-size:1.8rem;
+    font-weight:bold;
+}
+
+.container{
+    max-width:1000px;
+    margin:40px auto;
+    padding:0 20px;
+}
+
+.card{
+    background:white;
+    padding:25px;
+    border-radius:15px;
+    margin-bottom:20px;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+input,
+textarea,
+select{
+    width:100%;
+    padding:12px;
+    margin-top:8px;
+    margin-bottom:15px;
+    border:1px solid #ddd;
+    border-radius:8px;
+    box-sizing:border-box;
+}
+
+button{
+    background:#111;
+    color:white;
+    border:none;
+    padding:12px 20px;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#333;
+}
+
+.question-card{
+    border:1px solid #ddd;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
+}
+
+.assignment-item{
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:10px;
+    cursor:pointer;
+}
+
+.assignment-item:hover{
+    transform:translateY(-2px);
+}
+
+</style>
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        ATHLETIC CLOUD
+    </div>
+</header>
+
+<div class="container">
+
+    <div class="card">
+
+        <h2>Create Assignment</h2>
+
+        <input
+            id="assignmentTitle"
+            placeholder="Assignment Title"
+        >
+
+        <div id="questionBuilder"></div>
+
+        <button id="addQuestionBtn">
+            Add Question
+        </button>
+
+        <button id="saveAssignmentBtn">
+            Save Assignment
+        </button>
+
+    </div>
+
+    <div class="card">
+
+        <h2>Assignments</h2>
+
+        <div id="assignmentList"></div>
+
+    </div>
+
+</div>
+
+<script>
+
+let questions = [];
+
+function renderQuestions(){
+
+    const container =
+    document.getElementById(
+        "questionBuilder"
+    );
+
+    container.innerHTML = "";
+
+    questions.forEach((q,index)=>{
+
+        const div =
+        document.createElement("div");
+
+        div.className =
+        "question-card";
+
+        div.innerHTML = `
+
+            <input
+                placeholder="Question"
+                value="${q.question}"
+                onchange="
+                    questions[${index}].question=this.value
+                "
+            >
+
+            <select
+                onchange="
+                    questions[${index}].type=this.value;
+                    renderQuestions();
+                "
+            >
+
+                <option value="short"
+                ${q.type==="short"?"selected":""}>
+                Short Paragraph
+                </option>
+
+                <option value="long"
+                ${q.type==="long"?"selected":""}>
+                Long Paragraph
+                </option>
+
+                <option value="multiple"
+                ${q.type==="multiple"?"selected":""}>
+                Multiple Choice
+                </option>
+
+                <option value="checkbox"
+                ${q.type==="checkbox"?"selected":""}>
+                Checkbox
+                </option>
+
+            </select>
+
+        `;
+
+        if(
+            q.type==="multiple" ||
+            q.type==="checkbox"
+        ){
+
+            const options =
+            document.createElement("textarea");
+
+            options.placeholder =
+            "One option per line";
+
+            options.value =
+            (q.options||[]).join("\n");
+
+            options.onchange=()=>{
+
+                questions[index].options =
+                options.value
+                .split("\n")
+                .filter(x=>x.trim());
+
+            };
+
+            div.appendChild(options);
+        }
+
+        container.appendChild(div);
+
+    });
+
+}
+
+document
+.getElementById("addQuestionBtn")
+.addEventListener("click",()=>{
+
+    questions.push({
+
+        question:"",
+        type:"short",
+        options:[]
+
+    });
+
+    renderQuestions();
+
+});
+
+document
+.getElementById("saveAssignmentBtn")
+.addEventListener("click",()=>{
+
+    const assignment = {
+
+        title:
+        document.getElementById(
+            "assignmentTitle"
+        ).value,
+
+        questions
+
+    };
+
+    console.log(
+        "SAVE ASSIGNMENT",
+        assignment
+    );
+
+    alert(
+        "Assignment object created. Next step = Firebase save."
+    );
+
+});
+
+renderQuestions();
+
+</script>
+
+</body>
+</html>
