@@ -144,7 +144,40 @@ button:hover{
 
 </div>
 
-<script>
+<script type="module">
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+import {
+    getAuth
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "...",
+    authDomain: "...",
+    projectId: "...",
+    storageBucket: "...",
+    messagingSenderId: "...",
+    appId: "..."
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+const auth = getAuth(app);
+const teamId =
+new URLSearchParams(
+    location.search
+).get("teamId");
 
 let questionCount = 0;
 
@@ -260,13 +293,140 @@ function addQuestion(){
 
 document
 .getElementById("saveBtn")
-.addEventListener("click", () => {
+.addEventListener("click", saveAssignment);
 
-    alert(
-        "Next step: Firestore Save"
-    );
+    async function saveAssignment(){
 
-});
+    try{
+
+        const title =
+        document
+        .getElementById("assignmentTitle")
+        .value
+        .trim();
+
+        const description =
+        document
+        .getElementById("assignmentDescription")
+        .value
+        .trim();
+
+        if(!title){
+
+            alert(
+                "Title required"
+            );
+
+            return;
+        }
+
+        const questions = [];
+
+        document
+        .querySelectorAll(
+            ".question-card"
+        )
+        .forEach(card => {
+
+            const text =
+            card
+            .querySelector(
+                ".question-text"
+            )
+            .value
+            .trim();
+
+            const type =
+            card
+            .querySelector(
+                ".question-type"
+            )
+            .value;
+
+            const question = {
+
+                text,
+                type
+
+            };
+
+            if(
+                type === "multiple" ||
+                type === "checkbox"
+            ){
+
+                const options = [];
+
+                card
+                .querySelectorAll(
+                    ".option-input"
+                )
+                .forEach(input => {
+
+                    if(
+                        input.value.trim()
+                    ){
+
+                        options.push(
+                            input.value.trim()
+                        );
+
+                    }
+
+                });
+
+                question.options =
+                options;
+            }
+
+            questions.push(
+                question
+            );
+        });
+
+        const user =
+        auth.currentUser;
+
+        await addDoc(
+
+            collection(
+                db,
+                "assignments"
+            ),
+
+            {
+
+                title,
+                description,
+
+                teamId,
+
+                questions,
+
+                createdBy:
+                user.uid,
+
+                createdAt:
+                serverTimestamp()
+
+            }
+
+        );
+
+        alert(
+            "Assignment Saved"
+        );
+
+    }
+    catch(err){
+
+        console.error(err);
+
+        alert(
+            "Save Failed"
+        );
+    }
+}
 
 </script>
 
