@@ -1,20 +1,3 @@
-const assignmentId =
-new URLSearchParams(location.search)
-.get("assignmentId");
-
-if(!assignmentId){
-
-    alert("assignmentId not found");
-
-    console.error(
-        "URL:",
-        location.href
-    );
-
-    throw new Error(
-        "assignmentId missing"
-    );
-}
 <!DOCTYPE html>
 <html lang="ja">
 <head>
