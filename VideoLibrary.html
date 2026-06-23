@@ -107,8 +107,6 @@ video{
 const rawTeamId = new URLSearchParams(location.search).get("teamId");
 const teamId = rawTeamId ? rawTeamId.trim() : null;
 
-console.log("RAW teamId:", rawTeamId);
-console.log("FIXED teamId:", teamId);
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
     getFirestore,
@@ -118,7 +116,6 @@ import {
     where
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-/* ================= Firebase ================= */
 const firebaseConfig = {
     apiKey: "XXX",
     authDomain: "XXX",
@@ -128,13 +125,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ================= URL ================= */
-
-console.log("teamId:", teamId);
-
-let currentPlaylist = null;
-
-/* ================= PLAYLIST LOAD ================= */
+/* =======================
+   LOAD PLAYLISTS
+======================= */
 async function loadPlaylists(){
 
     const q = query(
@@ -158,27 +151,52 @@ async function loadPlaylists(){
         div.textContent = data.title;
 
         div.onclick = () => {
-            loadVideos(data.playlistId);
+            loadVideos(docSnap.id); // ← playlistIdはdocSnap.id
         };
 
         container.appendChild(div);
     });
 }
-/* ================= VIDEO LOAD ================= */
+
+/* =======================
+   LOAD VIDEOS
+======================= */
 async function loadVideos(playlistId){
 
-    console.log("TEAM:", teamId);
-    console.log("PLAYLIST:", playlistId);
+    console.log("loading playlist:", playlistId);
 
-    const snap = await getDocs(collection(db, "videos"));
+    const q = query(
+        collection(db, "videos"),
+        where("teamId", "==", teamId),
+        where("playlistId", "==", playlistId)
+    );
 
-    console.log("TOTAL VIDEOS:", snap.size);
+    const snap = await getDocs(q);
+
+    console.log("videos found:", snap.size);
 
     const container = document.getElementById("videoList");
     container.innerHTML = "";
 
     snap.forEach(docSnap => {
-        console.log("VIDEO DATA:", docSnap.data());
+
+        const data = docSnap.data();
+
+        const div = document.createElement("div");
+        div.className = "video-card";
+
+        div.innerHTML = `
+            <div>🎬 VIDEO</div>
+            <div style="font-size:12px;color:#aaa;">
+                ${data.subtitle || "no subtitle"}
+            </div>
+        `;
+
+        div.onclick = () => {
+            document.getElementById("videoPlayer").src = data.videoUrl;
+        };
+
+        container.appendChild(div);
     });
 }
 
