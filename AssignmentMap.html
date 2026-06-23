@@ -43,10 +43,11 @@ header{
 }
 
 /* IMAGE */
-.card img{
+.card img,
+.card video{
     width:100%;
     height:220px;
-    object-fit:contain;   /* ★ 修正：見切れ防止 */
+    object-fit:cover;
     background:#111;
 }
 
@@ -191,29 +192,45 @@ async function load(){
     render();
 }
 
-/* IMAGE PICKER */
+/* IMAGE CHECK */
 function isImage(v){
     return typeof v === "string" &&
     (v.includes("cloudinary") || v.match(/\.(jpg|jpeg|png|webp)/));
 }
 
-/* VIDEO PICKER */
+/* VIDEO CHECK */
 function isVideo(v){
     return typeof v === "string" &&
     v.includes("cloudinary") &&
     v.includes("/video/");
 }
 
-/* FIRST IMAGE */
-function getImage(r){
+/* TOP MEDIA LOGIC */
+function getTopMedia(r){
+
+    let image = null;
+    let video = null;
+
     for(const k in r.answers){
+
         const v = r.answers[k];
-        if(isImage(v)) return v;
+
+        if(!image && isImage(v)){
+            image = v;
+        }
+
+        if(!video && isVideo(v)){
+            video = v;
+        }
     }
-    return "https://via.placeholder.com/600x400?text=No+Image";
+
+    if(image) return {type:"image", url:image};
+    if(video) return {type:"video", url:video};
+
+    return {type:"none", url:"https://via.placeholder.com/600x400?text=No+Image"};
 }
 
-/* TITLE = Q0 */
+/* TITLE */
 function getTitle(r){
     return r.answers?.[0] || r.userName || "Untitled";
 }
@@ -226,14 +243,26 @@ function render(){
 
     responses.forEach(r => {
 
+        const media = getTopMedia(r);
+        const title = getTitle(r);
+
         const card = document.createElement("div");
         card.className = "card";
 
-        const img = getImage(r);
-        const title = getTitle(r);
+        let mediaHTML = "";
+
+        if(media.type === "image"){
+            mediaHTML = `<img src="${media.url}">`;
+        }
+        else if(media.type === "video"){
+            mediaHTML = `<video src="${media.url}" muted></video>`;
+        }
+        else{
+            mediaHTML = `<img src="${media.url}">`;
+        }
 
         card.innerHTML = `
-            <img src="${img}">
+            ${mediaHTML}
             <div class="info">
                 <div class="title">${title}</div>
                 <div class="meta">
@@ -249,30 +278,30 @@ function render(){
     });
 }
 
-/* SAFE RENDER */
-function renderAnswer(value){
+/* SAFE ANSWER RENDER */
+function renderAnswer(v){
 
-    if(isImage(value)){
-        return `<img src="${value}" style="width:100%;border-radius:8px;">`;
+    if(isImage(v)){
+        return `<img src="${v}" style="width:100%;border-radius:8px;">`;
     }
 
-    if(isVideo(value)){
+    if(isVideo(v)){
         return `
             <video controls style="width:100%;border-radius:8px;">
-                <source src="${value}">
+                <source src="${v}">
             </video>
         `;
     }
 
-    if(Array.isArray(value)){
-        return value.map(v => renderAnswer(v)).join("<br>");
+    if(Array.isArray(v)){
+        return v.map(renderAnswer).join("<br>");
     }
 
-    if(typeof value === "string" && value.startsWith("http")){
-        return ""; // URLは非表示
+    if(typeof v === "string" && v.startsWith("http")){
+        return ""; // URL非表示
     }
 
-    return value || "";
+    return v || "";
 }
 
 /* MODAL */
@@ -283,7 +312,14 @@ function openModal(r){
     const info = document.getElementById("modalInfo");
     const video = document.getElementById("modalVideo");
 
-    img.src = getImage(r);
+    const media = getTopMedia(r);
+
+    if(media.type === "image"){
+        img.src = media.url;
+    }
+    else{
+        img.src = "";
+    }
 
     let html = `<h2>${getTitle(r)}</h2>`;
 
@@ -298,7 +334,6 @@ function openModal(r){
 
     info.innerHTML = html;
 
-    /* video at bottom */
     let videoHtml = "";
 
     for(const k in r.answers){
