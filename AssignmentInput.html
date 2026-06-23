@@ -338,29 +338,7 @@ async function uploadToCloudinary(file){
     return data.secure_url;
 }
 async function submitForm(){
-for (let index = 0; index < assignmentData.questions.length; index++) {
 
-    const q = assignmentData.questions[index];
-
-    if (!q.required) continue;
-
-    // checkbox
-    if (q.type === "checkbox") {
-    const checked = document.querySelectorAll(`[data-q="${index}"]:checked`);
-
-    answers[index] = [...checked].map(c => c.value);
-}
-
-    // image / video / text / select
-    else {
-        const input = document.querySelector(`[data-q="${index}"]`);
-
-        if (!input || !input.value || input.value.trim() === "") {
-            alert(`Q${index + 1} is required`);
-            return;
-        }
-    }
-}
     try {
 
         console.log("CLICKED");
@@ -372,8 +350,58 @@ for (let index = 0; index < assignmentData.questions.length; index++) {
             return;
         }
 
-        const answers = {};
+        const answers = {}; // 🔥 必ず最初
 
+        /* =========================
+           ① REQUIRED VALIDATION
+        ========================= */
+        for (let index = 0; index < assignmentData.questions.length; index++) {
+
+            const q = assignmentData.questions[index];
+
+            if (!q.required) continue;
+
+            if (q.type === "checkbox") {
+
+                const checked = document.querySelectorAll(`[data-q="${index}"]:checked`);
+
+                if (checked.length === 0) {
+                    alert(`Q${index + 1} is required`);
+                    document.querySelector(`[data-q="${index}"]`)?.scrollIntoView({ behavior: "smooth" });
+                    return;
+                }
+
+            } else {
+
+                const input = document.querySelector(`[data-q="${index}"]`);
+
+                if (!input) {
+                    alert(`Q${index + 1} is missing`);
+                    return;
+                }
+
+                if (input.type === "file") {
+
+                    if (!input.files || input.files.length === 0) {
+                        alert(`Q${index + 1} is required`);
+                        input.scrollIntoView({ behavior: "smooth" });
+                        return;
+                    }
+
+                } else {
+
+                    if (!input.value || input.value.trim() === "") {
+                        alert(`Q${index + 1} is required`);
+                        input.scrollIntoView({ behavior: "smooth" });
+                        return;
+                    }
+                }
+            }
+        }
+
+        /* =========================
+           ② ANSWER BUILD
+        ========================= */
         for (let index = 0; index < assignmentData.questions.length; index++) {
 
             const question = assignmentData.questions[index];
@@ -382,11 +410,9 @@ for (let index = 0; index < assignmentData.questions.length; index++) {
 
                 answers[index] = [];
 
-                document.querySelectorAll(`[data-q="${index}"]`)
+                document.querySelectorAll(`[data-q="${index}"]:checked`)
                 .forEach(box => {
-                    if (box.checked) {
-                        answers[index].push(box.value);
-                    }
+                    answers[index].push(box.value);
                 });
 
             } else if (
@@ -410,9 +436,11 @@ for (let index = 0; index < assignmentData.questions.length; index++) {
             }
         }
 
-        const assignmentTitle = assignmentData.title;
+        /* =========================
+           ③ FIRESTORE SAVE
+        ========================= */
 
-        console.log("before Firestore");
+        const assignmentTitle = assignmentData.title;
 
         await addDoc(collection(db, "assignmentResponses"), {
             assignmentId,
@@ -423,8 +451,6 @@ for (let index = 0; index < assignmentData.questions.length; index++) {
             answers,
             createdAt: serverTimestamp()
         });
-
-        console.log("done");
 
         alert("Response Submitted");
         history.back();
