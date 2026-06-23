@@ -420,14 +420,14 @@ async function submitForm(){
             "assignmentResponses"
         ),
         {
-            assignmentId,
-            teamId,
-            userId:
-            auth.currentUser.uid,
-            answers,
-            createdAt:
-            serverTimestamp()
-        }
+  assignmentId,
+  assignmentTitle,
+  teamId,
+  userId,
+  userName,
+  answers,
+  createdAt
+}
     );
 
     alert(
