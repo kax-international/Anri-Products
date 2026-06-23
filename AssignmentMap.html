@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Assignment View | Athletic Cloud</title>
+<title>Assignment Map | Athletic Cloud</title>
 
 <style>
 body{
@@ -32,39 +32,37 @@ header{
     box-shadow:0 2px 8px rgba(0,0,0,0.08);
 }
 
-video{
-    width:100%;
-    border-radius:10px;
+.user{
+    font-weight:bold;
+    margin-bottom:8px;
 }
 
 pre{
     white-space:pre-wrap;
+    word-break:break-word;
+    background:#f7f7f7;
+    padding:10px;
+    border-radius:8px;
 }
 </style>
 </head>
 
 <body>
 
-<header>ATHLETIC CLOUD - VIEW</header>
+<header>ATHLETIC CLOUD - RESPONSES</header>
 
 <div class="container">
 
-    <h2 id="title">Loading...</h2>
-    <p id="desc"></p>
+    <h2 id="title">Loading responses...</h2>
 
-    <div id="videoArea"></div>
-
-    <h3>Questions</h3>
-    <div id="questions"></div>
-
-    <h3>Responses</h3>
-    <div id="responses">Loading...</div>
+    <div id="responses"></div>
 
 </div>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { initializeApp } 
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
 import {
     getFirestore,
@@ -84,31 +82,28 @@ import {
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
     authDomain: "athletic-cloud-33538.firebaseapp.com",
-    projectId: "athletic-cloud-33538"
+    projectId: "athletic-cloud-33538",
+    storageBucket: "athletic-cloud-33538.appspot.com",
+    messagingSenderId: "1020993809301",
+    appId: "1:1020993809301:web:a31e28377788bef965249c"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// URL params
 const params = new URLSearchParams(location.search);
 const assignmentId = params.get("id");
 const teamId = params.get("teamId");
 
-// DOM
-const titleEl = document.getElementById("title");
-const descEl = document.getElementById("desc");
-const videoArea = document.getElementById("videoArea");
-const questionsEl = document.getElementById("questions");
 const responsesEl = document.getElementById("responses");
+const titleEl = document.getElementById("title");
 
-// data
-let assignmentData = null;
+let assignment = null;
 
-/* -------------------------
-   AUTH GATE
-------------------------- */
+/* --------------------------
+   AUTH
+-------------------------- */
 onAuthStateChanged(auth, async (user) => {
 
     if (!user) {
@@ -120,53 +115,39 @@ onAuthStateChanged(auth, async (user) => {
     await loadResponses();
 });
 
-/* -------------------------
-   LOAD ASSIGNMENT
-------------------------- */
-async function loadAssignment() {
-
-    const snap = await getDoc(doc(db, "assignments", assignmentId));
-
-    if (!snap.exists()) {
-        titleEl.innerHTML = "Assignment not found";
-        return;
-    }
-
-    assignmentData = snap.data();
-
-    titleEl.textContent = assignmentData.title || "";
-    descEl.textContent = assignmentData.description || "";
-
-    renderQuestions();
-}
-
-/* -------------------------
-   QUESTIONS
-------------------------- */
-function renderQuestions() {
-
-    if (!assignmentData?.questions) return;
-
-    let html = "";
-
-    assignmentData.questions.forEach((q, i) => {
-        html += `
-            <div class="card">
-                <b>${i + 1}. ${q.text || ""}</b><br/>
-                <small>${q.type}</small>
-            </div>
-        `;
-    });
-
-    questionsEl.innerHTML = html;
-}
-
-/* -------------------------
-   LOAD RESPONSES
-------------------------- */
-async function loadResponses() {
+/* --------------------------
+   Assignment取得（タイトル表示用）
+-------------------------- */
+async function loadAssignment(){
 
     try {
+
+        const snap = await getDoc(
+            doc(db, "assignments", assignmentId)
+        );
+
+        if (!snap.exists()) {
+            titleEl.innerText = "Assignment not found";
+            return;
+        }
+
+        assignment = snap.data();
+        titleEl.innerText = assignment.title;
+
+    } catch (err) {
+        console.error(err);
+        titleEl.innerText = "Error loading assignment";
+    }
+}
+
+/* --------------------------
+   Responses取得
+-------------------------- */
+async function loadResponses(){
+
+    try {
+
+        responsesEl.innerHTML = "Loading...";
 
         const q = query(
             collection(db, "assignmentResponses"),
@@ -175,42 +156,44 @@ async function loadResponses() {
 
         const snap = await getDocs(q);
 
-        const responses = [];
+        const list = [];
 
         snap.forEach(docSnap => {
-            responses.push({
+            list.push({
                 id: docSnap.id,
                 ...docSnap.data()
             });
         });
 
-        renderResponses(responses);
+        render(list);
 
     } catch (err) {
-        console.error(err);
-        responsesEl.innerHTML = "Firestore permission error";
+        console.error("Firestore error:", err);
+        responsesEl.innerHTML = "Permission error or no data";
     }
 }
 
-/* -------------------------
-   RENDER RESPONSES
-------------------------- */
-function renderResponses(responses) {
+/* --------------------------
+   Render（表示のみ）
+-------------------------- */
+function render(list){
 
-    if (!responses.length) {
-        responsesEl.innerHTML = "<p>No responses yet</p>";
+    if(list.length === 0){
+        responsesEl.innerHTML = "<p>No responses found</p>";
         return;
     }
 
     let html = "";
 
-    responses.forEach(r => {
+    list.forEach(r => {
 
         html += `
-            <div class="card">
-                <b>${r.userName || r.userId || "Unknown"}</b>
-                <pre>${JSON.stringify(r.answers, null, 2)}</pre>
+        <div class="card">
+            <div class="user">
+                ${r.userName || r.userId || "Unknown user"}
             </div>
+            <pre>${JSON.stringify(r.answers, null, 2)}</pre>
+        </div>
         `;
     });
 
