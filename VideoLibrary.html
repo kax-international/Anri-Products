@@ -158,7 +158,7 @@ async function loadPlaylists(){
         div.textContent = data.title;
 
         div.onclick = () => {
-            loadVideos(docSnap.id);
+            loadVideos(data.playlistId);
         };
 
         container.appendChild(div);
