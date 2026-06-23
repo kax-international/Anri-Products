@@ -151,17 +151,22 @@ button{
     <button
         class="nav-btn"
         onclick="goAssignmentView()">
-        Assignment Forms
+        Input Form
     </button>
 
     <button
         class="nav-btn"
         onclick="goCreateAssignment()">
-        Create Assignment
+        Create Form
+    </button>
+
+    <button
+        class="nav-btn"
+        onclick="goAssignmentDatabase()">
+        Search Database
     </button>
 
 </div>
-
 <div class="info">
     <span class="label">Team ID:</span>
     <span id="teamId">loading...</span>
@@ -229,23 +234,18 @@ document.getElementById("teamId").textContent = teamId;
 
 // nav
 window.goAssignmentView = function () {
-
-    const teamId =
-    new URLSearchParams(location.search)
-    .get("teamId");
-
     window.location.href =
     `AssignmentView.html?teamId=${teamId}`;
 };
 
 window.goCreateAssignment = function () {
-
-    const teamId =
-    new URLSearchParams(location.search)
-    .get("teamId");
-
     window.location.href =
     `Assignmentcreate.html?teamId=${teamId}`;
+};
+
+window.goAssignmentDatabase = function () {
+    window.location.href =
+    `Assignment.html?teamId=${teamId}`;
 };
 
 // logout
