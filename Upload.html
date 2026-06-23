@@ -93,8 +93,11 @@ button:hover{
 
 <!-- Video -->
 <div class="section">
-    <label>Video File</label>
-    <input type="file" id="videoFile" accept="video/*" multiple>
+    <label>Videos</label>
+
+    <div id="videoContainer"></div>
+
+    <button id="addVideoBtn" class="add-btn">+ Add Video</button>
 </div>
 
 <button id="uploadBtn">Upload</button>
@@ -104,6 +107,21 @@ button:hover{
 </div>
 
 <script type="module">
+document.getElementById("addVideoBtn").onclick = () => {
+
+    const container = document.getElementById("videoContainer");
+
+    const block = document.createElement("div");
+    block.className = "video-block";
+
+    block.innerHTML = `
+        <input type="file" class="video-file" accept="video/*">
+        <input type="text" class="video-subtitle" placeholder="subtitle (optional)">
+        <hr>
+    `;
+
+    container.appendChild(block);
+};
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
@@ -165,8 +183,7 @@ document.getElementById("uploadBtn").onclick = async () => {
 
     const title = document.getElementById("playlistTitle").value;
 
-    const fileInput = document.getElementById("videoFile");
-    const files = fileInput.files;
+    const videoBlocks = document.querySelectorAll(".video-block");
 
     if(!title){
         alert("Playlist title required");
@@ -205,45 +222,46 @@ document.getElementById("uploadBtn").onclick = async () => {
         });
 
         // 2. 複数動画を順番にアップロード
-        for(let i = 0; i < files.length; i++){
+        for(let i = 0; i < videoBlocks.length; i++){
 
-            setStatus(`Uploading ${i+1}/${files.length}...`);
+    const block = videoBlocks[i];
 
-            const file = files[i];
+    const file = block.querySelector(".video-file").files[0];
+    const subtitle = block.querySelector(".video-subtitle").value;
 
-            // Cloudinary upload
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("upload_preset", UPLOAD_PRESET);
+    if(!file) continue;
 
-            const res = await fetch(
-                `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`,
-                {
-                    method: "POST",
-                    body: formData
-                }
-            );
+    setStatus(`Uploading ${i+1}/${videoBlocks.length}...`);
 
-            const data = await res.json();
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
 
-            if(!data.secure_url){
-                console.error(data);
-                throw new Error("Cloudinary upload failed");
-            }
-
-            const videoUrl = data.secure_url;
-
-            // 3. Firestore保存（動画ごと）
-            await addDoc(collection(db, "videos"), {
-                teamId,
-                playlistId,
-                title,
-                subtitlePath: subtitles,
-                videoUrl,
-                thumbnailUrl: data.thumbnail_url || "",
-                createdAt: serverTimestamp()
-            });
+    const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`,
+        {
+            method: "POST",
+            body: formData
         }
+    );
+
+    const data = await res.json();
+
+    if(!data.secure_url){
+        console.error(data);
+        throw new Error("Upload failed");
+    }
+
+    await addDoc(collection(db, "videos"), {
+        teamId,
+        playlistId,
+        title,
+        subtitle: subtitle || "",
+        videoUrl: data.secure_url,
+        thumbnailUrl: data.thumbnail_url || "",
+        createdAt: serverTimestamp()
+    });
+}
 
         setStatus("All uploads complete!");
 
