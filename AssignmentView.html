@@ -86,7 +86,24 @@ header{
 </div>
 
 <script type="module">
+import {
+    getAuth,
+    onAuthStateChanged
+}
+const auth = getAuth(app);
 
+onAuthStateChanged(auth, (user) => {
+
+    console.log("USER:", user);
+
+    if(!user){
+
+        alert("Not Logged In");
+        return;
+    }
+
+});
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 import { initializeApp }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
@@ -113,8 +130,6 @@ const teamId =
 new URLSearchParams(
     location.search
 ).get("teamId");
-
-loadAssignments();
 
 async function loadAssignments(){
 
