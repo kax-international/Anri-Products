@@ -127,62 +127,6 @@ async function loadAssignments(){
 
     list.innerHTML = "";
 
-    const snapshot =
-    await getDocs(
-        collection(db,"assignments")
-    );
-
-    let found = false;
-
-    snapshot.forEach(docSnap => {
-
-        const data =
-        docSnap.data();
-
-        console.log(data);
-
-        if(data.teamId !== teamId){
-            return;
-        }
-
-        found = true;
-
-        const card =
-        document.createElement("div");
-
-        card.className =
-        "assignment-card";
-
-        card.innerHTML = `
-            <h3>${data.title}</h3>
-            <p>${data.description || ""}</p>
-            <small>
-                ${data.questions?.length || 0}
-                Questions
-            </small>
-        `;
-
-        card.addEventListener(
-            "click",
-            () => {
-
-                window.location.href =
-                `AssignmentInput.html?id=${docSnap.id}&teamId=${teamId}`;
-
-            }
-        );
-
-        list.appendChild(card);
-
-    });
-
-    if(!found){
-
-        list.innerHTML =
-        "<p>No Forms Found</p>";
-
-    }
-
 }
     const snapshot =
     await getDocs(
