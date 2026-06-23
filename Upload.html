@@ -258,6 +258,55 @@ document.getElementById("uploadBtn").onclick = async () => {
                 createdAt: serverTimestamp()
             });
         }
+        const playlistRef = doc(db, "playlists", playlistId);
+
+// 1. playlist作成
+await setDoc(playlistRef, {
+    teamId,
+    title,
+    subtitles,
+    createdAt: serverTimestamp()
+});
+
+// 2. videosはサブコレクションに保存
+for (let i = 0; i < videoBlocks.length; i++) {
+
+    const block = videoBlocks[i];
+    const file = block.querySelector(".video-file").files[0];
+    const subtitle = block.querySelector(".video-subtitle").value;
+
+    if (!file) continue;
+
+    setStatus(`Uploading ${i + 1}/${videoBlocks.length}...`);
+
+    // Cloudinary upload
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+
+    const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`,
+        {
+            method: "POST",
+            body: formData
+        }
+    );
+
+    const data = await res.json();
+
+    if (!data?.secure_url) {
+        throw new Error("Cloudinary upload failed");
+    }
+
+    // 🔥 サブコレクションに保存
+    await addDoc(collection(db, "playlists", playlistId, "videos"), {
+        teamId,
+        videoUrl: data.secure_url,
+        subtitle: subtitle || "",
+        thumbnailUrl: data.thumbnail_url || "",
+        createdAt: serverTimestamp()
+    });
+}
 
         setStatus("All uploads complete!");
 
