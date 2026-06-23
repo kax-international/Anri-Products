@@ -107,23 +107,7 @@ button:hover{
 </div>
 
 <script type="module">
-document.getElementById("addVideoBtn").onclick = () => {
 
-    const container = document.getElementById("videoContainer");
-
-    const block = document.createElement("div");
-    block.className = "video-block";
-
-    block.innerHTML = `
-        <input type="file" class="video-file" accept="video/*">
-        <input type="text" class="video-subtitle" placeholder="subtitle (optional)">
-        <hr>
-    `;
-
-    container.appendChild(block);
-};
-const CLOUD_NAME = "dxvgp89ma";
-const UPLOAD_PRESET = "AthleticCloud";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
     getFirestore,
@@ -135,8 +119,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 /* =========================
-   Firebase
+   CONFIG（ここに統一）
 ========================= */
+const CLOUD_NAME = "dxvgp89ma";
+const UPLOAD_PRESET = "AthleticCloud";
+
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
     authDomain: "athletic-cloud-33538.firebaseapp.com",
@@ -150,26 +137,39 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 /* =========================
-   Cloudinary
-========================= */
-
-/* =========================
-   URL Params
+   PARAMS
 ========================= */
 const params = new URLSearchParams(location.search);
 const teamId = params.get("teamId");
 
 /* =========================
-   UI helpers
+   STATUS
 ========================= */
 const status = document.getElementById("status");
-
 function setStatus(msg){
     status.textContent = msg;
 }
 
 /* =========================
-   Add subtitle input
+   ADD VIDEO UI
+========================= */
+document.getElementById("addVideoBtn").onclick = () => {
+    const container = document.getElementById("videoContainer");
+
+    const block = document.createElement("div");
+    block.className = "video-block";
+
+    block.innerHTML = `
+        <input type="file" class="video-file" accept="video/*">
+        <input type="text" class="video-subtitle" placeholder="subtitle (optional)">
+        <hr>
+    `;
+
+    container.appendChild(block);
+};
+
+/* =========================
+   ADD SUBTITLE
 ========================= */
 document.getElementById("addSubtitle").onclick = () => {
     const input = document.createElement("input");
@@ -179,12 +179,11 @@ document.getElementById("addSubtitle").onclick = () => {
 };
 
 /* =========================
-   Upload process
+   UPLOAD
 ========================= */
 document.getElementById("uploadBtn").onclick = async () => {
 
     const title = document.getElementById("playlistTitle").value;
-
     const videoBlocks = document.querySelectorAll(".video-block");
 
     if(!title){
@@ -193,19 +192,15 @@ document.getElementById("uploadBtn").onclick = async () => {
     }
 
     if(videoBlocks.length === 0){
-    alert("Add at least one video");
-    return;
-}
+        alert("Add at least one video");
+        return;
+    }
 
-    setStatus("Uploading videos...");
-
-    // subtitles
-    const subtitleInputs = document.querySelectorAll(".subtitle-box");
+    setStatus("Uploading...");
 
     const subtitles = [];
-    subtitleInputs.forEach(el => {
-        const v = el.value.trim();
-        if(v) subtitles.push(v);
+    document.querySelectorAll(".subtitle-box").forEach(el => {
+        if(el.value.trim()) subtitles.push(el.value.trim());
     });
 
     const playlistId = title
@@ -213,9 +208,9 @@ document.getElementById("uploadBtn").onclick = async () => {
         .toLowerCase()
         .replace(/\s+/g, "_");
 
-    try{
+    try {
 
-        // 1. playlist保存（1回だけ）
+        // 1. playlist保存
         await setDoc(doc(db, "playlists", playlistId), {
             teamId,
             title,
@@ -223,57 +218,56 @@ document.getElementById("uploadBtn").onclick = async () => {
             createdAt: serverTimestamp()
         });
 
-        // 2. 複数動画を順番にアップロード
+        // 2. videos upload
         for(let i = 0; i < videoBlocks.length; i++){
 
-    const block = videoBlocks[i];
+            const block = videoBlocks[i];
+            const file = block.querySelector(".video-file").files[0];
+            const subtitle = block.querySelector(".video-subtitle").value;
 
-    const file = block.querySelector(".video-file").files[0];
-    const subtitle = block.querySelector(".video-subtitle").value;
+            if(!file) continue;
 
-    if(!file) continue;
+            setStatus(`Uploading ${i+1}/${videoBlocks.length}...`);
 
-    setStatus(`Uploading ${i+1}/${videoBlocks.length}...`);
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("upload_preset", UPLOAD_PRESET);
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
+            const res = await fetch(
+                `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`,
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
 
-    const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`,
-        {
-            method: "POST",
-            body: formData
+            const data = await res.json();
+
+            if(!data?.secure_url){
+                console.error(data);
+                throw new Error("Cloudinary upload failed");
+            }
+
+            await addDoc(collection(db, "videos"), {
+                teamId,
+                playlistId,
+                title,
+                subtitle: subtitle || "",
+                videoUrl: data.secure_url,
+                thumbnailUrl: data.thumbnail_url || "",
+                createdAt: serverTimestamp()
+            });
         }
-    );
-
-    const data = await res.json();
-
-    if (!data || !data.secure_url) {
-    console.error("Cloudinary response error:", data);
-    throw new Error("Cloudinary upload failed");
-}
-
-   const docRef = await addDoc(collection(db, "videos"), {
-    teamId,
-    playlistId,
-    title,
-    subtitle: subtitle || "",
-    videoUrl: data.secure_url,
-    thumbnailUrl: data.thumbnail_url || "",
-    createdAt: serverTimestamp()
-});
-
-console.log("Saved video doc ID:", docRef.id);
 
         setStatus("All uploads complete!");
 
-        // reset UI
+        // reset
         document.getElementById("playlistTitle").value = "";
+        document.getElementById("videoContainer").innerHTML = "";
         document.getElementById("subtitleContainer").innerHTML =
             `<input class="subtitle-box" placeholder="ex. 06232026">`;
 
-    }catch(err){
+    } catch(err){
         console.error(err);
         setStatus("Upload failed");
     }
