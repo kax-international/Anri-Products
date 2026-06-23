@@ -177,6 +177,19 @@ button{
     </button>
 
 </div>
+<h3 class="section-title">Video</h3>
+
+<div class="top-actions">
+
+    <button class="nav-btn" onclick="goUploadVideo()">
+        Upload Video
+    </button>
+
+    <button class="nav-btn" onclick="goVideoLibrary()">
+        Video Library
+    </button>
+
+</div>
 <div class="info">
     <span class="label">Team ID:</span>
     <span id="teamId">loading...</span>
@@ -258,6 +271,15 @@ window.goAssignmentDatabase = function () {
 window.goSearchEngine = function () {
     window.location.href =
     `Assignment.html?teamId=${teamId}`;
+};
+window.goUploadVideo = function () {
+    window.location.href =
+    `Upload.html?teamId=${teamId}`;
+};
+
+window.goVideoLibrary = function () {
+    window.location.href =
+    `VideoLibrary.html?teamId=${teamId}`;
 };
 
 // logout
