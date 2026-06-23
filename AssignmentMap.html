@@ -102,7 +102,6 @@ button{
 
 <header>ATHLETIC CLOUD - SEARCH ENGINE</header>
 
-<!-- CONTROL BAR -->
 <div class="control-bar">
 
     <input id="searchInput" placeholder="keyword search...">
@@ -119,7 +118,6 @@ button{
 
 <div id="gallery">Loading...</div>
 
-<!-- MODAL -->
 <div class="modal" id="modal">
     <div class="modal-content">
         <span id="close">&times;</span>
@@ -157,7 +155,7 @@ const assignmentId = params.get("id");
 
 let responses = [];
 let filtered = [];
-let filterSchema = {}; // ← フォーム構造
+let questionMap = {}; // ★追加
 
 /* AUTH */
 onAuthStateChanged(auth, async (user) => {
@@ -181,18 +179,37 @@ async function load(){
     responses = snap.docs.map(d => d.data());
     filtered = [...responses];
 
+    await loadQuestionMap(); // ★追加
     buildSchema();
     buildFilters();
     applyAll();
 }
 
+/* ★質問名マップ作成 */
+async function loadQuestionMap(){
+
+    const snap = await getDocs(
+        collection(db,"assignments")
+    );
+
+    snap.forEach(doc => {
+        const data = doc.data();
+        if(doc.id === assignmentId){
+
+            data.questions.forEach((q, i) => {
+                questionMap[i] = q.text; // ←ここが本体
+            });
+
+        }
+    });
+}
+
 /* =========================
-   動的スキーマ生成
+   スキーマ
 ========================= */
 function buildSchema(){
 
     const sample = responses[0]?.answers || {};
-
     filterSchema = {};
 
     Object.keys(sample).forEach(k => {
@@ -207,7 +224,7 @@ function buildSchema(){
 }
 
 /* =========================
-   フィルターUI生成
+   フィルター
 ========================= */
 function buildFilters(){
 
@@ -219,7 +236,11 @@ function buildFilters(){
         const select = document.createElement("select");
         select.dataset.key = key;
 
-        select.innerHTML = `<option value="">${key} (all)</option>`;
+        select.innerHTML = `
+            <option value="">
+                ${questionMap[key] || key} (all)
+            </option>
+        `;
 
         filterSchema[key].forEach(v => {
             const opt = document.createElement("option");
@@ -229,13 +250,12 @@ function buildFilters(){
         });
 
         select.addEventListener("change", applyAll);
-
         container.appendChild(select);
     });
 }
 
 /* =========================
-   キーワード + フィルター + sort
+   FILTER + SEARCH
 ========================= */
 function applyAll(){
 
@@ -252,12 +272,10 @@ function applyAll(){
 
         const ans = r.answers || {};
 
-        // フィルター一致
         for(const k in filters){
             if(ans[k] != filters[k]) return false;
         }
 
-        // キーワード検索
         const text = JSON.stringify(ans).toLowerCase();
         if(keyword && !text.includes(keyword)) return false;
 
@@ -347,10 +365,11 @@ function openModal(r){
 
     let html = `<h2>${getTitle(r)}</h2>`;
 
+    /* ★ここを修正（番号→質問名） */
     for(const k in r.answers){
         html += `
             <p>
-                <b>${k}:</b><br>
+                <b>${questionMap[k] || k}:</b><br>
                 ${r.answers[k]}
             </p>
         `;
