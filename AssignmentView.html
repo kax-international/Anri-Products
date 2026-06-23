@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Assignment View | Athletic Cloud</title>
+<title>Assignment Forms | Athletic Cloud</title>
 
 <style>
 
@@ -27,57 +27,48 @@ header{
 }
 
 .container{
-    max-width:900px;
+    max-width:1000px;
     margin:40px auto;
-    background:white;
-    padding:30px;
-    border-radius:15px;
-    box-shadow:0 5px 15px rgba(0,0,0,.1);
+    padding:0 20px;
 }
 
-.question-card{
-    background:#fafafa;
-    border:1px solid #eee;
-    border-radius:12px;
-    padding:20px;
+h1{
     margin-bottom:20px;
 }
 
-.question-title{
-    font-weight:bold;
-    margin-bottom:10px;
+#formList{
+    display:grid;
+    gap:15px;
 }
 
-.option-row{
-    margin-top:8px;
-}
-
-input[type=text],
-textarea,
-select{
-    width:100%;
-    padding:12px;
-    border:1px solid #ddd;
-    border-radius:8px;
-    box-sizing:border-box;
-}
-
-textarea{
-    resize:vertical;
-}
-
-button{
-    border:none;
-    border-radius:8px;
-    background:#111;
-    color:white;
-    padding:12px 18px;
+.form-card{
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
     cursor:pointer;
-    font-weight:bold;
+    transition:.2s;
 }
 
-button:hover{
-    background:#333;
+.form-card:hover{
+    transform:translateY(-3px);
+}
+
+.form-title{
+    font-size:18px;
+    font-weight:bold;
+    margin-bottom:8px;
+}
+
+.form-description{
+    color:#666;
+    font-size:14px;
+}
+
+.empty{
+    background:white;
+    padding:20px;
+    border-radius:12px;
 }
 
 </style>
@@ -93,19 +84,11 @@ button:hover{
 
 <div class="container">
 
-    <h1 id="assignmentTitle">
+    <h1>Available Forms</h1>
+
+    <div id="formList">
         Loading...
-    </h1>
-
-    <p id="assignmentDescription"></p>
-
-    <hr>
-
-    <div id="formContainer"></div>
-
-    <button id="saveBtn">
-        Save Entry
-    </button>
+    </div>
 
 </div>
 
@@ -116,322 +99,113 @@ from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
 import {
     getFirestore,
-    doc,
-    getDoc,
     collection,
-    addDoc,
-    serverTimestamp
+    getDocs,
+    query,
+    where
 }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-import {
-    getAuth,
-    onAuthStateChanged
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-
 const firebaseConfig = {
-
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
     authDomain: "athletic-cloud-33538.firebaseapp.com",
     projectId: "athletic-cloud-33538",
     storageBucket: "athletic-cloud-33538.firebasestorage.app",
     messagingSenderId: "1020993809301",
     appId: "1:1020993809301:web:a31e28377788bef965249c"
-
 };
 
 const app = initializeApp(firebaseConfig);
-
 const db = getFirestore(app);
-const auth = getAuth(app);
 
-const assignmentId =
+const teamId =
 new URLSearchParams(location.search)
-.get("assignmentId");
+.get("teamId");
 
-let assignmentData = null;
+loadForms();
 
-async function loadAssignment(){
+async function loadForms(){
+
+    const formList =
+    document.getElementById("formList");
+
+    formList.innerHTML = "";
 
     try{
 
-        const ref =
-        doc(
-            db,
-            "assignments",
-            assignmentId
+        const q =
+        query(
+            collection(db,"assignments"),
+            where("teamId","==",teamId)
         );
 
-        const snap =
-        await getDoc(ref);
+        const snapshot =
+        await getDocs(q);
 
-        if(!snap.exists()){
+        if(snapshot.empty){
 
-            alert(
-                "Assignment not found"
-            );
+            formList.innerHTML =
+            `
+            <div class="empty">
+                No Forms Found
+            </div>
+            `;
 
             return;
         }
 
-        assignmentData =
-        snap.data();
+        snapshot.forEach(docSnap => {
 
-        document
-        .getElementById(
-            "assignmentTitle"
-        )
-        .textContent =
-        assignmentData.title;
+            const form =
+            docSnap.data();
 
-        document
-        .getElementById(
-            "assignmentDescription"
-        )
-        .textContent =
-        assignmentData.description || "";
+            const card =
+            document.createElement("div");
 
-        renderQuestions();
+            card.className =
+            "form-card";
 
-    }
-    catch(err){
-
-        console.error(err);
-
-        alert(
-            "Load Failed"
-        );
-
-    }
-
-}
-
-function renderQuestions(){
-
-    const container =
-    document.getElementById(
-        "formContainer"
-    );
-
-    container.innerHTML = "";
-
-    assignmentData.questions
-    .forEach((question,index) => {
-
-        const card =
-        document.createElement("div");
-
-        card.className =
-        "question-card";
-
-        let html = `
-
-            <div class="question-title">
-
-                ${question.text}
-
-                ${question.required
-                    ? "*"
-                    : ""}
-
+            card.innerHTML =
+            `
+            <div class="form-title">
+                ${form.title}
             </div>
 
-        `;
-
-        if(question.type === "short"){
-
-            html += `
-                <input
-                    type="text"
-                    data-question="${index}"
-                >
-            `;
-        }
-
-        else if(
-            question.type === "long"
-        ){
-
-            html += `
-                <textarea
-                    rows="4"
-                    data-question="${index}"
-                ></textarea>
-            `;
-        }
-
-        else if(
-            question.type === "multiple"
-        ){
-
-            html += `
-                <select
-                    data-question="${index}"
-                >
+            <div class="form-description">
+                ${form.description || ""}
+            </div>
             `;
 
-            question.options
-            .forEach(option => {
+            card.addEventListener(
+                "click",
+                () => {
 
-                html += `
-                    <option>
-                        ${option}
-                    </option>
-                `;
-
-            });
-
-            html += `
-                </select>
-            `;
-        }
-
-        else if(
-            question.type === "checkbox"
-        ){
-
-            question.options
-            .forEach(option => {
-
-                html += `
-                    <div class="option-row">
-
-                        <label>
-
-                            <input
-                                type="checkbox"
-                                value="${option}"
-                                data-question="${index}"
-                            >
-
-                            ${option}
-
-                        </label>
-
-                    </div>
-                `;
-
-            });
-
-        }
-
-        card.innerHTML = html;
-
-        container.appendChild(card);
-
-    });
-
-}
-
-document
-.getElementById("saveBtn")
-.addEventListener("click", saveEntry);
-
-async function saveEntry(){
-
-    try{
-
-        const answers = {};
-
-        assignmentData.questions
-        .forEach((question,index) => {
-
-            if(
-                question.type === "checkbox"
-            ){
-
-                const selected = [];
-
-                document
-                .querySelectorAll(
-                    `input[data-question="${index}"]:checked`
-                )
-                .forEach(box => {
-
-                    selected.push(
-                        box.value
+                    // 次の段階で実装
+                    console.log(
+                        "Selected Form:",
+                        docSnap.id
                     );
 
-                });
+                }
+            );
 
-                answers[
-                    question.text
-                ] = selected;
-
-            }
-
-            else{
-
-                const field =
-                document.querySelector(
-                    `[data-question="${index}"]`
-                );
-
-                answers[
-                    question.text
-                ] = field.value;
-
-            }
+            formList.appendChild(card);
 
         });
 
-        await addDoc(
-
-            collection(
-                db,
-                "assignmentEntries"
-            ),
-
-            {
-
-                assignmentId,
-
-                answers,
-
-                createdBy:
-                auth.currentUser.uid,
-
-                createdAt:
-                serverTimestamp()
-
-            }
-
-        );
-
-        alert(
-            "Entry Saved"
-        );
-
     }
     catch(err){
 
         console.error(err);
 
-        alert(
-            "Save Failed"
-        );
-
+        formList.innerHTML =
+        `
+        <div class="empty">
+            Load Failed
+        </div>
+        `;
     }
-
 }
-
-onAuthStateChanged(
-    auth,
-    user => {
-
-        if(!user){
-
-            location.href =
-            "login.html";
-
-            return;
-        }
-
-        loadAssignment();
-
-    }
-);
 
 </script>
 
