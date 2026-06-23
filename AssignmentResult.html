@@ -1,1 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Form Database | Athletic Cloud</title>
+
+<style>
+body{
+    margin:0;
+    background:#f5f5f5;
+    font-family:Arial,sans-serif;
+}
+
+header{
+    background:#111;
+    color:white;
+    padding:20px 40px;
+}
+
+.logo{
+    font-size:1.8rem;
+    font-weight:bold;
+    letter-spacing:2px;
+}
+
+.container{
+    max-width:900px;
+    margin:40px auto;
+    padding:30px;
+}
+
+.form-card{
+    background:white;
+    padding:20px;
+    margin-bottom:15px;
+    border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.form-card:hover{
+    transform:translateY(-2px);
+}
+
+.form-title{
+    font-size:18px;
+    font-weight:bold;
+    margin-bottom:6px;
+}
+
+.form-desc{
+    color:#666;
+    font-size:14px;
+}
+
+.small{
+    font-size:12px;
+    color:#999;
+    margin-top:8px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">ATHLETIC CLOUD</div>
+</header>
+
+<div class="container">
+
+    <h1>Assignment Database</h1>
+    <p>Select a form to view spreadsheet</p>
+
+    <div id="formList">Loading...</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+    getFirestore,
+    collection,
+    getDocs
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
+    authDomain: "athletic-cloud-33538.firebaseapp.com",
+    projectId: "athletic-cloud-33538",
+    storageBucket: "athletic-cloud-33538.firebasestorage.app",
+    messagingSenderId: "1020993809301",
+    appId: "1:1020993809301:web:a31e28377788bef965249c"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const teamId =
+new URLSearchParams(location.search).get("teamId");
+
+loadForms();
+
+async function loadForms(){
+
+    const list =
+    document.getElementById("formList");
+
+    list.innerHTML = "";
+
+    const snapshot =
+    await getDocs(collection(db, "assignments"));
+
+    let found = false;
+
+    snapshot.forEach(docSnap => {
+
+        const data = docSnap.data();
+
+        if(data.teamId !== teamId) return;
+
+        found = true;
+
+        const card = document.createElement("div");
+        card.className = "form-card";
+
+        card.innerHTML = `
+            <div class="form-title">${data.title}</div>
+            <div class="form-desc">${data.description || ""}</div>
+            <div class="small">
+                ${data.questions?.length || 0} questions
+            </div>
+        `;
+
+        card.onclick = () => {
+
+            window.location.href =
+            `AssignmentDatabase.html?id=${docSnap.id}&teamId=${teamId}`;
+
+        };
+
+        list.appendChild(card);
+
+    });
+
+    if(!found){
+        list.innerHTML = "<p>No forms found</p>";
+    }
+}
+
+</script>
+
+</body>
+</html>
