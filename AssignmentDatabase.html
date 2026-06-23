@@ -36,7 +36,6 @@ th,td{
     border:1px solid #ddd;
     padding:10px;
     min-width:120px;
-    text-align:left;
 }
 
 th{
@@ -48,8 +47,8 @@ td[contenteditable="true"]{
     background:#f9f9f9;
 }
 
-.save-btn{
-    margin:10px 0;
+button{
+    margin:10px 5px;
     padding:10px 15px;
     background:#111;
     color:white;
@@ -62,22 +61,12 @@ td[contenteditable="true"]{
 
 <body>
 
-<header>
-    ATHLETIC CLOUD - DATABASE
-</header>
+<header>ATHLETIC CLOUD - DATABASE</header>
 
 <div class="container">
 
-    <button class="save-btn" onclick="saveChanges()">
-        Save Changes
-    </button>
-    <button class="save-btn" onclick="addRow()">
-    + Add Row
-</button>
-
-<button class="save-btn" onclick="saveChanges()">
-    Save Changes
-</button>
+    <button onclick="saveChanges()">Save Changes</button>
+    <button onclick="addRow()">+ Add Row</button>
 
     <div id="tableContainer">Loading...</div>
 
@@ -101,7 +90,6 @@ import {
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
-/* Firebase */
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
     authDomain: "athletic-cloud-33538.firebaseapp.com",
@@ -112,28 +100,21 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-/* params */
 const params = new URLSearchParams(location.search);
 const assignmentId = params.get("id");
-const teamId = params.get("teamId");
 
 let assignmentData = null;
 let responses = [];
 
-/* auth */
-onAuthStateChanged(auth, (user) => {
-    if (!user) {
+onAuthStateChanged(auth, async(user)=>{
+    if(!user){
         location.href = "login.html";
         return;
     }
-    loadTable();
+    await loadTable();
 });
 
-/* load */
-async function loadTable() {
-
-    const container = document.getElementById("tableContainer");
-    container.innerHTML = "Loading...";
+async function loadTable(){
 
     const assignmentSnap = await getDoc(doc(db, "assignments", assignmentId));
     assignmentData = assignmentSnap.data();
@@ -142,42 +123,44 @@ async function loadTable() {
 
     responses = [];
 
-    responseSnap.forEach(docSnap => {
+    responseSnap.forEach(docSnap=>{
         const data = docSnap.data();
-        if (data.assignmentId === assignmentId) {
-            responses.push({ id: docSnap.id, ...data });
+        if(data.assignmentId === assignmentId){
+            responses.push({
+                id: docSnap.id,
+                ...data
+            });
         }
     });
 
     renderTable();
 }
 
-/* render */
-function renderTable() {
+function renderTable(){
 
     const container = document.getElementById("tableContainer");
 
     let html = "<table>";
 
-    /* HEADER */
+    // header
     html += "<tr>";
     html += "<th>User</th>";
 
-    assignmentData.questions.forEach((q, i) => {
-        html += `<th>${q.text || "Q" + (i + 1)}</th>`;
+    assignmentData.questions.forEach((q,i)=>{
+        html += `<th>${q.text || ("Q"+(i+1))}</th>`;
     });
 
-    html += "<th>Actions</th>";
+    html += "<th>Action</th>";
     html += "</tr>";
 
-    /* ROWS */
-    responses.forEach((r, rowIndex) => {
+    // rows
+    responses.forEach((r,rowIndex)=>{
 
-        html += `<tr data-id="${r.id}">`;
+        html += `<tr data-id="${r.id || ""}">`;
 
-        html += `<td>${r.userName || r.userId}</td>`;
+        html += `<td>${r.userName || r.userId || "unknown"}</td>`;
 
-        assignmentData.questions.forEach((q, colIndex) => {
+        assignmentData.questions.forEach((q,colIndex)=>{
 
             const val = r.answers?.[colIndex] || "";
 
@@ -192,7 +175,7 @@ function renderTable() {
 
         html += `
             <td>
-                <button onclick="deleteRow('${r.id}', ${rowIndex})">🗑</button>
+                <button onclick="deleteRow('${r.id}', ${rowIndex})">Delete</button>
             </td>
         `;
 
@@ -204,43 +187,59 @@ function renderTable() {
     container.innerHTML = html;
 }
 
-/* delete row */
-window.deleteRow = async function(id, index) {
+window.addRow = function(){
 
-    if (!confirm("Delete this row?")) return;
+    const emptyAnswers = {};
 
-    if (id) {
-        await deleteDoc(doc(db, "assignmentResponses", id));
-    }
+    assignmentData.questions.forEach((_,i)=>{
+        emptyAnswers[i] = "";
+    });
 
-    responses.splice(index, 1);
+    responses.push({
+        id: null,
+        userId: "manual",
+        userName: "New Row",
+        answers: emptyAnswers
+    });
+
     renderTable();
 };
 
-/* save changes */
-window.saveChanges = async function () {
+window.deleteRow = async function(id,index){
 
-    const rows = document.querySelectorAll("tr");
+    if(!confirm("Delete row?")) return;
 
-    for (const row of rows) {
+    if(id){
+        await deleteDoc(doc(db,"assignmentResponses",id));
+    }
+
+    responses.splice(index,1);
+    renderTable();
+};
+
+window.saveChanges = async function(){
+
+    const rows = document.querySelectorAll("tr[data-id]");
+
+    for(const row of rows){
 
         const id = row.getAttribute("data-id");
-        if (!id) continue;
+        if(!id) continue;
 
-        const tds = row.querySelectorAll("td");
+        const tds = row.querySelectorAll("td[contenteditable='true']");
 
-        const newAnswers = [];
+        const answers = [];
 
-        for (let i = 1; i < tds.length - 1; i++) {
-            newAnswers.push(tds[i].innerText.trim());
-        }
+        tds.forEach(td=>{
+            answers.push(td.innerText.trim());
+        });
 
-        await updateDoc(doc(db, "assignmentResponses", id), {
-            answers: newAnswers
+        await updateDoc(doc(db,"assignmentResponses",id),{
+            answers
         });
     }
 
-    alert("Saved!");
+    alert("Saved");
 };
 
 </script>
