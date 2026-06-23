@@ -65,24 +65,19 @@ h2{
 </div>
 
 <script type="module">
-import { getAuth, onAuthStateChanged } 
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-const auth = getAuth(app);
-onAuthStateChanged(auth, (user) => {
 
-    if (!user) {
-        location.href = "login.html";
-        return;
-    }
-
-    load();
-});
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
 import {
     getFirestore,
     collection,
     getDocs
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
@@ -93,18 +88,31 @@ const firebaseConfig = {
     appId: "1:1020993809301:web:a31e28377788bef965249c"
 };
 
+// ✅ ① 必ず最初に app
 const app = initializeApp(firebaseConfig);
+
+// ✅ ② 次に db / auth
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 const teamId = new URLSearchParams(location.search).get("teamId");
 
 const list = document.getElementById("assignmentList");
 
+// ✅ ③ authガード
+onAuthStateChanged(auth, (user) => {
+
+    if (!user) {
+        location.href = "login.html";
+        return;
+    }
+
+    load();
+});
+
 async function load() {
 
     try {
-
-        console.log("Loading assignments...");
 
         list.innerHTML = "Loading...";
 
@@ -118,12 +126,7 @@ async function load() {
 
             const data = docSnap.data();
 
-            console.log("ASSIGNMENT:", docSnap.id, data);
-
-            // team filter（ここ超重要）
-            if (teamId && data.teamId !== teamId) {
-                return;
-            }
+            if (teamId && data.teamId !== teamId) return;
 
             found = true;
 
