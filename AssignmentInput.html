@@ -100,7 +100,8 @@ button:hover{
 </div>
 
 <script type="module">
-
+const CLOUD_NAME = "dxvgp89ma";
+const UPLOAD_PRESET = "AthleticCloud";
 import { initializeApp }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
@@ -274,6 +275,27 @@ function renderQuestions(){
                 });
 
                 break;
+            case "image":
+
+    html += `
+    <input
+    type="file"
+    accept="image/*"
+    data-q="${index}">
+    `;
+
+    break;
+
+case "video":
+
+    html += `
+    <input
+    type="file"
+    accept="video/*"
+    data-q="${index}">
+    `;
+
+    break;
         }
 
         card.innerHTML = html;
@@ -287,9 +309,44 @@ function renderQuestions(){
 document
 .getElementById("submitBtn")
 .addEventListener("click",submitForm);
+async function uploadToCloudinary(file){
 
+    const formData = new FormData();
+
+    formData.append(
+        "file",
+        file
+    );
+
+    formData.append(
+        "upload_preset",
+        UPLOAD_PRESET
+    );
+
+    const response =
+    await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,
+        {
+            method:"POST",
+            body:formData
+        }
+    );
+
+    const data =
+    await response.json();
+
+    return data.secure_url;
+}
 async function submitForm(){
-
+    if(
+    question.required &&
+    !answers[index]
+){
+    alert(
+        `${question.text} is required`
+    );
+    return;
+}
     const answers = {};
 
     assignmentData.questions.forEach(
@@ -318,17 +375,46 @@ async function submitForm(){
             });
 
         }
-        else{
+        else if(
+    question.type === "image" ||
+    question.type === "video"
+){
 
-            const input =
-            document.querySelector(
-            `[data-q="${index}"]`
-            );
+    const input =
+    document.querySelector(
+    `[data-q="${index}"]`
+    );
 
-            answers[index] =
-            input.value;
+    if(
+        input.files.length > 0
+    ){
 
-        }
+        const url =
+        await uploadToCloudinary(
+            input.files[0]
+        );
+
+        answers[index] =
+        url;
+
+    }else{
+
+        answers[index] = "";
+
+    }
+
+}
+else{
+
+    const input =
+    document.querySelector(
+    `[data-q="${index}"]`
+    );
+
+    answers[index] =
+    input.value;
+
+}
 
     });
 
