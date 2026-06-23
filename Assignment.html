@@ -3,339 +3,136 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Assignments | Athletic Cloud</title>
 
 <style>
-
 body{
     margin:0;
+    font-family:Arial;
     background:#f5f5f5;
-    font-family:Arial,sans-serif;
 }
 
 header{
     background:#111;
-    color:white;
+    color:#fff;
     padding:20px 40px;
-
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
-
-.logo{
-    font-size:1.8rem;
     font-weight:bold;
-    letter-spacing:2px;
-    cursor:pointer;
 }
 
 .container{
-    max-width:1000px;
-    margin:40px auto;
-    padding:0 20px;
-}
-
-.top-bar{
-    display:flex;
-    gap:10px;
-    margin-bottom:20px;
+    max-width:900px;
+    margin:30px auto;
+    padding:20px;
 }
 
 .search-box{
-    flex:1;
-}
-
-.search-box input{
     width:100%;
     padding:12px;
+    border-radius:8px;
     border:1px solid #ddd;
-    border-radius:8px;
-    font-size:14px;
+    margin-bottom:20px;
 }
 
-button{
-    border:none;
-    border-radius:8px;
-    background:#111;
-    color:white;
-    padding:12px 18px;
-    font-weight:bold;
-    cursor:pointer;
-}
-
-button:hover{
-    background:#333;
-}
-
-.assignment-card{
-
+.card{
     background:white;
-
-    border-radius:15px;
-
-    padding:20px;
-
-    margin-bottom:15px;
-
-    box-shadow:
-    0 5px 15px rgba(0,0,0,.08);
-
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:12px;
+    cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
 }
 
-.assignment-title{
-    font-size:1.2rem;
-    font-weight:bold;
-    margin-bottom:10px;
+.card:hover{
+    transform:translateY(-2px);
 }
-
-.assignment-description{
-    color:#666;
-    margin-bottom:15px;
-}
-
-.card-actions{
-    display:flex;
-    gap:10px;
-}
-
-.empty{
-    text-align:center;
-    color:#777;
-    padding:40px;
-}
-
 </style>
 </head>
 
 <body>
 
-<header>
-
-    <div class="logo" id="homeLogo">
-        ATHLETIC CLOUD
-    </div>
-
-</header>
+<header>ATHLETIC CLOUD - ASSIGNMENTS</header>
 
 <div class="container">
 
-    <h1>Assignments</h1>
+    <input id="search" class="search-box" placeholder="Search assignments...">
 
-    <div class="top-bar">
-
-        <div class="search-box">
-
-            <input
-                type="text"
-                id="searchInput"
-                placeholder="Search Assignment..."
-            >
-
-        </div>
-
-        <button id="createBtn">
-            Create Assignment
-        </button>
-
-    </div>
-
-    <div id="assignmentList">
-
-        <div class="empty">
-            Loading...
-        </div>
-
-    </div>
+    <div id="list">Loading...</div>
 
 </div>
 
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
-
     getFirestore,
-
     collection,
-
     getDocs
-
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 const firebaseConfig = {
-
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
     authDomain: "athletic-cloud-33538.firebaseapp.com",
-    projectId: "athletic-cloud-33538",
-    storageBucket: "athletic-cloud-33538.firebasestorage.app",
-    messagingSenderId: "1020993809301",
-    appId: "1:1020993809301:web:a31e28377788bef965249c"
-
+    projectId: "athletic-cloud-33538"
 };
 
 const app = initializeApp(firebaseConfig);
-
 const db = getFirestore(app);
 
-const assignmentId =
-new URLSearchParams(location.search)
-.get("assignmentId");
-console.log("assignmentId:", assignmentId);
+let assignments = [];
 
-let allAssignments = [];
+async function load(){
 
-document
-.getElementById("homeLogo")
-.addEventListener("click", () => {
+    const snap = await getDocs(collection(db, "assignments"));
 
-    window.location.href =
-    "AthleticCloud.html";
+    assignments = [];
 
-});
-
-document
-.getElementById("createBtn")
-.addEventListener("click", () => {
-
-    window.location.href =
-    `Assignmentcreate.html?teamId=${teamId}`;
-
-});
-
-document
-.getElementById("searchInput")
-.addEventListener("input", renderAssignments);
-
-async function loadAssignment(){
-
-    const ref =
-    doc(
-        db,
-        "assignments",
-        assignmentId
-    );
-
-    const snap =
-    await getDoc(ref);
-
-}}
-
-function renderAssignments(){
-
-    const keyword =
-    document
-    .getElementById("searchInput")
-    .value
-    .toLowerCase();
-
-    const list =
-    document
-    .getElementById(
-        "assignmentList"
-    );
-
-    list.innerHTML = "";
-
-    const filtered =
-    allAssignments.filter(a => {
-
-        return (
-
-            a.title
-            .toLowerCase()
-            .includes(keyword)
-
-            ||
-
-            (a.description || "")
-            .toLowerCase()
-            .includes(keyword)
-
-        );
-
+    snap.forEach(docSnap => {
+        assignments.push({
+            id: docSnap.id,
+            ...docSnap.data()
+        });
     });
 
-    if(filtered.length === 0){
-
-        list.innerHTML = `
-            <div class="empty">
-                No Assignments
-            </div>
-        `;
-
-        return;
-    }
-
-    filtered.forEach(a => {
-
-        const card =
-        document.createElement("div");
-
-        card.className =
-        "assignment-card";
-
-        card.innerHTML = `
-
-            <div class="assignment-title">
-
-                ${a.title}
-
-            </div>
-
-            <div class="assignment-description">
-
-                ${a.description || ""}
-
-            </div>
-
-            <div class="card-actions">
-
-                <button
-                    class="open-btn"
-                >
-                    Open
-                </button>
-
-                <button
-                    class="result-btn"
-                >
-                    Results
-                </button>
-
-            </div>
-
-        `;
-
-        card
-        .querySelector(".open-btn")
-        .addEventListener("click", () => {
-
-            window.location.href =
-            `AssignmentView.html?assignmentId=${a.id}`;
-
-        });
-
-        card
-        .querySelector(".result-btn")
-        .addEventListener("click", () => {
-
-            window.location.href =
-            `AssignmentResult.html?assignmentId=${a.id}`;
-
-        });
-
-        list.appendChild(card);
-
-    });
-
+    render(assignments);
 }
 
-loadAssignments();
+function render(data){
+
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    data.forEach(a => {
+
+        const div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML = `
+            <h3>${a.title}</h3>
+            <p>${a.description || ""}</p>
+        `;
+
+        div.onclick = () => {
+            location.href =
+            `AssignmentMap.html?id=${a.id}`;
+        };
+
+        list.appendChild(div);
+    });
+}
+
+// SEARCH
+document.getElementById("search").addEventListener("input", (e)=>{
+    const q = e.target.value.toLowerCase();
+
+    const filtered = assignments.filter(a =>
+        (a.title || "").toLowerCase().includes(q) ||
+        (a.description || "").toLowerCase().includes(q)
+    );
+
+    render(filtered);
+});
+
+load();
 
 </script>
 
