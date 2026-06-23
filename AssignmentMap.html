@@ -12,11 +12,29 @@ body{
     background:#f3f3f3;
 }
 
+/* HEADER */
 header{
     background:#111;
     color:white;
     padding:15px 20px;
     font-weight:bold;
+}
+
+/* TOOL BAR */
+.toolbar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 20px;
+    background:#fff;
+    border-bottom:1px solid #ddd;
+}
+
+.toolbar select{
+    padding:8px 12px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    font-size:14px;
 }
 
 /* GRID */
@@ -32,7 +50,7 @@ header{
     background:white;
     border-radius:10px;
     overflow:hidden;
-    box-shadow:0 2px 8px rgba(0,0,0,.15);
+    box-shadow:0 2px 8px rgba(0,0,0,.12);
     transition:0.2s;
     cursor:pointer;
 }
@@ -42,13 +60,12 @@ header{
     box-shadow:0 6px 16px rgba(0,0,0,.2);
 }
 
-/* IMAGE */
+/* MEDIA（最重要修正ポイント） */
 .card img,
 .card video{
     width:100%;
-    max-height:260px;
-    height:auto;
-    object-fit:contain;   /* ★重要 */
+    height:240px;
+    object-fit:contain;   /* ★ 見切れ防止 */
     background:#111;
     display:block;
 }
@@ -61,7 +78,7 @@ header{
 .title{
     font-size:18px;
     font-weight:bold;
-    margin-bottom:8px;
+    margin-bottom:6px;
 }
 
 .meta{
@@ -80,22 +97,16 @@ header{
     height:100%;
     background:rgba(0,0,0,0.85);
     overflow:auto;
+    z-index:9999;
 }
 
 .modal-content{
     background:white;
     width:95%;
-    max-width:1200px;
+    max-width:1100px;
     margin:20px auto;
     padding:20px;
     border-radius:12px;
-}
-
-#modalImage{
-    width:100%;
-    max-height:70vh;
-    object-fit:contain;
-    background:#000;
 }
 
 #close{
@@ -104,47 +115,22 @@ header{
     cursor:pointer;
 }
 
-.video{
+/* modal media */
+.modal img,
+.modal video{
     width:100%;
-    margin-top:20px;
+    max-height:70vh;
+    object-fit:contain;
+    background:#000;
     border-radius:10px;
-}
-.toolbar{
-    padding: 10px 20px;
-    display:flex;
-    justify-content:flex-end;
+    margin-bottom:15px;
 }
 
-.sort-box{
-    background:white;
-    border:1px solid #e5e5e5;
-    border-radius:10px;
-    padding:8px 12px;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    box-shadow:0 2px 6px rgba(0,0,0,0.06);
-    transition:0.2s;
+.video-block{
+    width:100%;
+    margin-top:15px;
 }
 
-.sort-box:hover{
-    transform:translateY(-1px);
-    box-shadow:0 4px 10px rgba(0,0,0,0.12);
-}
-
-.sort-box .label{
-    font-size:13px;
-    color:#555;
-    font-weight:bold;
-}
-
-.sort-box select{
-    border:none;
-    outline:none;
-    background:transparent;
-    font-size:14px;
-    cursor:pointer;
-}
 </style>
 </head>
 
@@ -153,13 +139,16 @@ header{
 <header>
     ATHLETIC CLOUD - Assignments
 </header>
-<div style="padding:10px 20px;">
-    <label>Sort: </label>
+
+<!-- SORT UI（統一デザイン） -->
+<div class="toolbar">
+    <label>Sort</label>
     <select id="sortSelect">
         <option value="desc">Newest First</option>
         <option value="asc">Oldest First</option>
     </select>
 </div>
+
 <div id="gallery">Loading...</div>
 
 <!-- MODAL -->
@@ -167,22 +156,12 @@ header{
     <div class="modal-content">
         <span id="close">&times;</span>
 
-        <img id="modalImage">
+        <img id="modalImage" />
 
         <div id="modalInfo"></div>
 
         <div id="modalVideo"></div>
     </div>
-    <div class="toolbar">
-    <div class="sort-box">
-        <span class="label">Sort</span>
-
-        <select id="sortSelect">
-            <option value="desc">Newest First</option>
-            <option value="asc">Oldest First</option>
-        </select>
-    </div>
-</div>
 </div>
 
 <script type="module">
@@ -220,11 +199,10 @@ onAuthStateChanged(auth, async (user) => {
         location.href = "login.html";
         return;
     }
-
     await load();
 });
 
-/* LOAD DATA */
+/* LOAD */
 async function load(){
 
     const q = query(
@@ -237,49 +215,35 @@ async function load(){
     responses = [];
 
     snap.forEach(d => {
-        responses.push({
-            id: d.id,
-            ...d.data()
-        });
+        responses.push({ id: d.id, ...d.data() });
     });
 
-    render();
     sortResponses();
+    render();
 }
-document.getElementById("sortSelect").addEventListener("change", () => {
-    sortResponses();
-    render();
-});
-function sortResponses() {
+
+/* SORT */
+function sortResponses(){
 
     const mode = document.getElementById("sortSelect").value;
 
-    responses.sort((a, b) => {
-
-        const timeA = a.createdAt?.seconds || 0;
-        const timeB = b.createdAt?.seconds || 0;
-
-        if (mode === "asc") {
-            return timeA - timeB;
-        } else {
-            return timeB - timeA;
-        }
+    responses.sort((a,b)=>{
+        const ta = a.createdAt?.seconds || 0;
+        const tb = b.createdAt?.seconds || 0;
+        return mode === "asc" ? ta - tb : tb - ta;
     });
 }
-/* IMAGE CHECK */
+
+/* MEDIA DETECTION */
 function isImage(v){
-    return typeof v === "string" &&
-    (v.includes("cloudinary") || v.match(/\.(jpg|jpeg|png|webp)/));
+    return typeof v === "string" && v.includes("cloudinary") && v.includes("/image/");
 }
 
-/* VIDEO CHECK */
 function isVideo(v){
-    return typeof v === "string" &&
-    v.includes("cloudinary") &&
-    v.includes("/video/");
+    return typeof v === "string" && v.includes("cloudinary") && v.includes("/video/");
 }
 
-/* TOP MEDIA LOGIC */
+/* TOP MEDIA */
 function getTopMedia(r){
 
     let image = null;
@@ -289,13 +253,8 @@ function getTopMedia(r){
 
         const v = r.answers[k];
 
-        if(!image && isImage(v)){
-            image = v;
-        }
-
-        if(!video && isVideo(v)){
-            video = v;
-        }
+        if(!image && isImage(v)) image = v;
+        if(!video && isVideo(v)) video = v;
     }
 
     if(image) return {type:"image", url:image};
@@ -309,7 +268,7 @@ function getTitle(r){
     return r.answers?.[0] || r.userName || "Untitled";
 }
 
-/* RENDER GRID */
+/* RENDER */
 function render(){
 
     const gallery = document.getElementById("gallery");
@@ -318,10 +277,6 @@ function render(){
     responses.forEach(r => {
 
         const media = getTopMedia(r);
-        const title = getTitle(r);
-
-        const card = document.createElement("div");
-        card.className = "card";
 
         let mediaHTML = "";
 
@@ -335,10 +290,13 @@ function render(){
             mediaHTML = `<img src="${media.url}">`;
         }
 
+        const card = document.createElement("div");
+        card.className = "card";
+
         card.innerHTML = `
             ${mediaHTML}
             <div class="info">
-                <div class="title">${title}</div>
+                <div class="title">${getTitle(r)}</div>
                 <div class="meta">
                     ${r.userName || ""}<br>
                     ${new Date(r.createdAt?.seconds*1000 || Date.now()).toLocaleString()}
@@ -352,7 +310,7 @@ function render(){
     });
 }
 
-/* SAFE ANSWER RENDER */
+/* SAFE RENDER ANSWER */
 function renderAnswer(v){
 
     if(isImage(v)){
@@ -372,7 +330,7 @@ function renderAnswer(v){
     }
 
     if(typeof v === "string" && v.startsWith("http")){
-        return ""; // URL非表示
+        return "";
     }
 
     return v || "";
@@ -388,12 +346,7 @@ function openModal(r){
 
     const media = getTopMedia(r);
 
-    if(media.type === "image"){
-        img.src = media.url;
-    }
-    else{
-        img.src = "";
-    }
+    img.src = media.type === "image" ? media.url : "";
 
     let html = `<h2>${getTitle(r)}</h2>`;
 
@@ -414,7 +367,7 @@ function openModal(r){
         const v = r.answers[k];
         if(isVideo(v)){
             videoHtml += `
-                <video class="video" controls>
+                <video class="video-block" controls>
                     <source src="${v}">
                 </video>
             `;
@@ -426,7 +379,12 @@ function openModal(r){
     modal.style.display = "block";
 }
 
-/* CLOSE */
+/* EVENTS */
+document.getElementById("sortSelect").addEventListener("change", ()=>{
+    sortResponses();
+    render();
+});
+
 document.getElementById("close").onclick = () => {
     document.getElementById("modal").style.display = "none";
 };
