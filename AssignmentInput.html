@@ -341,6 +341,15 @@ async function submitForm(){
 
     try {
 
+        console.log("CLICKED");
+
+        const user = auth.currentUser;
+
+        if (!user) {
+            alert("Not logged in");
+            return;
+        }
+
         const answers = {};
 
         for (let index = 0; index < assignmentData.questions.length; index++) {
@@ -365,7 +374,7 @@ async function submitForm(){
 
                 const input = document.querySelector(`[data-q="${index}"]`);
 
-                if (input.files.length > 0) {
+                if (input.files && input.files.length > 0) {
                     const url = await uploadToCloudinary(input.files[0]);
                     answers[index] = url;
                 } else {
@@ -375,39 +384,34 @@ async function submitForm(){
             } else {
 
                 const input = document.querySelector(`[data-q="${index}"]`);
-                answers[index] = input.value;
-
+                answers[index] = input.value || "";
             }
         }
 
-        const user = auth.currentUser;
-
         const assignmentTitle = assignmentData.title;
 
-        await addDoc(
-            collection(db, "assignmentResponses"),
-            {
-                assignmentId,
-                assignmentTitle,
-                teamId,
+        console.log("before Firestore");
 
-                userId: user?.uid || "",
-                userName: user?.displayName || "",
+        await addDoc(collection(db, "assignmentResponses"), {
+            assignmentId,
+            assignmentTitle,
+            teamId,
+            userId: user.uid,
+            userName: user.displayName || "",
+            answers,
+            createdAt: serverTimestamp()
+        });
 
-                answers,
-                createdAt: serverTimestamp()
-            }
-        );
+        console.log("done");
 
         alert("Response Submitted");
         history.back();
 
     } catch (err) {
-        console.error(err);
+        console.error("SUBMIT ERROR:", err);
         alert("Submit Failed");
     }
 }
-
 </script>
 
 </body>
