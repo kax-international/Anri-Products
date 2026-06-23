@@ -19,16 +19,16 @@ header{
     font-weight:bold;
 }
 
-/* CONTROL BAR */
+/* CONTROL */
 .control-bar{
     display:flex;
+    flex-wrap:wrap;
     gap:10px;
     padding:10px 20px;
-    flex-wrap:wrap;
     align-items:center;
 }
 
-select, button{
+select,input,button{
     padding:10px;
     border-radius:8px;
     border:1px solid #ddd;
@@ -55,98 +55,66 @@ button{
     border-radius:10px;
     overflow:hidden;
     box-shadow:0 2px 8px rgba(0,0,0,.15);
-    transition:0.2s;
     cursor:pointer;
 }
 
-.card:hover{
-    transform:translateY(-3px);
-}
-
-/* MEDIA */
 .card img,
 .card video{
     width:100%;
     max-height:260px;
     object-fit:contain;
     background:#111;
-    display:block;
 }
 
 /* INFO */
-.info{
-    padding:15px;
-}
-
-.title{
-    font-size:18px;
-    font-weight:bold;
-    margin-bottom:8px;
-}
-
-.meta{
-    font-size:13px;
-    color:#666;
-}
+.info{padding:15px}
+.title{font-size:18px;font-weight:bold}
+.meta{font-size:13px;color:#666;margin-top:5px}
 
 /* MODAL */
 .modal{
     display:none;
     position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,0.85);
+    inset:0;
+    background:rgba(0,0,0,.85);
     overflow:auto;
 }
 
 .modal-content{
     background:white;
     width:95%;
-    max-width:1200px;
+    max-width:1100px;
     margin:20px auto;
     padding:20px;
     border-radius:12px;
 }
 
-#close{
-    float:right;
-    font-size:32px;
-    cursor:pointer;
-}
+#close{float:right;font-size:30px;cursor:pointer}
 
 .video{
     width:100%;
-    margin-top:20px;
-    border-radius:10px;
+    margin-top:15px;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-    ATHLETIC CLOUD - Assignments Filter
-</header>
+<header>ATHLETIC CLOUD - SEARCH ENGINE</header>
 
-<!-- FILTER UI -->
+<!-- CONTROL BAR -->
 <div class="control-bar">
 
-    <select id="personnelFilter">
-        <option value="">Personnel (All)</option>
+    <input id="searchInput" placeholder="keyword search...">
+
+    <select id="sortSelect">
+        <option value="desc">Newest</option>
+        <option value="asc">Oldest</option>
     </select>
 
-    <select id="numberingFilter">
-        <option value="">Numbering (All)</option>
-    </select>
-
-    <select id="playTypeFilter">
-        <option value="">Play Type (All)</option>
-    </select>
+    <div id="dynamicFilters"></div>
 
     <button id="resetBtn">Reset</button>
-
 </div>
 
 <div id="gallery">Loading...</div>
@@ -175,13 +143,12 @@ import {
 import { getAuth, onAuthStateChanged }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
-const firebaseConfig = {
+const app = initializeApp({
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
     authDomain: "athletic-cloud-33538.firebaseapp.com",
     projectId: "athletic-cloud-33538"
-};
+});
 
-const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
@@ -190,6 +157,7 @@ const assignmentId = params.get("id");
 
 let responses = [];
 let filtered = [];
+let filterSchema = {}; // ← フォーム構造
 
 /* AUTH */
 onAuthStateChanged(auth, async (user) => {
@@ -204,121 +172,133 @@ onAuthStateChanged(auth, async (user) => {
 async function load(){
 
     const q = query(
-        collection(db, "assignmentResponses"),
-        where("assignmentId", "==", assignmentId)
+        collection(db,"assignmentResponses"),
+        where("assignmentId","==",assignmentId)
     );
 
     const snap = await getDocs(q);
 
-    responses = [];
-
-    snap.forEach(d => {
-        responses.push({
-            id: d.id,
-            ...d.data()
-        });
-    });
-
+    responses = snap.docs.map(d => d.data());
     filtered = [...responses];
 
+    buildSchema();
     buildFilters();
-    render();
+    applyAll();
 }
 
 /* =========================
-   FILTER OPTIONS BUILD
+   動的スキーマ生成
+========================= */
+function buildSchema(){
+
+    const sample = responses[0]?.answers || {};
+
+    filterSchema = {};
+
+    Object.keys(sample).forEach(k => {
+        filterSchema[k] = new Set();
+    });
+
+    responses.forEach(r => {
+        Object.keys(r.answers || {}).forEach(k => {
+            filterSchema[k].add(r.answers[k]);
+        });
+    });
+}
+
+/* =========================
+   フィルターUI生成
 ========================= */
 function buildFilters(){
 
-    const personnelSet = new Set();
-    const numberingSet = new Set();
-    const playTypeSet = new Set();
+    const container = document.getElementById("dynamicFilters");
+    container.innerHTML = "";
 
-    responses.forEach(r => {
+    Object.keys(filterSchema).forEach(key => {
 
-        const a = r.answers || {};
+        const select = document.createElement("select");
+        select.dataset.key = key;
 
-        // 例：index固定想定（必要ならここ後で柔軟化できる）
-        if(a[0]) personnelSet.add(a[0]);
-        if(a[1]) numberingSet.add(a[1]);
-        if(a[2]) playTypeSet.add(a[2]);
-    });
+        select.innerHTML = `<option value="">${key} (all)</option>`;
 
-    fillSelect("personnelFilter", personnelSet);
-    fillSelect("numberingFilter", numberingSet);
-    fillSelect("playTypeFilter", playTypeSet);
-}
+        filterSchema[key].forEach(v => {
+            const opt = document.createElement("option");
+            opt.value = v;
+            opt.textContent = v;
+            select.appendChild(opt);
+        });
 
-function fillSelect(id, set){
+        select.addEventListener("change", applyAll);
 
-    const el = document.getElementById(id);
-
-    set.forEach(v => {
-        const opt = document.createElement("option");
-        opt.value = v;
-        opt.textContent = v;
-        el.appendChild(opt);
+        container.appendChild(select);
     });
 }
 
 /* =========================
-   FILTER ENGINE (AND条件)
+   キーワード + フィルター + sort
 ========================= */
-function applyFilter(){
+function applyAll(){
 
-    const p = document.getElementById("personnelFilter").value;
-    const n = document.getElementById("numberingFilter").value;
-    const t = document.getElementById("playTypeFilter").value;
+    const keyword = document.getElementById("searchInput").value.toLowerCase();
+
+    const selects = document.querySelectorAll("#dynamicFilters select");
+
+    const filters = {};
+    selects.forEach(s => {
+        if(s.value) filters[s.dataset.key] = s.value;
+    });
 
     filtered = responses.filter(r => {
 
-        const a = r.answers || {};
+        const ans = r.answers || {};
 
-        const personnel = a[0];
-        const numbering = a[1];
-        const playType = a[2];
+        // フィルター一致
+        for(const k in filters){
+            if(ans[k] != filters[k]) return false;
+        }
 
-        return (
-            (!p || personnel === p) &&
-            (!n || numbering === n) &&
-            (!t || playType === t)
-        );
+        // キーワード検索
+        const text = JSON.stringify(ans).toLowerCase();
+        if(keyword && !text.includes(keyword)) return false;
+
+        return true;
+    });
+
+    sortAndRender();
+}
+
+/* SORT */
+function sortAndRender(){
+
+    const mode = document.getElementById("sortSelect").value;
+
+    filtered.sort((a,b)=>{
+        const ta = a.createdAt?.seconds || 0;
+        const tb = b.createdAt?.seconds || 0;
+        return mode === "asc" ? ta - tb : tb - ta;
     });
 
     render();
 }
 
-/* =========================
-   MEDIA LOGIC
-========================= */
-function getTopMedia(r){
-
-    let image = null;
-    let video = null;
+/* MEDIA */
+function getMedia(r){
 
     for(const k in r.answers){
-
         const v = r.answers[k];
 
-        if(!image && typeof v === "string" && v.includes("http") &&
-           (v.includes("jpg") || v.includes("png") || v.includes("image"))){
-            image = v;
-        }
-
-        if(!video && typeof v === "string" && v.includes("video")){
-            video = v;
+        if(typeof v === "string" && v.includes("cloudinary")){
+            if(v.includes("video")) return {type:"video", url:v};
+            if(v.includes("image") || v.match(/\.(jpg|png|jpeg)/)) return {type:"image", url:v};
         }
     }
-
-    if(image) return {type:"image", url:image};
-    if(video) return {type:"video", url:video};
 
     return {type:"none", url:"https://via.placeholder.com/600x400?text=No+Image"};
 }
 
 /* TITLE */
 function getTitle(r){
-    return r.userName || "Untitled";
+    return Object.values(r.answers || {})[0] || "Untitled";
 }
 
 /* RENDER */
@@ -329,17 +309,12 @@ function render(){
 
     filtered.forEach(r => {
 
-        const media = getTopMedia(r);
+        const media = getMedia(r);
 
-        let mediaHTML = "";
-
-        if(media.type === "image"){
-            mediaHTML = `<img src="${media.url}">`;
-        } else if(media.type === "video"){
-            mediaHTML = `<video src="${media.url}" muted></video>`;
-        } else {
-            mediaHTML = `<img src="${media.url}">`;
-        }
+        let mediaHTML =
+            media.type === "video"
+            ? `<video src="${media.url}" muted></video>`
+            : `<img src="${media.url}">`;
 
         const card = document.createElement("div");
         card.className = "card";
@@ -367,22 +342,19 @@ function openModal(r){
     const img = document.getElementById("modalImage");
     const info = document.getElementById("modalInfo");
 
-    const media = getTopMedia(r);
+    const media = getMedia(r);
     img.src = media.type === "image" ? media.url : "";
 
     let html = `<h2>${getTitle(r)}</h2>`;
 
-    const labels = ["Personnel", "Numbering", "Play Type"];
-
-    Object.keys(r.answers || {}).forEach((k, i) => {
-
+    for(const k in r.answers){
         html += `
             <p>
-                <b>${labels[i] || ("Q" + k)}:</b><br>
+                <b>${k}:</b><br>
                 ${r.answers[k]}
             </p>
         `;
-    });
+    }
 
     info.innerHTML = html;
 
@@ -390,27 +362,14 @@ function openModal(r){
 }
 
 /* EVENTS */
-document.getElementById("close").onclick = () => {
+document.getElementById("searchInput").addEventListener("input", applyAll);
+document.getElementById("sortSelect").addEventListener("change", sortAndRender);
+
+document.getElementById("close").onclick = () =>
     document.getElementById("modal").style.display = "none";
-};
 
-window.onclick = (e) => {
-    if(e.target.id === "modal"){
-        document.getElementById("modal").style.display = "none";
-    }
-};
-
-document.getElementById("personnelFilter").addEventListener("change", applyFilter);
-document.getElementById("numberingFilter").addEventListener("change", applyFilter);
-document.getElementById("playTypeFilter").addEventListener("change", applyFilter);
-
-document.getElementById("resetBtn").onclick = () => {
-    document.getElementById("personnelFilter").value = "";
-    document.getElementById("numberingFilter").value = "";
-    document.getElementById("playTypeFilter").value = "";
-    filtered = [...responses];
-    render();
-};
+window.onclick = e =>
+    e.target.id === "modal" && (document.getElementById("modal").style.display="none");
 
 </script>
 
