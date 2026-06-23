@@ -49,23 +49,15 @@ input, select{
     border-radius:10px;
     overflow:hidden;
     box-shadow:0 2px 8px rgba(0,0,0,.15);
-    transition:0.2s;
     cursor:pointer;
 }
 
-.card:hover{
-    transform:translateY(-3px);
-    box-shadow:0 6px 16px rgba(0,0,0,.2);
-}
-
-/* MEDIA */
 .card img,
 .card video{
     width:100%;
     max-height:260px;
     object-fit:contain;
     background:#111;
-    display:block;
 }
 
 /* INFO */
@@ -114,7 +106,6 @@ input, select{
 .video{
     width:100%;
     margin-top:20px;
-    border-radius:10px;
 }
 </style>
 </head>
@@ -127,7 +118,11 @@ input, select{
 
 <div class="control-bar">
 
-    <input id="searchInput" placeholder="Search keyword...">
+    <input id="searchInput" placeholder="Keyword search...">
+
+    <select id="filterSelect">
+        <option value="">Filter Question</option>
+    </select>
 
     <select id="sortSelect">
         <option value="desc">Newest First</option>
@@ -138,11 +133,9 @@ input, select{
 
 <div id="gallery">Loading...</div>
 
-<!-- MODAL -->
 <div class="modal" id="modal">
     <div class="modal-content">
         <span id="close">&times;</span>
-
         <img id="modalImage">
         <div id="modalInfo"></div>
         <div id="modalVideo"></div>
@@ -157,7 +150,9 @@ import {
     collection,
     getDocs,
     query,
-    where
+    where,
+    doc,
+    getDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 import { getAuth, onAuthStateChanged }
@@ -178,6 +173,7 @@ const assignmentId = params.get("id");
 
 let responses = [];
 let filtered = [];
+let questions = [];
 
 /* AUTH */
 onAuthStateChanged(auth, async (user) => {
@@ -191,23 +187,68 @@ onAuthStateChanged(auth, async (user) => {
 /* LOAD */
 async function load(){
 
+    // assignment（質問名取得）
+    const assignSnap = await getDoc(doc(db,"assignments",assignmentId));
+    if(assignSnap.exists()){
+        questions = assignSnap.data().questions || [];
+        buildFilterUI();
+    }
+
+    // responses
     const q = query(
-        collection(db, "assignmentResponses"),
-        where("assignmentId", "==", assignmentId)
+        collection(db,"assignmentResponses"),
+        where("assignmentId","==",assignmentId)
     );
 
     const snap = await getDocs(q);
 
     responses = [];
-
-    snap.forEach(d => {
-        responses.push({
-            id: d.id,
-            ...d.data()
-        });
+    snap.forEach(d=>{
+        responses.push({id:d.id,...d.data()});
     });
 
     filtered = [...responses];
+    render(filtered);
+}
+
+/* FILTER UI（質問名で生成） */
+function buildFilterUI(){
+
+    const sel = document.getElementById("filterSelect");
+    sel.innerHTML = `<option value="">Filter Question</option>`;
+
+    questions.forEach((q,i)=>{
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = q.text;
+        sel.appendChild(opt);
+    });
+}
+
+/* SEARCH + FILTER */
+function applyFilter(){
+
+    const keyword = document.getElementById("searchInput").value.toLowerCase();
+    const qIndex = document.getElementById("filterSelect").value;
+
+    filtered = responses.filter(r=>{
+
+        const answers = r.answers || {};
+
+        // question filter
+        if(qIndex !== ""){
+            const v = answers[qIndex];
+            if(!v) return false;
+
+            if(keyword){
+                return v.toString().toLowerCase().includes(keyword);
+            }
+            return true;
+        }
+
+        // global search
+        return JSON.stringify(r).toLowerCase().includes(keyword);
+    });
 
     sortAndRender();
 }
@@ -226,53 +267,17 @@ function sortAndRender(){
     render(filtered);
 }
 
-/* SEARCH */
-function applySearch(){
-
-    const keyword = document
-        .getElementById("searchInput")
-        .value
-        .toLowerCase()
-        .trim();
-
-    if(!keyword){
-        filtered = [...responses];
-        sortAndRender();
-        return;
-    }
-
-    filtered = responses.filter(r => {
-
-        const text = JSON.stringify(r.answers || {})
-            .toLowerCase();
-
-        const name = (r.userName || "").toLowerCase();
-        const title = (r.assignmentTitle || "").toLowerCase();
-
-        return (
-            text.includes(keyword) ||
-            name.includes(keyword) ||
-            title.includes(keyword)
-        );
-    });
-
-    sortAndRender();
-}
-
-/* TOP MEDIA */
+/* MEDIA */
 function getTopMedia(r){
 
     let image = null;
     let video = null;
 
     for(const k in r.answers){
-
         const v = r.answers[k];
 
         if(!image && typeof v === "string" && v.includes("http")){
-            if(v.includes("image") || v.match(/\.(jpg|png|jpeg|webp)/)){
-                image = v;
-            }
+            if(v.match(/\.(jpg|png|jpeg|webp)/)) image = v;
         }
 
         if(!video && typeof v === "string" && v.includes("video")){
@@ -280,13 +285,13 @@ function getTopMedia(r){
         }
     }
 
-    if(image) return {type:"image", url:image};
-    if(video) return {type:"video", url:video};
+    if(image) return {type:"image",url:image};
+    if(video) return {type:"video",url:video};
 
-    return {type:"none", url:"https://via.placeholder.com/600x400?text=No+Image"};
+    return {type:"none",url:"https://via.placeholder.com/600x400?text=No+Image"};
 }
 
-/* TITLE */
+/* TITLE = Q0 */
 function getTitle(r){
     return r.answers?.[0] || r.userName || "Untitled";
 }
@@ -294,22 +299,19 @@ function getTitle(r){
 /* RENDER */
 function render(list){
 
-    const gallery = document.getElementById("gallery");
-    gallery.innerHTML = "";
+    const g = document.getElementById("gallery");
+    g.innerHTML = "";
 
-    list.forEach(r => {
+    list.forEach(r=>{
 
         const media = getTopMedia(r);
 
-        let mediaHTML = "";
-
-        if(media.type === "image"){
-            mediaHTML = `<img src="${media.url}">`;
-        } else if(media.type === "video"){
-            mediaHTML = `<video src="${media.url}" muted></video>`;
-        } else {
-            mediaHTML = `<img src="${media.url}">`;
-        }
+        let mediaHTML =
+            media.type === "image"
+            ? `<img src="${media.url}">`
+            : media.type === "video"
+            ? `<video src="${media.url}" muted></video>`
+            : `<img src="${media.url}">`;
 
         const card = document.createElement("div");
         card.className = "card";
@@ -320,14 +322,13 @@ function render(list){
                 <div class="title">${getTitle(r)}</div>
                 <div class="meta">
                     ${r.userName || ""}<br>
-                    ${new Date(r.createdAt?.seconds*1000 || Date.now()).toLocaleString()}
+                    ${new Date(r.createdAt?.seconds*1000||Date.now()).toLocaleString()}
                 </div>
             </div>
         `;
 
-        card.onclick = () => openModal(r);
-
-        gallery.appendChild(card);
+        card.onclick = ()=>openModal(r);
+        g.appendChild(card);
     });
 }
 
@@ -340,56 +341,37 @@ function openModal(r){
     const video = document.getElementById("modalVideo");
 
     const media = getTopMedia(r);
-    img.src = media.type === "image" ? media.url : "";
+    img.src = media.type==="image" ? media.url : "";
 
     let html = `<h2>${getTitle(r)}</h2>`;
 
-    for(const k in r.answers){
-        const v = r.answers[k];
-
+    questions.forEach((q,i)=>{
         html += `
             <p>
-                <b>Q${k}:</b><br>
-                ${typeof v === "string" && v.includes("http") ? "" : v}
+                <b>${q.text}:</b><br>
+                ${r.answers?.[i] || ""}
             </p>
         `;
-    }
+    });
 
     info.innerHTML = html;
 
-    let videoHtml = "";
-
-    for(const k in r.answers){
-        const v = r.answers[k];
-        if(typeof v === "string" && v.includes("video")){
-            videoHtml += `
-                <video class="video" controls>
-                    <source src="${v}">
-                </video>
-            `;
-        }
-    }
-
-    video.innerHTML = videoHtml;
-    modal.style.display = "block";
+    modal.style.display="block";
 }
 
 /* EVENTS */
-document.getElementById("close").onclick = () => {
-    document.getElementById("modal").style.display = "none";
+document.getElementById("close").onclick=()=>{
+    document.getElementById("modal").style.display="none";
 };
-
-window.onclick = (e) => {
-    if(e.target.id === "modal"){
-        document.getElementById("modal").style.display = "none";
-    }
-};
-
-document.getElementById("sortSelect")
-    .addEventListener("change", sortAndRender);
 
 document.getElementById("searchInput")
-    .addEventListener("input", applySearch);
+.addEventListener("input",applyFilter);
+
+document.getElementById("filterSelect")
+.addEventListener("change",applyFilter);
+
+document.getElementById("sortSelect")
+.addEventListener("change",sortAndRender);
 
 </script>
 
