@@ -167,40 +167,18 @@ async function loadPlaylists(){
 /* ================= VIDEO LOAD ================= */
 async function loadVideos(playlistId){
 
-    console.log("loading videos for playlist:", playlistId);
+    console.log("TEAM:", teamId);
+    console.log("PLAYLIST:", playlistId);
 
-    const q = query(
-        collection(db, "videos"),
-        where("teamId", "==", teamId),
-        where("playlistId", "==", playlistId)
-    );
+    const snap = await getDocs(collection(db, "videos"));
 
-    const snap = await getDocs(q);
+    console.log("TOTAL VIDEOS:", snap.size);
 
     const container = document.getElementById("videoList");
     container.innerHTML = "";
 
-    console.log("videos found:", snap.size);
-
     snap.forEach(docSnap => {
-
-        const data = docSnap.data();
-
-        const div = document.createElement("div");
-        div.className = "video-card";
-
-        div.innerHTML = `
-            <div>🎬 VIDEO</div>
-            <div style="font-size:12px;color:#aaa;">
-                ${data.subtitle || "no subtitle"}
-            </div>
-        `;
-
-        div.onclick = () => {
-            document.getElementById("videoPlayer").src = data.videoUrl;
-        };
-
-        container.appendChild(div);
+        console.log("VIDEO DATA:", docSnap.data());
     });
 }
 
