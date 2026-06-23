@@ -137,9 +137,12 @@ import {
    Firebase
 ========================= */
 const firebaseConfig = {
-    apiKey: "XXX",
-    authDomain: "XXX",
-    projectId: "XXX"
+    apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
+    authDomain: "athletic-cloud-33538.firebaseapp.com",
+    projectId: "athletic-cloud-33538",
+    storageBucket: "athletic-cloud-33538.firebasestorage.app",
+    messagingSenderId: "1020993809301",
+    appId: "1:1020993809301:web:a31e28377788bef965249c"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -247,21 +250,22 @@ document.getElementById("uploadBtn").onclick = async () => {
 
     const data = await res.json();
 
-    if(!data.secure_url){
-        console.error(data);
-        throw new Error("Upload failed");
-    }
-
-    await addDoc(collection(db, "videos"), {
-        teamId,
-        playlistId,
-        title,
-        subtitle: subtitle || "",
-        videoUrl: data.secure_url,
-        thumbnailUrl: data.thumbnail_url || "",
-        createdAt: serverTimestamp()
-    });
+    if (!data || !data.secure_url) {
+    console.error("Cloudinary response error:", data);
+    throw new Error("Cloudinary upload failed");
 }
+
+   const docRef = await addDoc(collection(db, "videos"), {
+    teamId,
+    playlistId,
+    title,
+    subtitle: subtitle || "",
+    videoUrl: data.secure_url,
+    thumbnailUrl: data.thumbnail_url || "",
+    createdAt: serverTimestamp()
+});
+
+console.log("Saved video doc ID:", docRef.id);
 
         setStatus("All uploads complete!");
 
