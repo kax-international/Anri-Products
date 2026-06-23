@@ -190,10 +190,10 @@ document.getElementById("uploadBtn").onclick = async () => {
         return;
     }
 
-    if(!.video-block){
-        alert("Video file required");
-        return;
-    }
+    if(videoBlocks.length === 0){
+    alert("Add at least one video");
+    return;
+}
 
     setStatus("Uploading videos...");
 
@@ -269,7 +269,6 @@ document.getElementById("uploadBtn").onclick = async () => {
         document.getElementById("playlistTitle").value = "";
         document.getElementById("subtitleContainer").innerHTML =
             `<input class="subtitle-box" placeholder="ex. 06232026">`;
-        fileInput.value = "";
 
     }catch(err){
         console.error(err);
