@@ -1,1 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upload | Athletic Cloud</title>
 
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#f5f5f5;
+}
+
+.container{
+    max-width:900px;
+    margin:40px auto;
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,.1);
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+.section{
+    margin-bottom:20px;
+}
+
+label{
+    font-weight:bold;
+    display:block;
+    margin-bottom:6px;
+}
+
+input, textarea{
+    width:100%;
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:8px;
+    margin-bottom:10px;
+}
+
+button{
+    padding:12px 20px;
+    border:none;
+    border-radius:8px;
+    background:#111;
+    color:white;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#333;
+}
+
+.subtitle-box{
+    margin-bottom:10px;
+}
+
+.add-btn{
+    background:#444;
+    margin-bottom:20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Upload Video (Hudl Style)</h1>
+
+<!-- 1. playlist title -->
+<div class="section">
+    <label>Playlist Title</label>
+    <input id="playlistTitle" placeholder="ex. 2026 season">
+</div>
+
+<!-- subtitles -->
+<div class="section">
+    <label>Subtitles</label>
+
+    <div id="subtitleContainer">
+        <input class="subtitle-box" placeholder="ex. 06232026">
+    </div>
+
+    <button class="add-btn" id="addSubtitle">+ Add Subtitle</button>
+</div>
+
+<!-- video -->
+<div class="section">
+    <label>Video File</label>
+    <input type="file" id="videoFile">
+</div>
+
+<button id="uploadBtn">Upload</button>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import {
+    getFirestore,
+    doc,
+    setDoc,
+    addDoc,
+    collection,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "XXX",
+    authDomain: "XXX",
+    projectId: "XXX"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// teamId（URLから取得想定）
+const params = new URLSearchParams(location.search);
+const teamId = params.get("teamId");
+
+// subtitle追加
+document.getElementById("addSubtitle").onclick = () => {
+    const input = document.createElement("input");
+    input.className = "subtitle-box";
+    input.placeholder = "ex. Quarter back";
+    document.getElementById("subtitleContainer").appendChild(input);
+};
+
+// upload処理
+document.getElementById("uploadBtn").onclick = async () => {
+
+    const title = document.getElementById("playlistTitle").value;
+
+    const subtitleInputs = document.querySelectorAll(".subtitle-box");
+
+    const subtitles = [];
+    subtitleInputs.forEach(i => {
+        if(i.value.trim() !== ""){
+            subtitles.push(i.value.trim());
+        }
+    });
+
+    const file = document.getElementById("videoFile").files[0];
+
+    if(!title) return alert("Playlist title required");
+    if(!file) return alert("Video required");
+
+    // 1. playlistId作成（titleをID化）
+    const playlistId = title.replace(/\s+/g, "_").toLowerCase();
+
+    // 2. playlist保存
+    await setDoc(doc(db, "playlists", playlistId), {
+        teamId,
+        title,
+        subtitles,
+        createdAt: serverTimestamp()
+    });
+
+    // 3. 仮upload（ここはCloudinaryに差し替え）
+    const fakeVideoUrl = URL.createObjectURL(file);
+
+    // 4. video保存
+    await addDoc(collection(db, "videos"), {
+        teamId,
+        playlistId,
+        title,
+        subtitlePath: subtitles,
+        videoUrl: fakeVideoUrl,
+        createdAt: serverTimestamp()
+    });
+
+    alert("Upload complete!");
+};
+
+</script>
+
+</body>
+</html>
