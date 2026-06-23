@@ -65,79 +65,113 @@ import {
     doc,
     getDoc,
     collection,
-    getDocs
+    getDocs,
+    query,
+    where
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
     authDomain: "athletic-cloud-33538.firebaseapp.com",
-    projectId: "athletic-cloud-33538"
+    projectId: "athletic-cloud-33538",
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-const id = new URLSearchParams(location.search).get("id");
+const params = new URLSearchParams(location.search);
+const assignmentId = params.get("id");
+const teamId = params.get("teamId");
 
-let assignment;
+const container = document.getElementById("container");
 
-async function load(){
+/* ---------------------------
+   AUTH GATE（ここ超重要）
+----------------------------*/
+onAuthStateChanged(auth, async (user) => {
 
-    const snap = await getDoc(doc(db, "assignments", id));
-
-    assignment = snap.data();
-
-    document.getElementById("title").textContent = assignment.title;
-    document.getElementById("desc").textContent = assignment.description || "";
-
-    // VIDEO（任意フィールド）
-    if(assignment.videoUrl){
-        document.getElementById("videoArea").innerHTML =
-        `<video controls src="${assignment.videoUrl}"></video>`;
+    if (!user) {
+        location.href = "login.html";
+        return;
     }
 
-    // QUESTIONS
-    const qDiv = document.getElementById("questions");
-    qDiv.innerHTML = "";
+    await loadAssignment();
+    await loadResponses();
+});
 
-    assignment.questions.forEach((q,i)=>{
+/* ---------------------------
+   Assignment取得
+----------------------------*/
+let assignmentData = null;
 
-        const div = document.createElement("div");
-        div.className = "card";
+async function loadAssignment() {
 
-        div.innerHTML = `
-            <b>${i+1}. ${q.text}</b>
-            <p>type: ${q.type}</p>
-        `;
+    const snap = await getDoc(doc(db, "assignments", assignmentId));
 
-        qDiv.appendChild(div);
-    });
+    if (!snap.exists()) {
+        container.innerHTML = "Assignment not found";
+        return;
+    }
 
-    // RESPONSES
-    const snap2 = await getDocs(collection(db, "assignmentResponses"));
-
-    const resDiv = document.getElementById("responses");
-    resDiv.innerHTML = "";
-
-    snap2.forEach(d => {
-
-        const r = d.data();
-
-        if(r.assignmentId !== id) return;
-
-        const div = document.createElement("div");
-        div.className = "card";
-
-        div.innerHTML = `
-            <b>${r.userName || "Unknown"}</b>
-            <pre>${JSON.stringify(r.answers, null, 2)}</pre>
-        `;
-
-        resDiv.appendChild(div);
-    });
+    assignmentData = snap.data();
 }
 
-load();
+/* ---------------------------
+   Responses取得（ここでエラー出てる可能性高い）
+----------------------------*/
+async function loadResponses() {
+
+    try {
+
+        const q = query(
+            collection(db, "assignmentResponses"),
+            where("assignmentId", "==", assignmentId)
+        );
+
+        const snap = await getDocs(q);
+
+        const responses = [];
+
+        snap.forEach(docSnap => {
+            responses.push({
+                id: docSnap.id,
+                ...docSnap.data()
+            });
+        });
+
+        render(responses);
+
+    } catch (err) {
+        console.error("Firestore error:", err);
+        container.innerHTML = "Permission error or no access";
+    }
+}
+
+/* ---------------------------
+   UI表示
+----------------------------*/
+function render(responses) {
+
+    let html = "<h2>Responses</h2>";
+
+    responses.forEach(r => {
+
+        html += `
+            <div class="card">
+                <b>${r.userName || r.userId}</b><br/>
+                <pre>${JSON.stringify(r.answers, null, 2)}</pre>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
 
 </script>
 
