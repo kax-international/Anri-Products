@@ -146,13 +146,25 @@ button{
 
     <h1>Team Page</h1>
 
-    <div class="top-actions">
-        <button class="nav-btn" onclick="goAssignments()">Assignments</button>
-        <button class="nav-btn" onclick="goCreateAssignment()">Creating Assignment Form</button>
-    </div>
+    
 
     <div class="info">
-        <span class="label">Team ID:</span>
+        <span <div class="top-actions">
+
+    <button
+        class="nav-btn"
+        onclick="goAssignmentView()">
+        Assignment Forms
+    </button>
+
+    <button
+        class="nav-btn"
+        onclick="goCreateAssignment()">
+        Create Assignment
+    </button>
+
+</div>
+    class="label">Team ID:</span>
         <span id="teamId">loading...</span>
     </div>
 
@@ -217,17 +229,24 @@ const teamId = params.get("teamId");
 document.getElementById("teamId").textContent = teamId;
 
 // nav
-window.goAssignments = () => {
-    location.href = `Assignment.html?teamId=${teamId}`;
+window.goAssignmentView = function () {
+
+    const teamId =
+    new URLSearchParams(location.search)
+    .get("teamId");
+
+    window.location.href =
+    `AssignmentView.html?teamId=${teamId}`;
 };
 
-window.goCreateAssignment = () => {
-    location.href = `Assignmentcreate.html?teamId=${teamId}`;
-};
+window.goCreateAssignment = function () {
 
-window.goAssignments = function () {
-    const teamId = new URLSearchParams(location.search).get("teamId");
-    window.location.href = `AssignmentView.html?teamId=${teamId}`;
+    const teamId =
+    new URLSearchParams(location.search)
+    .get("teamId");
+
+    window.location.href =
+    `Assignmentcreate.html?teamId=${teamId}`;
 };
 
 // logout
