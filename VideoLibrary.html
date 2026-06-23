@@ -2,7 +2,6 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Video Library | Athletic Cloud</title>
 
 <style>
@@ -13,50 +12,68 @@ body{
 }
 
 .container{
-    max-width:1100px;
-    margin:30px auto;
-    background:white;
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 5px 15px rgba(0,0,0,.1);
     display:flex;
-    gap:20px;
+    height:100vh;
 }
 
+/* sidebar */
 .sidebar{
-    width:30%;
-    border-right:1px solid #eee;
-    padding-right:15px;
+    width:250px;
+    background:#111;
+    color:white;
+    padding:20px;
+    overflow:auto;
 }
 
-.main{
-    width:70%;
-}
-
-.item{
+.playlist{
     padding:10px;
-    margin-bottom:8px;
-    background:#f8f8f8;
+    margin-bottom:10px;
+    background:#222;
     border-radius:8px;
     cursor:pointer;
 }
 
-.item:hover{
-    background:#eaeaea;
+.playlist:hover{
+    background:#333;
 }
 
-.video-card{
+/* main */
+.main{
+    flex:1;
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+}
+
+.video-list{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+    gap:10px;
     margin-bottom:20px;
 }
 
-video{
-    width:100%;
-    border-radius:10px;
+.video-card{
+    background:white;
+    padding:10px;
+    border-radius:8px;
+    cursor:pointer;
 }
 
-.subtitle{
-    font-size:13px;
-    color:#666;
+.video-card:hover{
+    background:#eee;
+}
+
+.player{
+    flex:1;
+    background:black;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+video{
+    max-width:100%;
+    max-height:100%;
 }
 </style>
 </head>
@@ -65,17 +82,20 @@ video{
 
 <div class="container">
 
-<!-- Sidebar -->
-<div class="sidebar">
-    <h3>Playlists</h3>
-    <div id="playlistList"></div>
-</div>
+    <div class="sidebar">
+        <h3>Playlists</h3>
+        <div id="playlistList"></div>
+    </div>
 
-<!-- Main -->
-<div class="main">
-    <h3 id="currentTitle">Select Playlist</h3>
-    <div id="videoList"></div>
-</div>
+    <div class="main">
+
+        <div class="video-list" id="videoList"></div>
+
+        <div class="player">
+            <video id="videoPlayer" controls></video>
+        </div>
+
+    </div>
 
 </div>
 
@@ -89,26 +109,27 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "YOUR_KEY",
-    authDomain: "YOUR_DOMAIN",
-    projectId: "YOUR_PROJECT"
+    apiKey: "XXX",
+    authDomain: "XXX",
+    projectId: "XXX"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const params = new URLSearchParams(location.search);
-const teamId = params.get("teamId");
+const teamId = new URLSearchParams(location.search).get("teamId");
 
-// --------------------
-// Load playlists
-// --------------------
+let currentPlaylist = null;
+
+/* =======================
+   load playlists
+======================= */
 async function loadPlaylists(){
 
     const snap = await getDocs(collection(db, "playlists"));
 
-    const list = document.getElementById("playlistList");
-    list.innerHTML = "";
+    const container = document.getElementById("playlistList");
+    container.innerHTML = "";
 
     snap.forEach(docSnap => {
 
@@ -117,45 +138,51 @@ async function loadPlaylists(){
         if(data.teamId !== teamId) return;
 
         const div = document.createElement("div");
-        div.className = "item";
+        div.className = "playlist";
         div.textContent = data.title;
 
-        div.onclick = () => loadVideos(docSnap.id, data.title);
+        div.onclick = () => {
+            currentPlaylist = docSnap.id;
+            loadVideos(docSnap.id);
+        };
 
-        list.appendChild(div);
+        container.appendChild(div);
     });
 }
 
-// --------------------
-// Load videos
-// --------------------
-async function loadVideos(playlistId, title){
-
-    document.getElementById("currentTitle").textContent = title;
+/* =======================
+   load videos
+======================= */
+async function loadVideos(playlistId){
 
     const snap = await getDocs(
         collection(db, "playlists", playlistId, "videos")
     );
 
-    const videoList = document.getElementById("videoList");
-    videoList.innerHTML = "";
+    const container = document.getElementById("videoList");
+    container.innerHTML = "";
 
     snap.forEach(docSnap => {
 
-        const v = docSnap.data();
+        const data = docSnap.data();
 
         const div = document.createElement("div");
         div.className = "video-card";
 
         div.innerHTML = `
-            <video controls src="${v.videoUrl}"></video>
-            <div class="subtitle">${v.subtitle || ""}</div>
+            <div>🎬 Video</div>
+            <div>${data.subtitle || ""}</div>
         `;
 
-        videoList.appendChild(div);
+        div.onclick = () => {
+            document.getElementById("videoPlayer").src = data.videoUrl;
+        };
+
+        container.appendChild(div);
     });
 }
 
+/* init */
 loadPlaylists();
 
 </script>
