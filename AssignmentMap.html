@@ -8,90 +8,103 @@
 <style>
 body{
     margin:0;
-    font-family:Arial;
-    background:#0f0f0f;
-    color:white;
+    font-family:Arial,sans-serif;
+    background:#f3f3f3;
 }
 
 header{
     background:#111;
-    padding:20px 40px;
+    color:white;
+    padding:15px 20px;
     font-weight:bold;
 }
 
-.container{
-    max-width:1100px;
-    margin:30px auto;
+/* GRID */
+#gallery{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+    gap:20px;
     padding:20px;
 }
 
 /* CARD */
 .card{
-    background:#1a1a1a;
-    border-radius:16px;
+    background:white;
+    border-radius:10px;
     overflow:hidden;
-    margin-bottom:20px;
-    cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
     transition:0.2s;
-    box-shadow:0 4px 20px rgba(0,0,0,0.4);
+    cursor:pointer;
 }
 
 .card:hover{
-    transform:scale(1.01);
+    transform:translateY(-3px);
+    box-shadow:0 6px 16px rgba(0,0,0,.2);
 }
 
-.card-img{
+/* IMAGE */
+.card img{
     width:100%;
     height:220px;
     object-fit:cover;
-    background:#333;
+    background:#eee;
 }
 
-.card-body{
+/* INFO */
+.info{
     padding:15px;
 }
 
-.card-title{
+.title{
     font-size:18px;
     font-weight:bold;
     margin-bottom:8px;
 }
 
-.card-sub{
+.meta{
     font-size:13px;
-    opacity:0.7;
+    color:#666;
+    line-height:1.6;
 }
 
 /* MODAL */
 .modal{
+    display:none;
     position:fixed;
     top:0;
     left:0;
     width:100%;
     height:100%;
     background:rgba(0,0,0,0.85);
-    display:none;
-    justify-content:center;
-    align-items:center;
+    overflow:auto;
 }
 
 .modal-content{
-    width:90%;
-    max-width:900px;
-    background:#111;
-    border-radius:12px;
+    background:white;
+    width:95%;
+    max-width:1200px;
+    margin:20px auto;
     padding:20px;
+    border-radius:12px;
 }
 
-.modal img{
+#modalImage{
     width:100%;
-    border-radius:10px;
-    margin-bottom:10px;
+    max-height:70vh;
+    object-fit:contain;
+    background:#000;
+}
+
+#close{
+    float:right;
+    font-size:32px;
+    cursor:pointer;
 }
 
 .video{
     width:100%;
-    margin-top:15px;
+    margin-top:20px;
+    border-radius:10px;
 }
 </style>
 </head>
@@ -99,14 +112,22 @@ header{
 <body>
 
 <header>
-    ATHLETIC CLOUD - RESPONSE MAP
+    ATHLETIC CLOUD - BIG BLUE STYLE MAP
 </header>
 
-<div class="container" id="list"></div>
+<div id="gallery">Loading...</div>
 
 <!-- MODAL -->
 <div class="modal" id="modal">
-    <div class="modal-content" id="modalContent"></div>
+    <div class="modal-content">
+        <span id="close">&times;</span>
+
+        <img id="modalImage">
+
+        <div id="modalInfo"></div>
+
+        <div id="modalVideo"></div>
+    </div>
 </div>
 
 <script type="module">
@@ -138,8 +159,9 @@ const assignmentId = params.get("id");
 
 let responses = [];
 
+/* AUTH */
 onAuthStateChanged(auth, async (user) => {
-    if (!user) {
+    if(!user){
         location.href = "login.html";
         return;
     }
@@ -147,6 +169,7 @@ onAuthStateChanged(auth, async (user) => {
     await load();
 });
 
+/* LOAD DATA */
 async function load(){
 
     const q = query(
@@ -158,41 +181,37 @@ async function load(){
 
     responses = [];
 
-    snap.forEach(docSnap => {
+    snap.forEach(d => {
         responses.push({
-            id: docSnap.id,
-            ...docSnap.data()
+            id: d.id,
+            ...d.data()
         });
     });
 
-    renderCards();
+    render();
 }
 
-/* =========================
-   BIG BLUE OFFENSE STYLE CARD
-========================= */
-
+/* GET FIRST IMAGE */
 function getImage(r){
-    // 最初のimage URLを探す（将来拡張用）
-    for(const key in r.answers){
-        const v = r.answers[key];
-        if(typeof v === "string" && v.includes("http")){
-            if(v.includes("cloudinary") || v.includes("image")){
-                return v;
-            }
+    for(const k in r.answers){
+        const v = r.answers[k];
+        if(typeof v === "string" && v.startsWith("http")){
+            return v;
         }
     }
-    return "https://via.placeholder.com/800x400?text=No+Image";
+    return "https://via.placeholder.com/600x400?text=No+Image";
 }
 
+/* TITLE = Q0 */
 function getTitle(r){
     return r.answers?.[0] || r.userName || "Untitled";
 }
 
-function renderCards(){
+/* RENDER GRID */
+function render(){
 
-    const list = document.getElementById("list");
-    list.innerHTML = "";
+    const gallery = document.getElementById("gallery");
+    gallery.innerHTML = "";
 
     responses.forEach(r => {
 
@@ -203,38 +222,47 @@ function renderCards(){
         const title = getTitle(r);
 
         card.innerHTML = `
-            <img class="card-img" src="${img}">
-            <div class="card-body">
-                <div class="card-title">${title}</div>
-                <div class="card-sub">${r.userName || ""}</div>
+            <img src="${img}">
+            <div class="info">
+                <div class="title">${title}</div>
+                <div class="meta">
+                    ${r.userName || ""}<br>
+                    ${new Date(r.createdAt?.seconds*1000 || Date.now()).toLocaleString()}
+                </div>
             </div>
         `;
 
         card.onclick = () => openModal(r);
 
-        list.appendChild(card);
+        gallery.appendChild(card);
     });
 }
 
-/* =========================
-   MODAL VIEW
-========================= */
-
+/* MODAL */
 function openModal(r){
 
     const modal = document.getElementById("modal");
-    const content = document.getElementById("modalContent");
+    const img = document.getElementById("modalImage");
+    const info = document.getElementById("modalInfo");
+    const video = document.getElementById("modalVideo");
 
-    let html = "";
+    img.src = getImage(r);
 
-    html += `<h2>${r.userName || ""}</h2>`;
-    html += `<pre style="color:#ccc;">${JSON.stringify(r.answers, null, 2)}</pre>`;
+    let html = `<h2>${getTitle(r)}</h2>`;
 
-    // video表示（もしあれば）
-    for(const key in r.answers){
-        const v = r.answers[key];
+    for(const k in r.answers){
+        html += `<p><b>Q${k}:</b> ${JSON.stringify(r.answers[k])}</p>`;
+    }
+
+    info.innerHTML = html;
+
+    /* video (最後に表示) */
+    let videoHtml = "";
+
+    for(const k in r.answers){
+        const v = r.answers[k];
         if(typeof v === "string" && v.includes("video")){
-            html += `
+            videoHtml += `
                 <video class="video" controls>
                     <source src="${v}">
                 </video>
@@ -242,12 +270,19 @@ function openModal(r){
         }
     }
 
-    content.innerHTML = html;
-    modal.style.display = "flex";
+    video.innerHTML = videoHtml;
+
+    modal.style.display = "block";
 }
 
-document.getElementById("modal").onclick = () => {
+document.getElementById("close").onclick = () => {
     document.getElementById("modal").style.display = "none";
+};
+
+window.onclick = (e) => {
+    if(e.target.id === "modal"){
+        document.getElementById("modal").style.display = "none";
+    }
 };
 
 </script>
