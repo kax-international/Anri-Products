@@ -46,8 +46,8 @@ header{
 .card img{
     width:100%;
     height:220px;
-    object-fit:cover;
-    background:#eee;
+    object-fit:contain;   /* ★ 修正：見切れ防止 */
+    background:#111;
 }
 
 /* INFO */
@@ -191,13 +191,24 @@ async function load(){
     render();
 }
 
-/* GET FIRST IMAGE */
+/* IMAGE PICKER */
+function isImage(v){
+    return typeof v === "string" &&
+    (v.includes("cloudinary") || v.match(/\.(jpg|jpeg|png|webp)/));
+}
+
+/* VIDEO PICKER */
+function isVideo(v){
+    return typeof v === "string" &&
+    v.includes("cloudinary") &&
+    v.includes("/video/");
+}
+
+/* FIRST IMAGE */
 function getImage(r){
     for(const k in r.answers){
         const v = r.answers[k];
-        if(typeof v === "string" && v.startsWith("http")){
-            return v;
-        }
+        if(isImage(v)) return v;
     }
     return "https://via.placeholder.com/600x400?text=No+Image";
 }
@@ -238,6 +249,32 @@ function render(){
     });
 }
 
+/* SAFE RENDER */
+function renderAnswer(value){
+
+    if(isImage(value)){
+        return `<img src="${value}" style="width:100%;border-radius:8px;">`;
+    }
+
+    if(isVideo(value)){
+        return `
+            <video controls style="width:100%;border-radius:8px;">
+                <source src="${value}">
+            </video>
+        `;
+    }
+
+    if(Array.isArray(value)){
+        return value.map(v => renderAnswer(v)).join("<br>");
+    }
+
+    if(typeof value === "string" && value.startsWith("http")){
+        return ""; // URLは非表示
+    }
+
+    return value || "";
+}
+
 /* MODAL */
 function openModal(r){
 
@@ -251,17 +288,22 @@ function openModal(r){
     let html = `<h2>${getTitle(r)}</h2>`;
 
     for(const k in r.answers){
-        html += `<p><b>Q${k}:</b> ${JSON.stringify(r.answers[k])}</p>`;
+        html += `
+            <p>
+                <b>Q${k}:</b><br>
+                ${renderAnswer(r.answers[k])}
+            </p>
+        `;
     }
 
     info.innerHTML = html;
 
-    /* video (最後に表示) */
+    /* video at bottom */
     let videoHtml = "";
 
     for(const k in r.answers){
         const v = r.answers[k];
-        if(typeof v === "string" && v.includes("video")){
+        if(isVideo(v)){
             videoHtml += `
                 <video class="video" controls>
                     <source src="${v}">
@@ -275,6 +317,7 @@ function openModal(r){
     modal.style.display = "block";
 }
 
+/* CLOSE */
 document.getElementById("close").onclick = () => {
     document.getElementById("modal").style.display = "none";
 };
