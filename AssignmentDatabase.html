@@ -86,89 +86,41 @@ td[contenteditable="true"]{
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-
 import {
     getFirestore,
     doc,
     getDoc,
     collection,
     getDocs,
-    updateDoc
+    updateDoc,
+    deleteDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 import {
     getAuth,
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import {
-    deleteDoc
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-window.addRow = function(){
 
-    const emptyAnswers = {};
-
-    assignmentData.questions.forEach((_, i) => {
-        emptyAnswers[i] = "";
-    });
-
-    const newRow = {
-        id: null,
-        userId: "manual",
-        userName: "New Row",
-        answers: emptyAnswers
-    };
-
-    responses.push(newRow);
-
-    renderTable(assignmentData, responses);
-};
-html += `<tr data-id="${r.id || ""}" data-index="${rowIndex}">`;
-
-html += `
-<td>
-    ${r.userName || r.userId}
-    <button onclick="deleteRow('${r.id}', ${rowIndex})">
-        ❌
-    </button>
-</td>
-`;
-window.deleteRow = async function(id, index){
-
-    const confirmDelete = confirm("Delete this row?");
-    if(!confirmDelete) return;
-
-    // Firestore削除（既存データのみ）
-    if(id){
-
-        await deleteDoc(
-            doc(db, "assignmentResponses", id)
-        );
-    }
-
-    // ローカル削除
-    responses.splice(index, 1);
-
-    renderTable(assignmentData, responses);
-};
+/* Firebase */
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
     authDomain: "athletic-cloud-33538.firebaseapp.com",
     projectId: "athletic-cloud-33538",
-    storageBucket: "athletic-cloud-33538.firebasestorage.app",
-    messagingSenderId: "1020993809301",
-    appId: "1:1020993809301:web:a31e28377788bef965249c"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+/* params */
 const params = new URLSearchParams(location.search);
 const assignmentId = params.get("id");
 const teamId = params.get("teamId");
 
+let assignmentData = null;
 let responses = [];
 
+/* auth */
 onAuthStateChanged(auth, (user) => {
     if (!user) {
         location.href = "login.html";
@@ -177,58 +129,55 @@ onAuthStateChanged(auth, (user) => {
     loadTable();
 });
 
-async function loadTable(){
+/* load */
+async function loadTable() {
 
     const container = document.getElementById("tableContainer");
-
     container.innerHTML = "Loading...";
 
     const assignmentSnap = await getDoc(doc(db, "assignments", assignmentId));
-    const assignment = assignmentSnap.data();
+    assignmentData = assignmentSnap.data();
 
     const responseSnap = await getDocs(collection(db, "assignmentResponses"));
 
     responses = [];
 
     responseSnap.forEach(docSnap => {
-
         const data = docSnap.data();
-
-        if(data.assignmentId === assignmentId){
-            responses.push({
-                id: docSnap.id,
-                ...data
-            });
+        if (data.assignmentId === assignmentId) {
+            responses.push({ id: docSnap.id, ...data });
         }
     });
 
-    renderTable(assignment, responses);
+    renderTable();
 }
 
-function renderTable(assignment, responses){
+/* render */
+function renderTable() {
 
     const container = document.getElementById("tableContainer");
 
     let html = "<table>";
 
-    // HEADER
+    /* HEADER */
     html += "<tr>";
     html += "<th>User</th>";
 
-    assignment.questions.forEach((q, i) => {
-        html += `<th>${q.text || "Q"+(i+1)}</th>`;
+    assignmentData.questions.forEach((q, i) => {
+        html += `<th>${q.text || "Q" + (i + 1)}</th>`;
     });
 
+    html += "<th>Actions</th>";
     html += "</tr>";
 
-    // ROWS
+    /* ROWS */
     responses.forEach((r, rowIndex) => {
 
         html += `<tr data-id="${r.id}">`;
 
         html += `<td>${r.userName || r.userId}</td>`;
 
-        assignment.questions.forEach((q, colIndex) => {
+        assignmentData.questions.forEach((q, colIndex) => {
 
             const val = r.answers?.[colIndex] || "";
 
@@ -241,6 +190,12 @@ function renderTable(assignment, responses){
             `;
         });
 
+        html += `
+            <td>
+                <button onclick="deleteRow('${r.id}', ${rowIndex})">🗑</button>
+            </td>
+        `;
+
         html += "</tr>";
     });
 
@@ -249,28 +204,41 @@ function renderTable(assignment, responses){
     container.innerHTML = html;
 }
 
-// 保存
-window.saveChanges = async function(){
+/* delete row */
+window.deleteRow = async function(id, index) {
+
+    if (!confirm("Delete this row?")) return;
+
+    if (id) {
+        await deleteDoc(doc(db, "assignmentResponses", id));
+    }
+
+    responses.splice(index, 1);
+    renderTable();
+};
+
+/* save changes */
+window.saveChanges = async function () {
 
     const rows = document.querySelectorAll("tr");
 
-    rows.forEach(async (row) => {
+    for (const row of rows) {
 
         const id = row.getAttribute("data-id");
-        if(!id) return; // ← 新規行はスキップ
+        if (!id) continue;
 
         const tds = row.querySelectorAll("td");
 
         const newAnswers = [];
 
-        for(let i = 1; i < tds.length; i++){
+        for (let i = 1; i < tds.length - 1; i++) {
             newAnswers.push(tds[i].innerText.trim());
         }
 
         await updateDoc(doc(db, "assignmentResponses", id), {
             answers: newAnswers
         });
-    });
+    }
 
     alert("Saved!");
 };
