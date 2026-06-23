@@ -65,7 +65,18 @@ h2{
 </div>
 
 <script type="module">
+import { getAuth, onAuthStateChanged } 
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+const auth = getAuth(app);
+onAuthStateChanged(auth, (user) => {
 
+    if (!user) {
+        location.href = "login.html";
+        return;
+    }
+
+    load();
+});
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
     getFirestore,
@@ -88,8 +99,6 @@ const db = getFirestore(app);
 const teamId = new URLSearchParams(location.search).get("teamId");
 
 const list = document.getElementById("assignmentList");
-
-load();
 
 async function load() {
 
