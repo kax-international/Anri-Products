@@ -118,16 +118,19 @@ loadAssignments();
 
 async function loadAssignments(){
 
-    const list =
-    document.getElementById(
-        "assignmentList"
+    console.log("Loading assignments...");
+
+    const snapshot =
+    await getDocs(
+        collection(db,"assignments")
     );
 
-    list.innerHTML = "";
-console.log("Loading assignments...");
-snapshot.forEach(docSnap => {
-    console.log(docSnap.data());
-});
+    snapshot.forEach(docSnap => {
+        console.log(docSnap.id);
+        console.log(docSnap.data());
+    });
+
+}
     const snapshot =
     await getDocs(
         collection(
