@@ -1,1 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assignment View | Athletic Cloud</title>
 
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#f5f5f5;
+}
+
+header{
+    background:#111;
+    color:white;
+    padding:20px 40px;
+}
+
+.container{
+    max-width:900px;
+    margin:30px auto;
+    padding:20px;
+}
+
+.card{
+    background:white;
+    padding:15px;
+    margin-bottom:15px;
+    border-radius:10px;
+}
+
+video{
+    width:100%;
+    border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>ATHLETIC CLOUD - VIEW</header>
+
+<div class="container">
+
+    <h2 id="title">Loading...</h2>
+    <p id="desc"></p>
+
+    <div id="videoArea"></div>
+
+    <h3>Questions</h3>
+    <div id="questions"></div>
+
+    <h3>Responses</h3>
+    <div id="responses"></div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import {
+    getFirestore,
+    doc,
+    getDoc,
+    collection,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
+    authDomain: "athletic-cloud-33538.firebaseapp.com",
+    projectId: "athletic-cloud-33538"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const id = new URLSearchParams(location.search).get("id");
+
+let assignment;
+
+async function load(){
+
+    const snap = await getDoc(doc(db, "assignments", id));
+
+    assignment = snap.data();
+
+    document.getElementById("title").textContent = assignment.title;
+    document.getElementById("desc").textContent = assignment.description || "";
+
+    // VIDEO（任意フィールド）
+    if(assignment.videoUrl){
+        document.getElementById("videoArea").innerHTML =
+        `<video controls src="${assignment.videoUrl}"></video>`;
+    }
+
+    // QUESTIONS
+    const qDiv = document.getElementById("questions");
+    qDiv.innerHTML = "";
+
+    assignment.questions.forEach((q,i)=>{
+
+        const div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML = `
+            <b>${i+1}. ${q.text}</b>
+            <p>type: ${q.type}</p>
+        `;
+
+        qDiv.appendChild(div);
+    });
+
+    // RESPONSES
+    const snap2 = await getDocs(collection(db, "assignmentResponses"));
+
+    const resDiv = document.getElementById("responses");
+    resDiv.innerHTML = "";
+
+    snap2.forEach(d => {
+
+        const r = d.data();
+
+        if(r.assignmentId !== id) return;
+
+        const div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML = `
+            <b>${r.userName || "Unknown"}</b>
+            <pre>${JSON.stringify(r.answers, null, 2)}</pre>
+        `;
+
+        resDiv.appendChild(div);
+    });
+}
+
+load();
+
+</script>
+
+</body>
+</html>
