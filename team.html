@@ -225,6 +225,11 @@ window.goCreateAssignment = () => {
     location.href = `Assignmentcreate.html?teamId=${teamId}`;
 };
 
+window.goAssignments = function () {
+    const teamId = new URLSearchParams(location.search).get("teamId");
+    window.location.href = `AssignmentView.html?teamId=${teamId}`;
+};
+
 // logout
 document.getElementById("logoutBtn").addEventListener("click", async () => {
     await signOut(auth);
