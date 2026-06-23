@@ -163,6 +163,11 @@ button{
         onclick="goAssignmentDatabase()">
         Search Database
     </button>
+    <button
+        class="nav-btn"
+        onclick="goSearchEngine()">
+        SearchEngine
+    </button>
 
 </div>
 <div class="info">
@@ -240,6 +245,10 @@ window.goAssignmentView = function () {
     `AssignmentView.html?teamId=${teamId}`;
 };
 window.goAssignmentDatabase = function () {
+    window.location.href =
+    `AssignmentResult.html?teamId=${teamId}`;
+};
+window.goSearchEngine = function () {
     window.location.href =
     `Assignment.html?teamId=${teamId}`;
 };
