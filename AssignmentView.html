@@ -124,7 +124,10 @@ async function loadAssignments(){
     );
 
     list.innerHTML = "";
-
+console.log("Loading assignments...");
+snapshot.forEach(docSnap => {
+    console.log(docSnap.data());
+});
     const snapshot =
     await getDocs(
         collection(
