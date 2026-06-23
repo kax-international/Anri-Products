@@ -239,14 +239,12 @@ document.getElementById("uploadBtn").onclick = async () => {
            3. video save
         ========================= */
         await addDoc(collection(db, "videos"), {
-            teamId,
-            playlistId,
-            title,
-            subtitlePath: subtitles,
-            videoUrl,
-            thumbnailUrl: data.thumbnail_url || "",
-            createdAt: serverTimestamp()
-        });
+    teamId,
+    playlistId,
+    videoUrl,
+    subtitlePath: subtitles,
+    createdAt: serverTimestamp()
+});
 
         setStatus("Upload complete!");
 
