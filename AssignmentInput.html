@@ -339,101 +339,73 @@ async function uploadToCloudinary(file){
 }
 async function submitForm(){
 
-    const answers = {};
+    try {
 
-    for(
-        let index = 0;
-        index < assignmentData.questions.length;
-        index++
-    ){
+        const answers = {};
 
-        const question =
-        assignmentData.questions[index];
+        for (let index = 0; index < assignmentData.questions.length; index++) {
 
-        if(question.type === "checkbox"){
+            const question = assignmentData.questions[index];
 
-            answers[index] = [];
+            if (question.type === "checkbox") {
 
-            document
-            .querySelectorAll(
-                `[data-q="${index}"]`
-            )
-            .forEach(box=>{
+                answers[index] = [];
 
-                if(box.checked){
+                document.querySelectorAll(`[data-q="${index}"]`)
+                .forEach(box => {
+                    if (box.checked) {
+                        answers[index].push(box.value);
+                    }
+                });
 
-                    answers[index].push(
-                        box.value
-                    );
+            } else if (
+                question.type === "image" ||
+                question.type === "video"
+            ) {
 
+                const input = document.querySelector(`[data-q="${index}"]`);
+
+                if (input.files.length > 0) {
+                    const url = await uploadToCloudinary(input.files[0]);
+                    answers[index] = url;
+                } else {
+                    answers[index] = "";
                 }
 
-            });
+            } else {
 
-        }
-        else if(
-            question.type === "image" ||
-            question.type === "video"
-        ){
-
-            const input =
-            document.querySelector(
-                `[data-q="${index}"]`
-            );
-
-            if(
-                input.files.length > 0
-            ){
-
-                const url =
-                await uploadToCloudinary(
-                    input.files[0]
-                );
-
-                answers[index] =
-                url;
-
-            }else{
-
-                answers[index] = "";
+                const input = document.querySelector(`[data-q="${index}"]`);
+                answers[index] = input.value;
 
             }
-
-        }
-        else{
-
-            const input =
-            document.querySelector(
-                `[data-q="${index}"]`
-            );
-
-            answers[index] =
-            input.value;
-
         }
 
+        const user = auth.currentUser;
+
+        const assignmentTitle = assignmentData.title;
+
+        await addDoc(
+            collection(db, "assignmentResponses"),
+            {
+                assignmentId,
+                assignmentTitle,
+                teamId,
+
+                userId: user?.uid || "",
+                userName: user?.displayName || "",
+
+                answers,
+                createdAt: serverTimestamp()
+            }
+        );
+
+        alert("Response Submitted");
+        history.back();
+
+    } catch (err) {
+        console.error(err);
+        alert("Submit Failed");
     }
-
-   await addDoc(
-    collection(
-        db,
-        "assignmentResponses"
-    ),
-    {
-  assignmentId,
-  assignmentTitle,
-  teamId,
-  userId,
-  userName,
-  answers,
-  createdAt
-}
-)
-
-    alert(
-        "Response Submitted"
-    );
-
 }
 
 </script>
