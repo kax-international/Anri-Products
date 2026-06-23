@@ -61,53 +61,99 @@ header{
 </div>
 
 <script type="module">
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
     getFirestore,
     collection,
     getDocs
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 import {
     getAuth,
     onAuthStateChanged
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
     authDomain: "athletic-cloud-33538.firebaseapp.com",
-    projectId: "athletic-cloud-33538"
+    projectId: "athletic-cloud-33538",
+    storageBucket: "athletic-cloud-33538.firebasestorage.app",
+    messagingSenderId: "1020993809301",
+    appId: "1:1020993809301:web:a31e28377788bef965249c"
 };
 
+// ✅ init
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+
+// URL params
+const teamId = new URLSearchParams(location.search).get("teamId");
+
+// DOM
+const listEl = document.getElementById("list");
+const searchEl = document.getElementById("search");
 
 let assignments = [];
 
-async function load(){
+/* -----------------------------
+   AUTH GATE
+----------------------------- */
+onAuthStateChanged(auth, async (user) => {
 
-    const snap = await getDocs(collection(db, "assignments"));
+    if (!user) {
+        location.href = "login.html";
+        return;
+    }
 
-    assignments = [];
+    await loadAssignments();
+});
 
-    snap.forEach(docSnap => {
-        assignments.push({
-            id: docSnap.id,
-            ...docSnap.data()
+/* -----------------------------
+   LOAD DATA
+----------------------------- */
+async function loadAssignments() {
+
+    try {
+        listEl.innerHTML = "Loading...";
+
+        const snap = await getDocs(collection(db, "assignments"));
+
+        assignments = [];
+
+        snap.forEach(docSnap => {
+
+            const data = docSnap.data();
+
+            // team filter
+            if (teamId && data.teamId !== teamId) return;
+
+            assignments.push({
+                id: docSnap.id,
+                ...data
+            });
         });
-    });
 
-    render(assignments);
+        render(assignments);
+
+    } catch (err) {
+        console.error(err);
+        listEl.innerHTML = "<p>Error loading assignments</p>";
+    }
 }
 
-function render(data){
+/* -----------------------------
+   RENDER
+----------------------------- */
+function render(data) {
 
-    const list = document.getElementById("list");
-    list.innerHTML = "";
+    listEl.innerHTML = "";
+
+    if (data.length === 0) {
+        listEl.innerHTML = "<p>No assignments found</p>";
+        return;
+    }
 
     data.forEach(a => {
 
@@ -115,21 +161,23 @@ function render(data){
         div.className = "card";
 
         div.innerHTML = `
-            <h3>${a.title}</h3>
+            <h3>${a.title || ""}</h3>
             <p>${a.description || ""}</p>
         `;
 
         div.onclick = () => {
-            location.href =
-            `AssignmentMap.html?id=${a.id}`;
+            location.href = `AssignmentMap.html?id=${a.id}&teamId=${teamId}`;
         };
 
-        list.appendChild(div);
+        listEl.appendChild(div);
     });
 }
 
-// SEARCH
-document.getElementById("search").addEventListener("input", (e)=>{
+/* -----------------------------
+   SEARCH
+----------------------------- */
+searchEl.addEventListener("input", (e) => {
+
     const q = e.target.value.toLowerCase();
 
     const filtered = assignments.filter(a =>
@@ -139,8 +187,6 @@ document.getElementById("search").addEventListener("input", (e)=>{
 
     render(filtered);
 });
-
-load();
 
 </script>
 
