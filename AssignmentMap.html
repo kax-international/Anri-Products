@@ -117,7 +117,13 @@ header{
 <header>
     ATHLETIC CLOUD - Assignments
 </header>
-
+<div style="padding:10px 20px;">
+    <label>Sort: </label>
+    <select id="sortSelect">
+        <option value="desc">Newest First</option>
+        <option value="asc">Oldest First</option>
+    </select>
+</div>
 <div id="gallery">Loading...</div>
 
 <!-- MODAL -->
@@ -192,8 +198,28 @@ async function load(){
     });
 
     render();
+    sortResponses();
 }
+document.getElementById("sortSelect").addEventListener("change", () => {
+    sortResponses();
+    render();
+});
+function sortResponses() {
 
+    const mode = document.getElementById("sortSelect").value;
+
+    responses.sort((a, b) => {
+
+        const timeA = a.createdAt?.seconds || 0;
+        const timeB = b.createdAt?.seconds || 0;
+
+        if (mode === "asc") {
+            return timeA - timeB;
+        } else {
+            return timeB - timeA;
+        }
+    });
+}
 /* IMAGE CHECK */
 function isImage(v){
     return typeof v === "string" &&
