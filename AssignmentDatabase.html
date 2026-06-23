@@ -71,6 +71,13 @@ td[contenteditable="true"]{
     <button class="save-btn" onclick="saveChanges()">
         Save Changes
     </button>
+    <button class="save-btn" onclick="addRow()">
+    + Add Row
+</button>
+
+<button class="save-btn" onclick="saveChanges()">
+    Save Changes
+</button>
 
     <div id="tableContainer">Loading...</div>
 
@@ -93,7 +100,56 @@ import {
     getAuth,
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import {
+    deleteDoc
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+window.addRow = function(){
 
+    const emptyAnswers = {};
+
+    assignmentData.questions.forEach((_, i) => {
+        emptyAnswers[i] = "";
+    });
+
+    const newRow = {
+        id: null,
+        userId: "manual",
+        userName: "New Row",
+        answers: emptyAnswers
+    };
+
+    responses.push(newRow);
+
+    renderTable(assignmentData, responses);
+};
+html += `<tr data-id="${r.id || ""}" data-index="${rowIndex}">`;
+
+html += `
+<td>
+    ${r.userName || r.userId}
+    <button onclick="deleteRow('${r.id}', ${rowIndex})">
+        ❌
+    </button>
+</td>
+`;
+window.deleteRow = async function(id, index){
+
+    const confirmDelete = confirm("Delete this row?");
+    if(!confirmDelete) return;
+
+    // Firestore削除（既存データのみ）
+    if(id){
+
+        await deleteDoc(
+            doc(db, "assignmentResponses", id)
+        );
+    }
+
+    // ローカル削除
+    responses.splice(index, 1);
+
+    renderTable(assignmentData, responses);
+};
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
     authDomain: "athletic-cloud-33538.firebaseapp.com",
@@ -196,13 +252,12 @@ function renderTable(assignment, responses){
 // 保存
 window.saveChanges = async function(){
 
-    const table = document.querySelector("table");
-    const rows = table.querySelectorAll("tr");
+    const rows = document.querySelectorAll("tr");
 
-    rows.forEach(async (row, rowIndex) => {
+    rows.forEach(async (row) => {
 
         const id = row.getAttribute("data-id");
-        if(!id) return;
+        if(!id) return; // ← 新規行はスキップ
 
         const tds = row.querySelectorAll("td");
 
