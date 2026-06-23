@@ -414,12 +414,12 @@ async function submitForm(){
 
     }
 
-    await addDoc(
-        collection(
-            db,
-            "assignmentResponses"
-        ),
-        {
+   await addDoc(
+    collection(
+        db,
+        "assignmentResponses"
+    ),
+    {
   assignmentId,
   assignmentTitle,
   teamId,
@@ -428,7 +428,7 @@ async function submitForm(){
   answers,
   createdAt
 }
-    );
+)
 
     alert(
         "Response Submitted"
