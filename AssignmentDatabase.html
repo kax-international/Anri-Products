@@ -1,1 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Database | Athletic Cloud</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f5f5f5;
+}
+
+header{
+    background:#111;
+    color:white;
+    padding:20px 40px;
+}
+
+.container{
+    max-width:1200px;
+    margin:30px auto;
+    padding:10px;
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+}
+
+th,td{
+    border:1px solid #ddd;
+    padding:10px;
+    min-width:120px;
+    text-align:left;
+}
+
+th{
+    background:#111;
+    color:white;
+}
+
+td[contenteditable="true"]{
+    background:#f9f9f9;
+}
+
+.save-btn{
+    margin:10px 0;
+    padding:10px 15px;
+    background:#111;
+    color:white;
+    border:none;
+    cursor:pointer;
+    border-radius:8px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    ATHLETIC CLOUD - DATABASE
+</header>
+
+<div class="container">
+
+    <button class="save-btn" onclick="saveChanges()">
+        Save Changes
+    </button>
+
+    <div id="tableContainer">Loading...</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+    getFirestore,
+    doc,
+    getDoc,
+    collection,
+    getDocs,
+    updateDoc
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
+    authDomain: "athletic-cloud-33538.firebaseapp.com",
+    projectId: "athletic-cloud-33538",
+    storageBucket: "athletic-cloud-33538.firebasestorage.app",
+    messagingSenderId: "1020993809301",
+    appId: "1:1020993809301:web:a31e28377788bef965249c"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const params = new URLSearchParams(location.search);
+const assignmentId = params.get("id");
+const teamId = params.get("teamId");
+
+let responses = [];
+
+onAuthStateChanged(auth, (user) => {
+    if (!user) {
+        location.href = "login.html";
+        return;
+    }
+    loadTable();
+});
+
+async function loadTable(){
+
+    const container = document.getElementById("tableContainer");
+
+    container.innerHTML = "Loading...";
+
+    const assignmentSnap = await getDoc(doc(db, "assignments", assignmentId));
+    const assignment = assignmentSnap.data();
+
+    const responseSnap = await getDocs(collection(db, "assignmentResponses"));
+
+    responses = [];
+
+    responseSnap.forEach(docSnap => {
+
+        const data = docSnap.data();
+
+        if(data.assignmentId === assignmentId){
+            responses.push({
+                id: docSnap.id,
+                ...data
+            });
+        }
+    });
+
+    renderTable(assignment, responses);
+}
+
+function renderTable(assignment, responses){
+
+    const container = document.getElementById("tableContainer");
+
+    let html = "<table>";
+
+    // HEADER
+    html += "<tr>";
+    html += "<th>User</th>";
+
+    assignment.questions.forEach((q, i) => {
+        html += `<th>${q.text || "Q"+(i+1)}</th>`;
+    });
+
+    html += "</tr>";
+
+    // ROWS
+    responses.forEach((r, rowIndex) => {
+
+        html += `<tr data-id="${r.id}">`;
+
+        html += `<td>${r.userName || r.userId}</td>`;
+
+        assignment.questions.forEach((q, colIndex) => {
+
+            const val = r.answers?.[colIndex] || "";
+
+            html += `
+                <td contenteditable="true"
+                    data-row="${rowIndex}"
+                    data-col="${colIndex}">
+                    ${Array.isArray(val) ? val.join(", ") : val}
+                </td>
+            `;
+        });
+
+        html += "</tr>";
+    });
+
+    html += "</table>";
+
+    container.innerHTML = html;
+}
+
+// 保存
+window.saveChanges = async function(){
+
+    const table = document.querySelector("table");
+    const rows = table.querySelectorAll("tr");
+
+    rows.forEach(async (row, rowIndex) => {
+
+        const id = row.getAttribute("data-id");
+        if(!id) return;
+
+        const tds = row.querySelectorAll("td");
+
+        const newAnswers = [];
+
+        for(let i = 1; i < tds.length; i++){
+            newAnswers.push(tds[i].innerText.trim());
+        }
+
+        await updateDoc(doc(db, "assignmentResponses", id), {
+            answers: newAnswers
+        });
+    });
+
+    alert("Saved!");
+};
+
+</script>
+
+</body>
+</html>
