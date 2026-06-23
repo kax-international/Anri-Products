@@ -86,24 +86,7 @@ header{
 </div>
 
 <script type="module">
-import {
-    getAuth,
-    onAuthStateChanged
-}
-const auth = getAuth(app);
 
-onAuthStateChanged(auth, (user) => {
-
-    console.log("USER:", user);
-
-    if(!user){
-
-        alert("Not Logged In");
-        return;
-    }
-
-});
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 import { initializeApp }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
@@ -113,6 +96,12 @@ import {
     getDocs
 }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+import {
+    getAuth,
+    onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
@@ -124,83 +113,110 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 const teamId =
-new URLSearchParams(
-    location.search
-).get("teamId");
+new URLSearchParams(location.search)
+.get("teamId");
+
+onAuthStateChanged(auth, async (user) => {
+
+    console.log("AUTH USER:", user);
+
+    if(!user){
+
+        alert("Login required");
+        location.href = "login.html";
+        return;
+
+    }
+
+    await loadAssignments();
+
+});
 
 async function loadAssignments(){
 
-    console.log("Loading assignments...");
+    try{
 
-    const list =
-    document.getElementById(
-        "assignmentList"
-    );
+        console.log("Loading assignments...");
 
-    list.innerHTML = "";
+        const list =
+        document.getElementById("assignmentList");
 
-}
-    const snapshot =
-    await getDocs(
-        collection(
-            db,
-            "assignments"
-        )
-    );
+        list.innerHTML = "";
 
-    let found = false;
-
-    snapshot.forEach(docSnap => {
-
-        const data =
-        docSnap.data();
-
-        if(
-            data.teamId !== teamId
-        ){
-            return;
-        }
-
-        found = true;
-
-        const card =
-        document.createElement("div");
-
-        card.className =
-        "assignment-card";
-
-        card.innerHTML = `
-            <h3>${data.title}</h3>
-            <p>${data.description || ""}</p>
-            <small>
-                ${data.questions?.length || 0}
-                Questions
-            </small>
-        `;
-
-        card.addEventListener(
-            "click",
-            () => {
-
-                window.location.href =
-                `AssignmentInput.html?id=${docSnap.id}&teamId=${teamId}`;
-
-            }
+        const snapshot =
+        await getDocs(
+            collection(db,"assignments")
         );
 
-        list.appendChild(card);
+        console.log(
+            "Documents:",
+            snapshot.size
+        );
 
-    });
+        let found = false;
 
-    if(!found){
+        snapshot.forEach(docSnap => {
 
-        list.innerHTML =
-        "<p>No Forms Found</p>";
+            const data =
+            docSnap.data();
+
+            console.log(data);
+
+            if(data.teamId !== teamId){
+                return;
+            }
+
+            found = true;
+
+            const card =
+            document.createElement("div");
+
+            card.className =
+            "assignment-card";
+
+            card.innerHTML = `
+                <h3>${data.title}</h3>
+                <p>${data.description || ""}</p>
+                <small>
+                    ${data.questions?.length || 0}
+                    Questions
+                </small>
+            `;
+
+            card.onclick = () => {
+
+                location.href =
+                `AssignmentInput.html?id=${docSnap.id}&teamId=${teamId}`;
+
+            };
+
+            list.appendChild(card);
+
+        });
+
+        if(!found){
+
+            list.innerHTML =
+            "<p>No Forms Found</p>";
+
+        }
 
     }
+    catch(err){
+
+        console.error(
+            "LOAD ERROR:",
+            err
+        );
+
+    }
+
+}
 
 </script>
 
