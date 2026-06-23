@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Form Database | Athletic Cloud</title>
+<title>Assignment Result | Athletic Cloud</title>
 
 <style>
 body{
     margin:0;
-    background:#f5f5f5;
     font-family:Arial,sans-serif;
+    background:#f5f5f5;
 }
 
 header{
@@ -20,46 +20,32 @@ header{
 }
 
 .logo{
-    font-size:1.8rem;
+    font-size:1.6rem;
     font-weight:bold;
-    letter-spacing:2px;
 }
 
 .container{
     max-width:900px;
     margin:40px auto;
-    padding:30px;
+    padding:20px;
 }
 
-.form-card{
+.card{
     background:white;
     padding:20px;
-    margin-bottom:15px;
     border-radius:12px;
-    box-shadow:0 2px 10px rgba(0,0,0,.08);
+    margin-bottom:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
     cursor:pointer;
     transition:0.2s;
 }
 
-.form-card:hover{
+.card:hover{
     transform:translateY(-2px);
 }
 
-.form-title{
-    font-size:18px;
-    font-weight:bold;
-    margin-bottom:6px;
-}
-
-.form-desc{
-    color:#666;
-    font-size:14px;
-}
-
-.small{
-    font-size:12px;
-    color:#999;
-    margin-top:8px;
+h2{
+    margin-bottom:20px;
 }
 </style>
 </head>
@@ -72,24 +58,20 @@ header{
 
 <div class="container">
 
-    <h1>Assignment Database</h1>
-    <p>Select a form to view spreadsheet</p>
+    <h2>Select a form to view spreadsheet</h2>
 
-    <div id="formList">Loading...</div>
+    <div id="assignmentList">Loading...</div>
 
 </div>
 
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
     getFirestore,
     collection,
     getDocs
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
@@ -103,55 +85,63 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const teamId =
-new URLSearchParams(location.search).get("teamId");
+const teamId = new URLSearchParams(location.search).get("teamId");
 
-loadForms();
+const list = document.getElementById("assignmentList");
 
-async function loadForms(){
+load();
 
-    const list =
-    document.getElementById("formList");
+async function load() {
 
-    list.innerHTML = "";
+    try {
 
-    const snapshot =
-    await getDocs(collection(db, "assignments"));
+        console.log("Loading assignments...");
 
-    let found = false;
+        list.innerHTML = "Loading...";
 
-    snapshot.forEach(docSnap => {
+        const snap = await getDocs(collection(db, "assignments"));
 
-        const data = docSnap.data();
+        list.innerHTML = "";
 
-        if(data.teamId !== teamId) return;
+        let found = false;
 
-        found = true;
+        snap.forEach(docSnap => {
 
-        const card = document.createElement("div");
-        card.className = "form-card";
+            const data = docSnap.data();
 
-        card.innerHTML = `
-            <div class="form-title">${data.title}</div>
-            <div class="form-desc">${data.description || ""}</div>
-            <div class="small">
-                ${data.questions?.length || 0} questions
-            </div>
-        `;
+            console.log("ASSIGNMENT:", docSnap.id, data);
 
-        card.onclick = () => {
+            // team filter（ここ超重要）
+            if (teamId && data.teamId !== teamId) {
+                return;
+            }
 
-            window.location.href =
-            `AssignmentDatabase.html?id=${docSnap.id}&teamId=${teamId}`;
+            found = true;
 
-        };
+            const card = document.createElement("div");
+            card.className = "card";
 
-        list.appendChild(card);
+            card.innerHTML = `
+                <h3>${data.title}</h3>
+                <p>${data.description || ""}</p>
+                <small>${data.questions?.length || 0} questions</small>
+            `;
 
-    });
+            card.onclick = () => {
+                window.location.href =
+                `AssignmentDatabase.html?id=${docSnap.id}&teamId=${teamId}`;
+            };
 
-    if(!found){
-        list.innerHTML = "<p>No forms found</p>";
+            list.appendChild(card);
+        });
+
+        if (!found) {
+            list.innerHTML = "<p>No assignments found</p>";
+        }
+
+    } catch (err) {
+        console.error(err);
+        list.innerHTML = "<p>Error loading assignments</p>";
     }
 }
 
