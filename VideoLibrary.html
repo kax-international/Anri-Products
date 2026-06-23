@@ -2,13 +2,15 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Video Library | Athletic Cloud</title>
 
 <style>
 body{
     margin:0;
     font-family:Arial;
-    background:#f5f5f5;
+    background:#111;
+    color:white;
 }
 
 .container{
@@ -16,13 +18,13 @@ body{
     height:100vh;
 }
 
-/* sidebar */
+/* LEFT */
 .sidebar{
-    width:250px;
-    background:#111;
-    color:white;
+    width:260px;
+    background:#000;
     padding:20px;
     overflow:auto;
+    border-right:1px solid #333;
 }
 
 .playlist{
@@ -37,38 +39,40 @@ body{
     background:#333;
 }
 
-/* main */
+/* CENTER */
 .main{
     flex:1;
-    padding:20px;
     display:flex;
     flex-direction:column;
 }
 
+/* VIDEO LIST */
 .video-list{
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
     gap:10px;
-    margin-bottom:20px;
+    padding:20px;
+    background:#111;
 }
 
 .video-card{
-    background:white;
+    background:#222;
     padding:10px;
     border-radius:8px;
     cursor:pointer;
 }
 
 .video-card:hover{
-    background:#eee;
+    background:#333;
 }
 
+/* PLAYER */
 .player{
     flex:1;
-    background:black;
     display:flex;
     justify-content:center;
     align-items:center;
+    background:black;
 }
 
 video{
@@ -105,9 +109,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebas
 import {
     getFirestore,
     collection,
-    getDocs
+    getDocs,
+    query,
+    where
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
+/* ================= Firebase ================= */
 const firebaseConfig = {
     apiKey: "XXX",
     authDomain: "XXX",
@@ -117,32 +124,37 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+/* ================= URL ================= */
 const teamId = new URLSearchParams(location.search).get("teamId");
+
+console.log("teamId:", teamId);
 
 let currentPlaylist = null;
 
-/* =======================
-   load playlists
-======================= */
+/* ================= PLAYLIST LOAD ================= */
 async function loadPlaylists(){
 
-    const snap = await getDocs(collection(db, "playlists"));
+    const q = query(
+        collection(db, "playlists"),
+        where("teamId", "==", teamId)
+    );
+
+    const snap = await getDocs(q);
 
     const container = document.getElementById("playlistList");
     container.innerHTML = "";
 
+    console.log("playlists found:", snap.size);
+
     snap.forEach(docSnap => {
 
         const data = docSnap.data();
-
-        if(data.teamId !== teamId) return;
 
         const div = document.createElement("div");
         div.className = "playlist";
         div.textContent = data.title;
 
         div.onclick = () => {
-            currentPlaylist = docSnap.id;
             loadVideos(docSnap.id);
         };
 
@@ -150,10 +162,10 @@ async function loadPlaylists(){
     });
 }
 
-/* =======================
-   load videos
-======================= */
+/* ================= VIDEO LOAD ================= */
 async function loadVideos(playlistId){
+
+    console.log("loading videos:", playlistId);
 
     const snap = await getDocs(
         collection(db, "playlists", playlistId, "videos")
@@ -161,6 +173,8 @@ async function loadVideos(playlistId){
 
     const container = document.getElementById("videoList");
     container.innerHTML = "";
+
+    console.log("videos found:", snap.size);
 
     snap.forEach(docSnap => {
 
@@ -170,8 +184,10 @@ async function loadVideos(playlistId){
         div.className = "video-card";
 
         div.innerHTML = `
-            <div>🎬 Video</div>
-            <div>${data.subtitle || ""}</div>
+            <div>🎬 VIDEO</div>
+            <div style="font-size:12px;color:#aaa;">
+                ${data.subtitle || "no subtitle"}
+            </div>
         `;
 
         div.onclick = () => {
@@ -182,7 +198,7 @@ async function loadVideos(playlistId){
     });
 }
 
-/* init */
+/* INIT */
 loadPlaylists();
 
 </script>
