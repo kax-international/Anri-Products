@@ -137,24 +137,21 @@ let currentPlaylist = null;
 /* ================= PLAYLIST LOAD ================= */
 async function loadPlaylists(){
 
-    const snap = await getDocs(collection(db, "playlists"));
+    const q = query(
+        collection(db, "playlists"),
+        where("teamId", "==", teamId)
+    );
+
+    const snap = await getDocs(q);
 
     const container = document.getElementById("playlistList");
     container.innerHTML = "";
 
-    let count = 0;
+    console.log("playlists found:", snap.size);
 
     snap.forEach(docSnap => {
 
         const data = docSnap.data();
-
-        console.log("playlist doc:", docSnap.id, data);
-
-        // 🔥 手動フィルタ（これが一番壊れない）
-        if(!data.teamId) return;
-        if(data.teamId.trim() !== teamId) return;
-
-        count++;
 
         const div = document.createElement("div");
         div.className = "playlist";
@@ -166,26 +163,24 @@ async function loadPlaylists(){
 
         container.appendChild(div);
     });
-
-    console.log("FINAL playlists found:", count);
 }
 /* ================= VIDEO LOAD ================= */
 async function loadVideos(playlistId){
 
-    console.log("loading videos:", playlistId);
+    console.log("loading videos for playlist:", playlistId);
 
-    const snap = await getDocs(
-        collection(db, "playlists", playlistId, "videos")
+    const q = query(
+        collection(db, "videos"),
+        where("teamId", "==", teamId),
+        where("playlistId", "==", playlistId)
     );
+
+    const snap = await getDocs(q);
 
     const container = document.getElementById("videoList");
     container.innerHTML = "";
 
     console.log("videos found:", snap.size);
-
-    if(snap.empty){
-        console.warn("No videos in playlist:", playlistId);
-    }
 
     snap.forEach(docSnap => {
 
@@ -202,9 +197,7 @@ async function loadVideos(playlistId){
         `;
 
         div.onclick = () => {
-            const player = document.getElementById("videoPlayer");
-            player.src = data.videoUrl;
-            player.play();
+            document.getElementById("videoPlayer").src = data.videoUrl;
         };
 
         container.appendChild(div);
