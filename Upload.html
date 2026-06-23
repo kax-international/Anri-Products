@@ -21,13 +21,9 @@ body{
     box-shadow:0 5px 15px rgba(0,0,0,.1);
 }
 
-h1{
-    margin-bottom:20px;
-}
+h1{ margin-bottom:20px; }
 
-.section{
-    margin-bottom:20px;
-}
+.section{ margin-bottom:20px; }
 
 label{
     font-weight:bold;
@@ -35,7 +31,7 @@ label{
     margin-bottom:6px;
 }
 
-input, textarea{
+input{
     width:100%;
     padding:12px;
     border:1px solid #ddd;
@@ -64,6 +60,11 @@ button:hover{
     background:#444;
     margin-bottom:20px;
 }
+
+.status{
+    font-size:13px;
+    color:#666;
+}
 </style>
 </head>
 
@@ -73,15 +74,15 @@ button:hover{
 
 <h1>Upload Video (Hudl Style)</h1>
 
-<!-- 1. playlist title -->
+<!-- Playlist Title -->
 <div class="section">
     <label>Playlist Title</label>
     <input id="playlistTitle" placeholder="ex. 2026 season">
 </div>
 
-<!-- subtitles -->
+<!-- Subtitles -->
 <div class="section">
-    <label>Subtitles</label>
+    <label>Subtitles (Hierarchy)</label>
 
     <div id="subtitleContainer">
         <input class="subtitle-box" placeholder="ex. 06232026">
@@ -90,13 +91,15 @@ button:hover{
     <button class="add-btn" id="addSubtitle">+ Add Subtitle</button>
 </div>
 
-<!-- video -->
+<!-- Video -->
 <div class="section">
     <label>Video File</label>
-    <input type="file" id="videoFile">
+    <input type="file" id="videoFile" accept="video/*">
 </div>
 
 <button id="uploadBtn">Upload</button>
+
+<p class="status" id="status"></p>
 
 </div>
 
@@ -112,6 +115,9 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
+/* =========================
+   Firebase
+========================= */
 const firebaseConfig = {
     apiKey: "XXX",
     authDomain: "XXX",
@@ -121,11 +127,30 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// teamId（URLから取得想定）
+/* =========================
+   Cloudinary
+========================= */
+const CLOUD_NAME = "dxvgp89ma";
+const UPLOAD_PRESET = "AthleticCloud";
+
+/* =========================
+   URL Params
+========================= */
 const params = new URLSearchParams(location.search);
 const teamId = params.get("teamId");
 
-// subtitle追加
+/* =========================
+   UI helpers
+========================= */
+const status = document.getElementById("status");
+
+function setStatus(msg){
+    status.textContent = msg;
+}
+
+/* =========================
+   Add subtitle input
+========================= */
 document.getElementById("addSubtitle").onclick = () => {
     const input = document.createElement("input");
     input.className = "subtitle-box";
@@ -133,50 +158,107 @@ document.getElementById("addSubtitle").onclick = () => {
     document.getElementById("subtitleContainer").appendChild(input);
 };
 
-// upload処理
+/* =========================
+   Upload process
+========================= */
 document.getElementById("uploadBtn").onclick = async () => {
 
     const title = document.getElementById("playlistTitle").value;
+    const file = document.getElementById("videoFile").files[0];
 
+    if(!title){
+        alert("Playlist title required");
+        return;
+    }
+
+    if(!file){
+        alert("Video file required");
+        return;
+    }
+
+    setStatus("Uploading video...");
+
+    /* =========================
+       subtitle collect
+    ========================= */
     const subtitleInputs = document.querySelectorAll(".subtitle-box");
 
     const subtitles = [];
-    subtitleInputs.forEach(i => {
-        if(i.value.trim() !== ""){
-            subtitles.push(i.value.trim());
+    subtitleInputs.forEach(el => {
+        const v = el.value.trim();
+        if(v) subtitles.push(v);
+    });
+
+    /* =========================
+       playlist ID
+    ========================= */
+    const playlistId = title
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "_");
+
+    try{
+
+        /* =========================
+           1. Cloudinary upload
+        ========================= */
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", UPLOAD_PRESET);
+
+        const res = await fetch(
+            `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`,
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        const data = await res.json();
+
+        if(!data.secure_url){
+            console.error(data);
+            throw new Error("Cloudinary upload failed");
         }
-    });
 
-    const file = document.getElementById("videoFile").files[0];
+        const videoUrl = data.secure_url;
 
-    if(!title) return alert("Playlist title required");
-    if(!file) return alert("Video required");
+        setStatus("Saving to database...");
 
-    // 1. playlistId作成（titleをID化）
-    const playlistId = title.replace(/\s+/g, "_").toLowerCase();
+        /* =========================
+           2. playlist save
+        ========================= */
+        await setDoc(doc(db, "playlists", playlistId), {
+            teamId,
+            title,
+            subtitles,
+            createdAt: serverTimestamp()
+        });
 
-    // 2. playlist保存
-    await setDoc(doc(db, "playlists", playlistId), {
-        teamId,
-        title,
-        subtitles,
-        createdAt: serverTimestamp()
-    });
+        /* =========================
+           3. video save
+        ========================= */
+        await addDoc(collection(db, "videos"), {
+            teamId,
+            playlistId,
+            title,
+            subtitlePath: subtitles,
+            videoUrl,
+            thumbnailUrl: data.thumbnail_url || "",
+            createdAt: serverTimestamp()
+        });
 
-    // 3. 仮upload（ここはCloudinaryに差し替え）
-    const fakeVideoUrl = URL.createObjectURL(file);
+        setStatus("Upload complete!");
 
-    // 4. video保存
-    await addDoc(collection(db, "videos"), {
-        teamId,
-        playlistId,
-        title,
-        subtitlePath: subtitles,
-        videoUrl: fakeVideoUrl,
-        createdAt: serverTimestamp()
-    });
+        document.getElementById("playlistTitle").value = "";
+        document.getElementById("subtitleContainer").innerHTML =
+            `<input class="subtitle-box" placeholder="ex. 06232026">`;
+        document.getElementById("videoFile").value = "";
 
-    alert("Upload complete!");
+    }catch(err){
+        console.error(err);
+        setStatus("Upload failed");
+    }
 };
 
 </script>
