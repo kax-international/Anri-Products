@@ -29,11 +29,16 @@ header{
     padding:15px;
     margin-bottom:15px;
     border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
 }
 
 video{
     width:100%;
     border-radius:10px;
+}
+
+pre{
+    white-space:pre-wrap;
 }
 </style>
 </head>
@@ -53,13 +58,14 @@ video{
     <div id="questions"></div>
 
     <h3>Responses</h3>
-    <div id="responses"></div>
+    <div id="responses">Loading...</div>
 
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
 import {
     getFirestore,
     doc,
@@ -78,22 +84,31 @@ import {
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
     authDomain: "athletic-cloud-33538.firebaseapp.com",
-    projectId: "athletic-cloud-33538",
+    projectId: "athletic-cloud-33538"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// URL params
 const params = new URLSearchParams(location.search);
 const assignmentId = params.get("id");
 const teamId = params.get("teamId");
 
-const container = document.getElementById("container");
+// DOM
+const titleEl = document.getElementById("title");
+const descEl = document.getElementById("desc");
+const videoArea = document.getElementById("videoArea");
+const questionsEl = document.getElementById("questions");
+const responsesEl = document.getElementById("responses");
 
-/* ---------------------------
-   AUTH GATE（ここ超重要）
-----------------------------*/
+// data
+let assignmentData = null;
+
+/* -------------------------
+   AUTH GATE
+------------------------- */
 onAuthStateChanged(auth, async (user) => {
 
     if (!user) {
@@ -105,26 +120,50 @@ onAuthStateChanged(auth, async (user) => {
     await loadResponses();
 });
 
-/* ---------------------------
-   Assignment取得
-----------------------------*/
-let assignmentData = null;
-
+/* -------------------------
+   LOAD ASSIGNMENT
+------------------------- */
 async function loadAssignment() {
 
     const snap = await getDoc(doc(db, "assignments", assignmentId));
 
     if (!snap.exists()) {
-        container.innerHTML = "Assignment not found";
+        titleEl.innerHTML = "Assignment not found";
         return;
     }
 
     assignmentData = snap.data();
+
+    titleEl.textContent = assignmentData.title || "";
+    descEl.textContent = assignmentData.description || "";
+
+    renderQuestions();
 }
 
-/* ---------------------------
-   Responses取得（ここでエラー出てる可能性高い）
-----------------------------*/
+/* -------------------------
+   QUESTIONS
+------------------------- */
+function renderQuestions() {
+
+    if (!assignmentData?.questions) return;
+
+    let html = "";
+
+    assignmentData.questions.forEach((q, i) => {
+        html += `
+            <div class="card">
+                <b>${i + 1}. ${q.text || ""}</b><br/>
+                <small>${q.type}</small>
+            </div>
+        `;
+    });
+
+    questionsEl.innerHTML = html;
+}
+
+/* -------------------------
+   LOAD RESPONSES
+------------------------- */
 async function loadResponses() {
 
     try {
@@ -145,32 +184,37 @@ async function loadResponses() {
             });
         });
 
-        render(responses);
+        renderResponses(responses);
 
     } catch (err) {
-        console.error("Firestore error:", err);
-        container.innerHTML = "Permission error or no access";
+        console.error(err);
+        responsesEl.innerHTML = "Firestore permission error";
     }
 }
 
-/* ---------------------------
-   UI表示
-----------------------------*/
-function render(responses) {
+/* -------------------------
+   RENDER RESPONSES
+------------------------- */
+function renderResponses(responses) {
 
-    let html = "<h2>Responses</h2>";
+    if (!responses.length) {
+        responsesEl.innerHTML = "<p>No responses yet</p>";
+        return;
+    }
+
+    let html = "";
 
     responses.forEach(r => {
 
         html += `
             <div class="card">
-                <b>${r.userName || r.userId}</b><br/>
+                <b>${r.userName || r.userId || "Unknown"}</b>
                 <pre>${JSON.stringify(r.answers, null, 2)}</pre>
             </div>
         `;
     });
 
-    container.innerHTML = html;
+    responsesEl.innerHTML = html;
 }
 
 </script>
