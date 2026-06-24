@@ -206,6 +206,11 @@ async function sendRequest(assignmentId){
         status: "pending",
         createdAt: Date.now()
     });
+    await setDoc(doc(db,"assignments",id),{
+    title,
+    teamId,
+    ownerUid: currentUser.uid, // ←これ必須
+});
 
     await loadAssignments();
 }
