@@ -372,7 +372,7 @@ async function loadFeatureRequests(user){
     const list = document.getElementById("featureRequestList");
     list.innerHTML = "";
 
-    const snapshot = await getDocs(collection(db,"featureRequests"));
+    const snapshot = await getDocs(collection(db, "featureRequests"));
 
     let found = false;
 
@@ -380,15 +380,15 @@ async function loadFeatureRequests(user){
 
         const req = docSnap.data();
 
-        // =========================
-        // 🔥 修正ポイント①：null対策
-        // =========================
-        if (!req.ownerUid) return;  // ←これ追加超重要
+        // 🔥 防御（null・undefined除外）
+        if (!req) return;
+        if (!req.ownerUid) return;
+        if (!req.status) return;
 
-        // =========================
-        // 🔥 修正ポイント②：表示条件
-        // =========================
+        // 🔥 自分のチームのownerだけ
         if (req.ownerUid !== user.uid) return;
+
+        // 🔥 pendingのみ表示
         if (req.status !== "pending") return;
 
         found = true;
@@ -406,37 +406,38 @@ async function loadFeatureRequests(user){
             <button class="reject-btn">Reject</button>
         `;
 
-        const ref = doc(db,"featureRequests",docSnap.id);
+        const ref = doc(db, "featureRequests", docSnap.id);
 
         div.querySelector(".approve-btn").onclick = async () => {
 
-            await updateDoc(ref,{ status:"approved" });
+            await updateDoc(ref, { status: "approved" });
 
-            const teamRef = doc(db,"teams",req.teamId);
+            const teamRef = doc(db, "teams", req.teamId);
             const teamSnap = await getDoc(teamRef);
 
-            if (!teamSnap.exists()) return;
+            if (teamSnap.exists()) {
 
-            const teamData = teamSnap.data();
-            const members = teamData.members || {};
+                const teamData = teamSnap.data();
+                const members = teamData.members || {};
 
-            if (!members[req.requesterUid]) {
-                members[req.requesterUid] = {
-                    role: "member",
-                    permissions: {}
-                };
+                if (!members[req.requesterUid]) {
+                    members[req.requesterUid] = {
+                        role: "member",
+                        permissions: {}
+                    };
+                }
+
+                members[req.requesterUid].permissions[req.assignmentId] = true;
+
+                await updateDoc(teamRef, { members });
             }
-
-            members[req.requesterUid].permissions[req.assignmentId] = true;
-
-            await updateDoc(teamRef,{ members });
 
             loadFeatureRequests(user);
         };
 
         div.querySelector(".reject-btn").onclick = async () => {
 
-            await updateDoc(ref,{ status:"rejected" });
+            await updateDoc(ref, { status: "rejected" });
 
             loadFeatureRequests(user);
         };
@@ -444,7 +445,7 @@ async function loadFeatureRequests(user){
         list.appendChild(div);
     });
 
-    if(!found){
+    if (!found) {
         list.innerHTML = "No Feature Requests";
     }
 }
