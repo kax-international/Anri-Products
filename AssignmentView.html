@@ -170,9 +170,9 @@ async function getMyRequestStatus(assignmentId){
 await setDoc(ref, {
 
     requesterUid: currentUser.uid,
-    requesterName: currentUser.displayName || "Unknown",
+    requesterName: currentUser.email || currentUser.uid
 
-    ownerUid: currentUser.uid, // ← ★ここに変更（重要）
+    ownerUid: currentUser.uid
 
     teamId: data.teamId || teamId,
     teamName: data.teamName || "",
