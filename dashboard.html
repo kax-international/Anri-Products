@@ -380,8 +380,16 @@ async function loadFeatureRequests(user){
 
         const req = docSnap.data();
 
-        
-        console.log("FEATURE REQUEST:", req);
+        // =========================
+        // 🔥 修正ポイント①：null対策
+        // =========================
+        if (!req.ownerUid) return;  // ←これ追加超重要
+
+        // =========================
+        // 🔥 修正ポイント②：表示条件
+        // =========================
+        if (req.ownerUid !== user.uid) return;
+        if (req.status !== "pending") return;
 
         found = true;
 
@@ -389,10 +397,10 @@ async function loadFeatureRequests(user){
         div.className = "team-card";
 
         div.innerHTML = `
-            <strong>${req.requesterName}</strong><br>
-            Team: ${req.teamName}<br>
-            Feature: ${req.featureType}<br>
-            Form: ${req.assignmentTitle}<br><br>
+            <strong>${req.requesterName || "Unknown"}</strong><br>
+            Team: ${req.teamName || "-"}<br>
+            Feature: ${req.featureType || "-"}<br>
+            Form: ${req.assignmentTitle || "-"}<br><br>
 
             <button class="approve-btn">Approve</button>
             <button class="reject-btn">Reject</button>
@@ -406,19 +414,17 @@ async function loadFeatureRequests(user){
 
             const teamRef = doc(db,"teams",req.teamId);
             const teamSnap = await getDoc(teamRef);
-            const teamData = teamSnap.data();
 
+            if (!teamSnap.exists()) return;
+
+            const teamData = teamSnap.data();
             const members = teamData.members || {};
 
-            if(!members[req.requesterUid]){
+            if (!members[req.requesterUid]) {
                 members[req.requesterUid] = {
-                    role:"member",
-                    permissions:{}
+                    role: "member",
+                    permissions: {}
                 };
-            }
-
-            if(!members[req.requesterUid].permissions){
-                members[req.requesterUid].permissions = {};
             }
 
             members[req.requesterUid].permissions[req.assignmentId] = true;
