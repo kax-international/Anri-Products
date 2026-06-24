@@ -118,6 +118,7 @@ video{
 <script type="module">
 let allVideos = [];
 let playlistSubtitles = [];
+let currentPlaylistId = null;
 const rawTeamId = new URLSearchParams(location.search).get("teamId");
 const teamId = rawTeamId ? rawTeamId.trim() : null;
 
@@ -170,53 +171,103 @@ async function loadPlaylists(){
         div.textContent = data.title;
 
         div.onclick = () => {
-            loadVideos(docSnap.id); // ← playlistIdはdocSnap.id
-        };
+    currentPlaylistId = docSnap.id;
+    loadPlaylistSubtitles(docSnap.id);
+};
 
         container.appendChild(div);
     });
 }
-
 /* =======================
-   LOAD VIDEOS
+   LOAD playlists
 ======================= */
-async function loadVideos(playlistId){
-    const playlistDoc = await getDoc(
-    doc(db,"playlists",playlistId)
-);
+async function loadPlaylistSubtitles(playlistId){
 
-const playlistData = playlistDoc.data();
+    const playlistDoc =
+        await getDoc(
+            doc(db,"playlists",playlistId)
+        );
 
-playlistSubtitles =
-    playlistData.subtitles || [];
+    const data = playlistDoc.data();
 
-    console.log("loading playlist:", playlistId);
+    playlistSubtitles =
+        data.subtitles || [];
 
-    const snap = await getDocs(
-        collection(
-            db,
-            "playlists",
-            playlistId,
-            "videos"
-        )
-    );
+    const container =
+        document.getElementById("playlistList");
 
-    console.log("videos found:", snap.size);
+    const oldSubtitles =
+        document.getElementById("subtitleList");
 
-    allVideos = [];
+    if(oldSubtitles){
+        oldSubtitles.remove();
+    }
 
-    snap.forEach(docSnap => {
+    const subtitleDiv =
+        document.createElement("div");
 
-        const data = docSnap.data();
+    subtitleDiv.id = "subtitleList";
 
-        allVideos.push({
-            id: docSnap.id,
-            ...data
-        });
+    subtitleDiv.innerHTML =
+        "<h4>Subtitles</h4>";
+
+    playlistSubtitles.forEach(subtitle=>{
+
+        const item =
+            document.createElement("div");
+
+        item.className = "playlist";
+
+        item.textContent = subtitle;
+
+        item.onclick = ()=>{
+
+            loadVideos(
+    playlistId,
+    selectedSubtitle
+)
+
+        };
+
+        subtitleDiv.appendChild(item);
 
     });
 
-    createSubtitleButtons();
+    container.appendChild(subtitleDiv);
+}
+/* =======================
+   LOAD VIDEOS
+======================= */
+async function loadVideos(
+    playlistId,
+    selectedSubtitle
+){
+
+    const snap =
+        await getDocs(
+            collection(
+                db,
+                "playlists",
+                playlistId,
+                "videos"
+            )
+        );
+
+    allVideos = [];
+
+    snap.forEach(docSnap=>{
+
+        const data =
+            docSnap.data();
+
+        if(
+            data.subtitle ===
+            selectedSubtitle
+        ){
+            allVideos.push(data);
+        }
+
+    });
 
     renderVideos(allVideos);
 }
