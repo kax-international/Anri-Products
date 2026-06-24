@@ -37,7 +37,9 @@ header{
     margin-bottom:15px;
     border-radius:12px;
     box-shadow:0 2px 10px rgba(0,0,0,.08);
-    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
     transition:.2s;
 }
 
@@ -46,7 +48,35 @@ header{
 }
 
 .assignment-card h3{
-    margin-top:0;
+    margin:0;
+}
+
+.left{
+    display:flex;
+    flex-direction:column;
+}
+
+.right button{
+    border:none;
+    border-radius:8px;
+    padding:10px 14px;
+    cursor:pointer;
+}
+
+.request-btn{
+    background:#111;
+    color:white;
+}
+
+.requested-btn{
+    background:#aaa;
+    color:white;
+    cursor:not-allowed;
+}
+
+.open-btn{
+    background:#2d7ef7;
+    color:white;
 }
 
 .back-btn{
@@ -64,44 +94,35 @@ header{
 <body>
 
 <header>
-    <div class="logo">
-        ATHLETIC CLOUD
-    </div>
+    <div class="logo">ATHLETIC CLOUD</div>
 </header>
 
 <div class="container">
 
-    <button
-        class="back-btn"
-        onclick="history.back()">
-        ← Back
-    </button>
+    <button class="back-btn" onclick="history.back()">← Back</button>
 
     <h1>Input Form</h1>
 
-    <div id="assignmentList">
-        Loading...
-    </div>
+    <div id="assignmentList">Loading...</div>
 
 </div>
 
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
     getFirestore,
     collection,
-    getDocs
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+    getDocs,
+    doc,
+    getDoc,
+    setDoc
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 import {
     getAuth,
     onAuthStateChanged
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
@@ -113,110 +134,158 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
 const db = getFirestore(app);
 const auth = getAuth(app);
 
 const teamId =
-new URLSearchParams(location.search)
-.get("teamId");
+new URLSearchParams(location.search).get("teamId");
+
+let currentUser = null;
 
 onAuthStateChanged(auth, async (user) => {
 
-    console.log("AUTH USER:", user);
-
     if(!user){
-
         alert("Login required");
         location.href = "login.html";
         return;
-
     }
 
+    currentUser = user;
     await loadAssignments();
 
 });
 
+
+// ============================
+// Request状態取得
+// ============================
+async function getRequestStatus(assignmentId){
+
+    const ref =
+        doc(db, "assignments", assignmentId, "requests", currentUser.uid);
+
+    const snap = await getDoc(ref);
+
+    if(!snap.exists()){
+        return "none";
+    }
+
+    return snap.data().status;
+}
+
+
+// ============================
+// Request送信
+// ============================
+async function sendRequest(assignmentId){
+
+    const ref =
+        doc(db, "assignments", assignmentId, "requests", currentUser.uid);
+
+    await setDoc(ref, {
+        userId: currentUser.uid,
+        status: "requested",
+        createdAt: Date.now()
+    });
+
+    await loadAssignments();
+}
+
+
+// ============================
+// open form
+// ============================
+function openForm(assignmentId){
+    location.href =
+    `AssignmentInput.html?id=${assignmentId}&teamId=${teamId}`;
+}
+
+
+// ============================
+// assignments読み込み
+// ============================
 async function loadAssignments(){
 
-    try{
+    const list = document.getElementById("assignmentList");
+    list.innerHTML = "";
 
-        console.log("Loading assignments...");
+    const snapshot =
+        await getDocs(collection(db,"assignments"));
 
-        const list =
-        document.getElementById("assignmentList");
+    let found = false;
 
-        list.innerHTML = "";
+    for(const docSnap of snapshot.docs){
 
-        const snapshot =
-        await getDocs(
-            collection(db,"assignments")
-        );
+        const data = docSnap.data();
 
-        console.log(
-            "Documents:",
-            snapshot.size
-        );
-
-        let found = false;
-
-        snapshot.forEach(docSnap => {
-
-            const data =
-            docSnap.data();
-
-            console.log(data);
-
-            if(data.teamId !== teamId){
-                return;
-            }
-
-            found = true;
-
-            const card =
-            document.createElement("div");
-
-            card.className =
-            "assignment-card";
-
-            card.innerHTML = `
-                <h3>${data.title}</h3>
-                <p>${data.description || ""}</p>
-                <small>
-                    ${data.questions?.length || 0}
-                    Questions
-                </small>
-            `;
-
-            card.onclick = () => {
-
-                location.href =
-                `AssignmentInput.html?id=${docSnap.id}&teamId=${teamId}`;
-
-            };
-
-            list.appendChild(card);
-
-        });
-
-        if(!found){
-
-            list.innerHTML =
-            "<p>No Forms Found</p>";
-
+        if(data.teamId !== teamId){
+            continue;
         }
 
+        found = true;
+
+        const status = await getRequestStatus(docSnap.id);
+
+        const card = document.createElement("div");
+        card.className = "assignment-card";
+
+        let buttonHTML = "";
+
+        if(status === "none" || status === "rejected"){
+            buttonHTML = `
+                <button class="request-btn"
+                    onclick="window.requestForm('${docSnap.id}')">
+                    Request
+                </button>
+            `;
+        }
+
+        if(status === "requested"){
+            buttonHTML = `
+                <button class="requested-btn" disabled>
+                    Requested
+                </button>
+            `;
+        }
+
+        if(status === "approved"){
+            buttonHTML = `
+                <button class="open-btn"
+                    onclick="window.openForm('${docSnap.id}')">
+                    Open
+                </button>
+            `;
+        }
+
+        card.innerHTML = `
+            <div class="left">
+                <h3>${data.title}</h3>
+                <p>${data.description || ""}</p>
+                <small>${data.questions?.length || 0} Questions</small>
+            </div>
+
+            <div class="right">
+                ${buttonHTML}
+            </div>
+        `;
+
+        list.appendChild(card);
     }
-    catch(err){
 
-        console.error(
-            "LOAD ERROR:",
-            err
-        );
-
+    if(!found){
+        list.innerHTML = "<p>No Forms Found</p>";
     }
-
 }
+
+
+// ============================
+// グローバル公開（onclick用）
+// ============================
+window.requestForm = async function(assignmentId){
+    await sendRequest(assignmentId);
+};
+
+window.openForm = openForm;
 
 </script>
 
