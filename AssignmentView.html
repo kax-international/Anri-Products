@@ -159,10 +159,13 @@ onAuthStateChanged(auth, async (user) => {
 // ============================
 // Request状態取得
 // ============================
-async function getRequestStatus(assignmentId){
+async function getMyRequestStatus(assignmentId){
 
-    const ref =
-        doc(db, "assignments", assignmentId, "requests", currentUser.uid);
+    const ref = doc(
+        db,
+        "featureRequests",
+        `${assignmentId}_${currentUser.uid}`
+    );
 
     const snap = await getDoc(ref);
 
@@ -172,7 +175,6 @@ async function getRequestStatus(assignmentId){
 
     return snap.data().status;
 }
-
 
 // ============================
 // Request送信
@@ -242,7 +244,7 @@ async function loadAssignments(){
 
         found = true;
 
-        const status = await getRequestStatus(docSnap.id);
+        const status = await getMyRequestStatus(docSnap.id);
 
         const card = document.createElement("div");
         card.className = "assignment-card";
@@ -258,7 +260,7 @@ async function loadAssignments(){
             `;
         }
 
-        if(status === "requested"){
+        if(status === "pending"){
             buttonHTML = `
                 <button class="requested-btn" disabled>
                     Requested
