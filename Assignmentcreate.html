@@ -156,308 +156,121 @@ button:hover{
 </div>
 
 <script type="module">
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
     getFirestore,
     collection,
     addDoc,
     serverTimestamp
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 import {
-    getAuth
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
     authDomain: "athletic-cloud-33538.firebaseapp.com",
-    projectId: "athletic-cloud-33538",
-    storageBucket: "athletic-cloud-33538.firebasestorage.app",
-    messagingSenderId: "1020993809301",
-    appId: "1:1020993809301:web:a31e28377788bef965249c"
+    projectId: "athletic-cloud-33538"
 };
 
 const app = initializeApp(firebaseConfig);
-
 const db = getFirestore(app);
 const auth = getAuth(app);
-const teamId =
-new URLSearchParams(
-    location.search
-).get("teamId");
 
-let questionCount = 0;
+const teamId = new URLSearchParams(location.search).get("teamId");
 
-document
-.getElementById("addQuestionBtn")
-.addEventListener("click", addQuestion);
+let currentUser = null;
 
-function addQuestion(){
+/* =========================
+   AUTH
+========================= */
+onAuthStateChanged(auth, (user) => {
+    if (!user) {
+        alert("Login required");
+        location.href = "login.html";
+        return;
+    }
 
-    questionCount++;
+    currentUser = user;
+});
 
-    const card =
-    document.createElement("div");
+/* =========================
+   SAVE ASSIGNMENT
+========================= */
+document.getElementById("saveBtn").addEventListener("click", saveAssignment);
 
-    card.className =
-    "question-card";
+async function saveAssignment() {
 
-    card.innerHTML = `
-        <h3>Question ${questionCount}</h3>
+    try {
 
-        <div class="form-group">
-            <input
-                type="text"
-                class="question-text"
-                placeholder="Question Text"
-            >
-        </div>
-
-        <div class="form-group">
-            <select class="question-type">
-
-    <option value="short">
-        Short Paragraph
-    </option>
-
-    <option value="long">
-        Long Paragraph
-    </option>
-
-    <option value="multiple">
-        Multiple Choice
-    </option>
-
-    <option value="checkbox">
-        Checkbox
-    </option>
-
-    <option value="image">
-        Image Upload
-    </option>
-
-    <option value="video">
-        Video Upload
-    </option>
-
-</select>
-        </div>
-<div class="required-row">
-
-    <span>Required</span>
-
-    <input
-        type="checkbox"
-        class="question-required"
-    >
-
-</div>
-        <div class="option-box"></div>
-    `;
-
-    const typeSelect =
-    card.querySelector(".question-type");
-
-    const optionBox =
-    card.querySelector(".option-box");
-
-    typeSelect.addEventListener("change", () => {
-
-        const type =
-        typeSelect.value;
-
-        optionBox.innerHTML = "";
-
-        if(
-            type === "multiple" ||
-            type === "checkbox"
-        ){
-
-            optionBox.innerHTML = `
-                <div class="options"></div>
-
-                <button
-                    type="button"
-                    class="addOptionBtn"
-                >
-                    + Add Option
-                </button>
-            `;
-
-            const optionsDiv =
-            optionBox.querySelector(".options");
-
-            const addBtn =
-            optionBox.querySelector(".addOptionBtn");
-
-            addBtn.addEventListener("click", () => {
-
-                const input =
-                document.createElement("input");
-
-                input.type = "text";
-
-                input.placeholder =
-                "Option";
-
-                input.className =
-                "option-input";
-
-                optionsDiv.appendChild(input);
-            });
-
+        if (!currentUser) {
+            alert("User not ready");
+            return;
         }
 
-    });
+        const title = document.getElementById("formTitle").value.trim();
+        const description = document.getElementById("assignmentDescription").value.trim();
 
-    document
-    .getElementById("questionContainer")
-    .appendChild(card);
-}
-
-document
-.getElementById("saveBtn")
-.addEventListener("click", saveAssignment);
-
-    async function saveAssignment(){
-
-    try{
-
-        const title =
-        document
-        .getElementById("formTitle")
-        .value
-        .trim();
-
-        const description =
-        document
-        .getElementById("assignmentDescription")
-        .value
-        .trim();
-
-        if(!title){
-
-            alert(
-                "Title required"
-            );
-
+        if (!title) {
+            alert("Title required");
             return;
         }
 
         const questions = [];
 
-        document
-        .querySelectorAll(
-            ".question-card"
-        )
-        .forEach(card => {
+        document.querySelectorAll(".question-card").forEach(card => {
 
-            const text =
-            card
-            .querySelector(
-                ".question-text"
-            )
-            .value
-            .trim();
+            const text = card.querySelector(".question-text").value.trim();
+            const type = card.querySelector(".question-type").value;
+            const required = card.querySelector(".question-required").checked;
 
-            const type =
-            card
-            .querySelector(
-                ".question-type"
-            )
-            .value;
+            const question = {
+                text,
+                type,
+                required
+            };
 
-            const required =
-card.querySelector(
-    ".question-required"
-).checked;
-
-const question = {
-
-    text,
-    type,
-    required
-
-};
-            if(
-                type === "multiple" ||
-                type === "checkbox"
-            ){
+            if (type === "multiple" || type === "checkbox") {
 
                 const options = [];
 
-                card
-                .querySelectorAll(
-                    ".option-input"
-                )
-                .forEach(input => {
-
-                    if(
-                        input.value.trim()
-                    ){
-
-                        options.push(
-                            input.value.trim()
-                        );
-
-                    }
-
+                card.querySelectorAll(".option-input").forEach(input => {
+                    const v = input.value.trim();
+                    if (v) options.push(v);
                 });
 
-                question.options =
-                options;
+                question.options = options;
             }
 
-            questions.push(
-                question
-            );
+            questions.push(question);
         });
 
-        const user =
-        auth.currentUser;
+        await addDoc(collection(db, "assignments"), {
 
-        await addDoc(
+            title,
+            description,
+            teamId,
 
-            collection(
-                db,
-                "assignments"
-            ),
+            // 🔥 超重要（これが全崩壊の原因だった）
+            ownerUid: currentUser.uid,
+            createdBy: currentUser.uid,
 
-            {
+            questions,
 
-                title,
-                description,
+            createdAt: serverTimestamp()
+        });
 
-                teamId,
+        alert("Assignment Saved");
 
-                questions,
+        // 任意：戻る
+        // location.href = `team.html?teamId=${teamId}`;
 
-                createdBy:
-                user.uid,
-
-                createdAt:
-                serverTimestamp()
-
-            }
-
-        );
-
-        alert(
-            "Assignment Saved"
-        );
-
-    }
-    catch(err){
-
+    } catch (err) {
         console.error(err);
-
-        alert(
-            "Save Failed"
-        );
+        alert("Save Failed");
     }
 }
 
