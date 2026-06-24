@@ -181,27 +181,34 @@ const snap = await getDoc(ref);
 // ============================
 async function sendRequest(assignmentId){
 
-    // assignment情報を取得（ownerUidやtitleを取るため）
     const assignmentRef = doc(db, "assignments", assignmentId);
     const assignmentSnap = await getDoc(assignmentRef);
 
     const data = assignmentSnap.data();
 
-    const ref =
-        doc(db, "featureRequests", `${assignmentId}_${currentUser.uid}`);
+    if (!currentUser) return;
+
+    const ref = doc(
+        db,
+        "featureRequests",
+        `${assignmentId}_${currentUser.uid}`
+    );
 
     await setDoc(ref, {
 
+        // 👇これが超重要（null禁止）
         requesterUid: currentUser.uid,
-        requesterName: currentUser.displayName || "Unknown",
+        requesterName: currentUser.displayName || currentUser.email || "Unknown",
 
-        ownerUid: data.ownerUid || null,   // ★重要
+        // 🔥 ownerは「assignmentの作成者」
+        ownerUid: data.ownerUid,   // ←ここ絶対必要（null禁止）
 
-        teamId: data.teamId || teamId,
+        teamId: data.teamId,
         teamName: data.teamName || "",
 
-        featureType: "inputForm", // or "searchEngine"
-        assignmentId: assignmentId,
+        featureType: "inputForm",
+
+        assignmentId,
         assignmentTitle: data.title || "",
 
         status: "pending",
