@@ -132,20 +132,17 @@ header{
     margin-left: 5px;
 }
 
-
+.section-title{
+    margin-bottom:10px;
+}
 </style>
 </head>
 
 <body>
 
 <header>
-    <div class="logo" id="homeLogo">
-        ATHLETIC CLOUD
-    </div>
-
-    <button id="logoutBtn" class="logout-btn">
-        Logout
-    </button>
+    <div class="logo" id="homeLogo">ATHLETIC CLOUD</div>
+    <button id="logoutBtn" class="logout-btn">Logout</button>
 </header>
 
 <div class="main">
@@ -164,11 +161,25 @@ header{
     <button id="joinTeamBtn">Join Team</button>
 </div>
 
+<!-- ========================= -->
+<!-- JOIN REQUESTS -->
+<!-- ========================= -->
 <div class="welcome">
     <h2>Join Requests</h2>
     <div id="requestList">No Requests</div>
 </div>
 
+<!-- ========================= -->
+<!-- FEATURE REQUESTS（追加） -->
+<!-- ========================= -->
+<div class="welcome">
+    <h2>Team Requests</h2>
+    <div id="featureRequestList">No Requests</div>
+</div>
+
+<!-- ========================= -->
+<!-- DASHBOARD CARDS -->
+<!-- ========================= -->
 <div class="card-grid">
     <div class="card">
         <h3>Playbook Cloud</h3>
@@ -194,10 +205,7 @@ header{
 </div>
 
 <script type="module">
-import {
-  updateDoc,
-  deleteDoc
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
 import {
@@ -211,7 +219,8 @@ getFirestore,
 collection,
 getDocs,
 doc,
-getDoc
+getDoc,
+updateDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -227,59 +236,60 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+let currentUser = null;
+
 /* =========================
-   ボタン
+   UI BUTTONS
 ========================= */
 
 document.getElementById("logoutBtn").addEventListener("click", async () => {
     await signOut(auth);
-    window.location.href = "login.html";
+    location.href = "login.html";
 });
 
-document.getElementById("homeLogo").addEventListener("click", () => {
-    window.location.href = "AthleticCloud.html";
-});
-    
-document.getElementById("createTeamBtn").addEventListener("click", () => {
-    window.location.href = "create-team.html";
-});
+document.getElementById("homeLogo").onclick = () => {
+    location.href = "AthleticCloud.html";
+};
 
-document.getElementById("joinTeamBtn").addEventListener("click", () => {
-    window.location.href = "join-team.html";
-});
+document.getElementById("createTeamBtn").onclick = () => {
+    location.href = "create-team.html";
+};
+
+document.getElementById("joinTeamBtn").onclick = () => {
+    location.href = "join-team.html";
+};
 
 /* =========================
-   Teams読み込み
+   MY TEAMS
 ========================= */
 
-async function loadMyTeams(user) {
-    if (!user) return;
+async function loadMyTeams(user){
 
     const teamList = document.getElementById("teamList");
     teamList.innerHTML = "";
 
-    const snapshot = await getDocs(collection(db, "teams"));
+    const snapshot = await getDocs(collection(db,"teams"));
 
     snapshot.forEach(docSnap => {
+
         const data = docSnap.data();
         const members = data.members || {};
 
-        if (members[user.uid]) {
+        if(members[user.uid]){
 
             const role = members[user.uid];
-            const badge = role === "owner" ? "👑 Owner" : role;
 
             const div = document.createElement("div");
             div.className = "team-card";
 
             div.innerHTML = `
                 <strong>${data.name}</strong><br>
-                <small>${badge}</small>
+                <small>${role}</small>
             `;
 
-            div.addEventListener("click", () => {
-                window.location.href = `team.html?teamId=${docSnap.id}`;
-            });
+            div.onclick = () => {
+                location.href = `team.html?teamId=${docSnap.id}`;
+            };
 
             teamList.appendChild(div);
         }
@@ -287,145 +297,176 @@ async function loadMyTeams(user) {
 }
 
 /* =========================
-   Join Requests
+   JOIN REQUESTS（既存）
 ========================= */
 
-async function loadJoinRequests(user) {
+async function loadJoinRequests(user){
 
     const requestList = document.getElementById("requestList");
     requestList.innerHTML = "";
 
-    const teamSnapshot = await getDocs(collection(db, "teams"));
-
-    const ownerTeams = [];
-
-    teamSnapshot.forEach(teamDoc => {
-        const team = teamDoc.data();
-        const members = team.members || {};
-
-        if (members[user.uid] === "owner") {
-            ownerTeams.push({
-                id: teamDoc.id,
-                name: team.name
-            });
-        }
-    });
-
-    if (ownerTeams.length === 0) {
-        requestList.innerHTML = "No Owner Teams";
-        return;
-    }
-
-    // ✅ ここが抜けてた（超重要）
-    const requestSnapshot = await getDocs(collection(db, "joinRequests"));
+    const snapshot = await getDocs(collection(db,"joinRequests"));
 
     let found = false;
 
-    requestSnapshot.forEach(reqDoc => {
+    snapshot.forEach(docSnap => {
 
-        const req = reqDoc.data();
+        const req = docSnap.data();
 
-        const ownerTeam = ownerTeams.find(t => t.id === req.teamId);
+        if(req.ownerUid !== user.uid || req.status !== "pending") return;
 
-        if (ownerTeam && req.status === "pending") {
+        found = true;
 
-            found = true;
+        const div = document.createElement("div");
+        div.className = "team-card";
 
-            const div = document.createElement("div");
-            div.className = "team-card";
+        div.innerHTML = `
+            <strong>${req.requesterEmail}</strong><br>
+            Team: ${req.teamName}<br>
+            Role: ${req.requestedRole}<br><br>
 
-            div.innerHTML = `
-                <strong>${req.requesterEmail}</strong><br>
-                Team: ${ownerTeam.name}<br>
-                Role: ${req.requestedRole}<br><br>
+            <button class="approve-btn">Approve</button>
+            <button class="reject-btn">Reject</button>
+        `;
 
-                <button class="approve-btn">Approve</button>
-                <button class="reject-btn">Reject</button>
-            `;
+        const ref = doc(db,"joinRequests",docSnap.id);
 
-            const reqRef = doc(db, "joinRequests", reqDoc.id);
+        div.querySelector(".approve-btn").onclick = async () => {
 
-            // =====================
-            // APPROVE
-            // =====================
-            div.querySelector(".approve-btn").addEventListener("click", async () => {
+            await updateDoc(ref,{ status:"approved" });
 
-                await updateDoc(reqRef, {
-                    status: "approved"
-                });
+            const teamRef = doc(db,"teams",req.teamId);
+            const teamSnap = await getDoc(teamRef);
+            const teamData = teamSnap.data();
 
-                const teamRef = doc(db, "teams", req.teamId);
-                const teamSnap = await getDoc(teamRef);
-                const teamData = teamSnap.data();
+            const members = teamData.members || {};
+            members[req.requesterUid] = req.requestedRole;
 
-                const members = teamData.members || {};
+            await updateDoc(teamRef,{ members });
 
-                members[req.requesterUid] = req.requestedRole;
+            loadJoinRequests(user);
+            loadMyTeams(user);
+        };
 
-                await updateDoc(teamRef, {
-                    members: members
-                });
+        div.querySelector(".reject-btn").onclick = async () => {
 
-                alert("Approved");
+            await updateDoc(ref,{ status:"rejected" });
 
-                loadJoinRequests(user);
-                loadMyTeams(user);
-            });
+            loadJoinRequests(user);
+        };
 
-            // =====================
-            // REJECT
-            // =====================
-            div.querySelector(".reject-btn").addEventListener("click", async () => {
-
-                await updateDoc(reqRef, {
-                    status: "rejected"
-                });
-
-                alert("Rejected");
-
-                loadJoinRequests(user);
-            });
-
-            requestList.appendChild(div);
-        }
+        requestList.appendChild(div);
     });
 
-    if (!found) {
-        requestList.innerHTML = "No Pending Requests";
+    if(!found){
+        requestList.innerHTML = "No Join Requests";
     }
 }
 
 /* =========================
-   認証（ここが重要）
+   FEATURE REQUESTS（今回追加）
+========================= */
+
+async function loadFeatureRequests(user){
+
+    const list = document.getElementById("featureRequestList");
+    list.innerHTML = "";
+
+    const snapshot = await getDocs(collection(db,"featureRequests"));
+
+    let found = false;
+
+    snapshot.forEach(docSnap => {
+
+        const req = docSnap.data();
+
+        if(req.ownerUid !== user.uid || req.status !== "pending") return;
+
+        found = true;
+
+        const div = document.createElement("div");
+        div.className = "team-card";
+
+        div.innerHTML = `
+            <strong>${req.requesterName}</strong><br>
+            Team: ${req.teamName}<br>
+            Feature: ${req.featureType}<br>
+            Form: ${req.assignmentTitle}<br><br>
+
+            <button class="approve-btn">Approve</button>
+            <button class="reject-btn">Reject</button>
+        `;
+
+        const ref = doc(db,"featureRequests",docSnap.id);
+
+        div.querySelector(".approve-btn").onclick = async () => {
+
+            await updateDoc(ref,{ status:"approved" });
+
+            const teamRef = doc(db,"teams",req.teamId);
+            const teamSnap = await getDoc(teamRef);
+            const teamData = teamSnap.data();
+
+            const members = teamData.members || {};
+
+            if(!members[req.requesterUid]){
+                members[req.requesterUid] = {
+                    role:"member",
+                    permissions:{}
+                };
+            }
+
+            if(!members[req.requesterUid].permissions){
+                members[req.requesterUid].permissions = {};
+            }
+
+            members[req.requesterUid].permissions[req.assignmentId] = true;
+
+            await updateDoc(teamRef,{ members });
+
+            loadFeatureRequests(user);
+        };
+
+        div.querySelector(".reject-btn").onclick = async () => {
+
+            await updateDoc(ref,{ status:"rejected" });
+
+            loadFeatureRequests(user);
+        };
+
+        list.appendChild(div);
+    });
+
+    if(!found){
+        list.innerHTML = "No Feature Requests";
+    }
+}
+
+/* =========================
+   AUTH
 ========================= */
 
 onAuthStateChanged(auth, async (user) => {
 
-    if (!user) {
-        window.location.href = "login.html";
+    if(!user){
+        location.href = "login.html";
         return;
     }
 
-    const docRef = doc(db, "users", user.uid);
-    const docSnap = await getDoc(docRef);
+    currentUser = user;
 
-    if (!docSnap.exists()) {
-        alert("User profile not found");
-        await signOut(auth);
-        window.location.href = "login.html";
-        return;
-    }
-
-    const data = docSnap.data();
+    const userSnap = await getDoc(doc(db,"users",user.uid));
+    const data = userSnap.data();
 
     document.getElementById("username").innerText = `Welcome, ${data.name}`;
     document.getElementById("email").innerText = data.email;
-    document.getElementById("uid").innerText = `UID: ${user.uid}`;
+    document.getElementById("uid").innerText = user.uid;
 
     document.querySelector(".main").style.display = "block";
 
     loadMyTeams(user);
     loadJoinRequests(user);
+    loadFeatureRequests(user);
 });
 
 </script>
