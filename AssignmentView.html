@@ -136,7 +136,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const ownerUid = data.ownerUid;
 
+if (!ownerUid) {
+    console.error("ownerUid is missing in assignment:", data);
+    alert("Error: ownerUid is missing in assignment");
+    return;
+}
 const teamId =
 new URLSearchParams(location.search).get("teamId");
 
@@ -194,26 +200,23 @@ async function sendRequest(assignmentId){
         `${assignmentId}_${currentUser.uid}`
     );
 
-    await setDoc(ref, {
+   await setDoc(ref, {
 
-        // 👇これが超重要（null禁止）
-        requesterUid: currentUser.uid,
-        requesterName: currentUser.displayName || currentUser.email || "Unknown",
+    requesterUid: currentUser.uid,
+    requesterName: currentUser.displayName || currentUser.email || "Unknown",
 
-        // 🔥 ownerは「assignmentの作成者」
-        ownerUid: data.ownerUid,   // ←ここ絶対必要（null禁止）
+    ownerUid: ownerUid, // ← undefined禁止
 
-        teamId: data.teamId,
-        teamName: data.teamName || "",
+    teamId: data.teamId || teamId,
+    teamName: data.teamName || "",
 
-        featureType: "inputForm",
+    featureType: "inputForm",
+    assignmentId,
+    assignmentTitle: data.title || "",
 
-        assignmentId,
-        assignmentTitle: data.title || "",
-
-        status: "pending",
-        createdAt: Date.now()
-    });
+    status: "pending",
+    createdAt: Date.now()
+});
 
     await loadAssignments();
 }
