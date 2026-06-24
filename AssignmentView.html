@@ -179,12 +179,30 @@ async function getRequestStatus(assignmentId){
 // ============================
 async function sendRequest(assignmentId){
 
+    // assignment情報を取得（ownerUidやtitleを取るため）
+    const assignmentRef = doc(db, "assignments", assignmentId);
+    const assignmentSnap = await getDoc(assignmentRef);
+
+    const data = assignmentSnap.data();
+
     const ref =
-        doc(db, "assignments", assignmentId, "requests", currentUser.uid);
+        doc(db, "featureRequests", `${assignmentId}_${currentUser.uid}`);
 
     await setDoc(ref, {
-        userId: currentUser.uid,
-        status: "requested",
+
+        requesterUid: currentUser.uid,
+        requesterName: currentUser.displayName || "Unknown",
+
+        ownerUid: data.ownerUid || null,   // ★重要
+
+        teamId: data.teamId || teamId,
+        teamName: data.teamName || "",
+
+        featureType: "inputForm", // or "searchEngine"
+        assignmentId: assignmentId,
+        assignmentTitle: data.title || "",
+
+        status: "pending",
         createdAt: Date.now()
     });
 
