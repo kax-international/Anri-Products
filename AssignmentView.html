@@ -192,7 +192,12 @@ async function sendRequest(assignmentId){
 
     const data = assignmentSnap.data();
 
-    if (!currentUser) return;
+    const ownerUid = data.ownerUid; // ← ここで取る（正しい）
+
+    if(!ownerUid){
+        console.error("ownerUid missing:", data);
+        return;
+    }
 
     const ref = doc(
         db,
@@ -200,23 +205,22 @@ async function sendRequest(assignmentId){
         `${assignmentId}_${currentUser.uid}`
     );
 
-   await setDoc(ref, {
+    await setDoc(ref, {
+        requesterUid: currentUser.uid,
+        requesterName: currentUser.displayName || currentUser.email || "Unknown",
 
-    requesterUid: currentUser.uid,
-    requesterName: currentUser.displayName || currentUser.email || "Unknown",
+        ownerUid: ownerUid,
 
-    ownerUid: ownerUid, // ← undefined禁止
+        teamId: data.teamId || teamId,
+        teamName: data.teamName || "",
 
-    teamId: data.teamId || teamId,
-    teamName: data.teamName || "",
+        featureType: "inputForm",
+        assignmentId,
+        assignmentTitle: data.title || "",
 
-    featureType: "inputForm",
-    assignmentId,
-    assignmentTitle: data.title || "",
-
-    status: "pending",
-    createdAt: Date.now()
-});
+        status: "pending",
+        createdAt: Date.now()
+    });
 
     await loadAssignments();
 }
