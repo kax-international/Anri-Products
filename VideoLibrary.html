@@ -96,8 +96,53 @@ video{
         <div class="video-list" id="videoList"></div>
 
         <div class="player">
-            <video id="videoPlayer" controls></video>
-        </div>
+    <video id="videoPlayer" controls></video>
+</div>
+
+<div
+    style="
+        background:#1a1a1a;
+        padding:15px;
+        border-top:1px solid #333;
+    "
+>
+
+    <h3>Comments</h3>
+
+    <div
+        id="commentList"
+        style="
+            max-height:200px;
+            overflow:auto;
+            margin-bottom:10px;
+        "
+    ></div>
+
+    <textarea
+        id="commentInput"
+        placeholder="Write comment..."
+        style="
+            width:100%;
+            height:80px;
+            background:#222;
+            color:white;
+            border:1px solid #444;
+            border-radius:8px;
+            padding:10px;
+        "
+    ></textarea>
+
+    <button
+        id="saveCommentBtn"
+        style="
+            margin-top:10px;
+            padding:10px 20px;
+        "
+    >
+        Post Comment
+    </button>
+
+</div>
         <div id="subtitleBar"
      style="
         padding:10px;
@@ -119,6 +164,7 @@ video{
 let allVideos = [];
 let playlistSubtitles = [];
 let currentPlaylistId = null;
+let currentVideoId = null;
 const rawTeamId = new URLSearchParams(location.search).get("teamId");
 const teamId = rawTeamId ? rawTeamId.trim() : null;
 
@@ -130,7 +176,9 @@ import {
     query,
     getDoc,
     doc,
-    where
+    where,
+    addDoc,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -330,19 +378,115 @@ function renderVideos(videos){
 
         div.onclick = () => {
 
-            const player =
-                document.getElementById("videoPlayer");
+    const player =
+        document.getElementById("videoPlayer");
 
-            player.src = data.videoUrl;
+    player.src = data.videoUrl;
 
-            player.play();
-        };
+    player.play();
+
+    currentVideoId = data.id;
+
+    loadComments(
+        currentPlaylistId,
+        currentVideoId
+    );
+};
 
         container.appendChild(div);
     });
 }
+async function saveComment(){
 
-/* INIT */
+    const text =
+        document
+        .getElementById("commentInput")
+        .value
+        .trim();
+
+    if(!text){
+        return;
+    }
+
+    await addDoc(
+        collection(
+            db,
+            "playlists",
+            currentPlaylistId,
+            "videos",
+            currentVideoId,
+            "comments"
+        ),
+        {
+            text,
+            createdAt: serverTimestamp()
+        }
+    );
+
+    document.getElementById(
+        "commentInput"
+    ).value = "";
+
+    loadComments(
+        currentPlaylistId,
+        currentVideoId
+    );
+}
+async function loadComments(
+    playlistId,
+    videoId
+){
+
+    const snap =
+        await getDocs(
+            collection(
+                db,
+                "playlists",
+                playlistId,
+                "videos",
+                videoId,
+                "comments"
+            )
+        );
+
+    const container =
+        document.getElementById(
+            "commentList"
+        );
+
+    container.innerHTML = "";
+
+    snap.forEach(docSnap => {
+
+        const data =
+            docSnap.data();
+
+        const div =
+            document.createElement("div");
+
+        div.style.padding =
+            "8px";
+
+        div.style.marginBottom =
+            "6px";
+
+        div.style.background =
+            "#222";
+
+        div.style.borderRadius =
+            "6px";
+
+        div.textContent =
+            data.text;
+
+        container.appendChild(div);
+
+    });
+}
+document
+.getElementById("saveCommentBtn")
+.onclick = saveComment;
+
 loadPlaylists();
 
 </script>
