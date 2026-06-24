@@ -376,42 +376,93 @@ function render(){
 /* MODAL */
 function openModal(r){
 
+    const modal =
+        document.getElementById("modal");
+
     const img =
-    document.getElementById("modalImage");
+        document.getElementById("modalImage");
 
-const videoContainer =
-    document.getElementById("modalVideo");
+    const info =
+        document.getElementById("modalInfo");
 
-videoContainer.innerHTML = "";
+    const videoContainer =
+        document.getElementById("modalVideo");
+
+    videoContainer.innerHTML = "";
 
     const media = getMedia(r);
 
-if(media.type === "image"){
+    if(media.type === "image"){
 
-    img.style.display = "block";
-    img.src = media.url;
+        img.style.display = "block";
+        img.src = media.url;
 
-}
-else{
+    }else if(media.type === "video"){
 
-    img.style.display = "none";
+        img.style.display = "none";
 
-    videoContainer.innerHTML = `
-        <video
-            controls
-            autoplay
-            style="width:100%">
-            <source src="${media.url}">
-        </video>
+        videoContainer.innerHTML = `
+            <video
+                controls
+                autoplay
+                style="width:100%;max-height:600px;">
+                <source src="${media.url}">
+            </video>
+        `;
+
+    }else{
+
+        img.style.display = "none";
+    }
+
+    let html = `
+        <h2>${getTitle(r)}</h2>
     `;
-}
 
-    /* ★ここを修正（番号→質問名） */
     for(const k in r.answers){
+
+        const value = r.answers[k];
+
+        let displayValue = value;
+
+        if(
+            typeof value === "string" &&
+            value.includes("cloudinary")
+        ){
+
+            if(
+                value.includes("/video/") ||
+                value.match(/\.(mp4|mov|webm)$/i)
+            ){
+
+                displayValue = `
+                    <video
+                        controls
+                        style="
+                            width:100%;
+                            max-height:500px;
+                            margin-top:10px;">
+                        <source src="${value}">
+                    </video>
+                `;
+
+            }else{
+
+                displayValue = `
+                    <img
+                        src="${value}"
+                        style="
+                            width:100%;
+                            max-width:600px;
+                            margin-top:10px;">
+                `;
+            }
+        }
+
         html += `
             <p>
                 <b>${questionMap[k] || k}:</b><br>
-                ${r.answers[k]}
+                ${displayValue}
             </p>
         `;
     }
