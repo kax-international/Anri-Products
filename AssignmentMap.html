@@ -303,13 +303,57 @@ function sortAndRender(){
 function getMedia(r){
 
     for(const k in r.answers){
-        const v = r.answers[k];
 
-        if(typeof v === "string" && v.includes("cloudinary")){
-            if(v.includes("video")) return {type:"video", url:v};
-            if(v.includes("image") || v.match(/\.(jpg|png|jpeg)/)) return {type:"image", url:v};
+    const value = r.answers[k];
+
+    let displayValue = value;
+
+    if(
+        typeof value === "string" &&
+        value.includes("cloudinary")
+    ){
+
+        // VIDEO
+        if(
+            value.includes("/video/") ||
+            value.match(/\.(mp4|mov|webm)$/i)
+        ){
+
+            displayValue = `
+                <video
+                    controls
+                    style="
+                        width:100%;
+                        max-height:500px;
+                        margin-top:10px;
+                    ">
+                    <source src="${value}">
+                </video>
+            `;
+        }
+
+        // IMAGE
+        else{
+
+            displayValue = `
+                <img
+                    src="${value}"
+                    style="
+                        width:100%;
+                        max-width:600px;
+                        margin-top:10px;
+                    ">
+            `;
         }
     }
+
+    html += `
+        <p>
+            <b>${questionMap[k] || k}:</b><br>
+            ${displayValue}
+        </p>
+    `;
+}
 
     return {type:"none", url:"https://via.placeholder.com/600x400?text=No+Image"};
 }
@@ -356,14 +400,35 @@ function render(){
 /* MODAL */
 function openModal(r){
 
-    const modal = document.getElementById("modal");
-    const img = document.getElementById("modalImage");
-    const info = document.getElementById("modalInfo");
+    const img =
+    document.getElementById("modalImage");
+
+const videoContainer =
+    document.getElementById("modalVideo");
+
+videoContainer.innerHTML = "";
 
     const media = getMedia(r);
-    img.src = media.type === "image" ? media.url : "";
 
-    let html = `<h2>${getTitle(r)}</h2>`;
+if(media.type === "image"){
+
+    img.style.display = "block";
+    img.src = media.url;
+
+}
+else{
+
+    img.style.display = "none";
+
+    videoContainer.innerHTML = `
+        <video
+            controls
+            autoplay
+            style="width:100%">
+            <source src="${media.url}">
+        </video>
+    `;
+}
 
     /* ★ここを修正（番号→質問名） */
     for(const k in r.answers){
