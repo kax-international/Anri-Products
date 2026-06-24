@@ -233,23 +233,20 @@ function openForm(assignmentId){
 // ============================
 // assignments読み込み
 // ============================
-async function loadAssignments(){
+async function loadAssignments() {
 
     const list = document.getElementById("assignmentList");
     list.innerHTML = "";
 
-    const snapshot =
-        await getDocs(collection(db,"assignments"));
+    const snapshot = await getDocs(collection(db, "assignments"));
 
     let found = false;
 
-    for(const docSnap of snapshot.docs){
+    for (const docSnap of snapshot.docs) {
 
         const data = docSnap.data();
 
-        if(data.teamId !== teamId){
-            continue;
-        }
+        if (data.teamId !== teamId) continue;
 
         found = true;
 
@@ -260,7 +257,7 @@ async function loadAssignments(){
 
         let buttonHTML = "";
 
-        if(status === "none" || status === "rejected"){
+        if (status === "none" || status === "rejected") {
             buttonHTML = `
                 <button class="request-btn"
                     onclick="window.requestForm('${docSnap.id}')">
@@ -269,7 +266,7 @@ async function loadAssignments(){
             `;
         }
 
-        if(status === "pending"){
+        if (status === "pending") {
             buttonHTML = `
                 <button class="requested-btn" disabled>
                     Requested
@@ -277,7 +274,7 @@ async function loadAssignments(){
             `;
         }
 
-        if(status === "approved"){
+        if (status === "approved") {
             buttonHTML = `
                 <button class="open-btn"
                     onclick="window.openForm('${docSnap.id}')">
@@ -292,7 +289,6 @@ async function loadAssignments(){
                 <p>${data.description || ""}</p>
                 <small>${data.questions?.length || 0} Questions</small>
             </div>
-
             <div class="right">
                 ${buttonHTML}
             </div>
@@ -301,7 +297,7 @@ async function loadAssignments(){
         list.appendChild(card);
     }
 
-    if(!found){
+    if (!found) {
         list.innerHTML = "<p>No Forms Found</p>";
     }
 }
