@@ -274,8 +274,12 @@ document.getElementById("uploadBtn").onclick = async () => {
             }
         );
     }
+setStatus("All uploads complete!");
 
-    setStatus("All uploads complete!");
+    document.getElementById("playlistTitle").value = "";
+    document.getElementById("videoContainer").innerHTML = "";
+    document.getElementById("subtitleContainer").innerHTML =
+        `<input class="subtitle-box" placeholder="ex. 06232026">`;
 
 }
 catch(err){
@@ -284,17 +288,7 @@ catch(err){
     setStatus("Upload failed");
 
 }
-        setStatus("All uploads complete!");
-
-        // reset
-        document.getElementById("playlistTitle").value = "";
-        document.getElementById("videoContainer").innerHTML = "";
-        document.getElementById("subtitleContainer").innerHTML =
-            `<input class="subtitle-box" placeholder="ex. 06232026">`;
-    catch(err){
-        console.error(err);
-        setStatus("Upload failed");
-    }
+       
 };
 
 </script>
