@@ -170,11 +170,11 @@ async function getMyRequestStatus(assignmentId){
 await setDoc(ref, {
 
     requesterUid: currentUser.uid,
-    requesterName: currentUser.email || currentUser.uid
+    requesterName: currentUser.email || currentUser.uid,
 
-    ownerUid: currentUser.uid,
+    ownerUid: currentUser.uid, // ← ★カンマ必須
 
-    teamId: data.teamId || teamId,
+    teamId: data.teamId,
     teamName: data.teamName || "",
 
     featureType: "inputForm",
@@ -184,7 +184,6 @@ await setDoc(ref, {
     status: "pending",
     createdAt: Date.now()
 });
-}
 
 // ============================
 // Request送信
