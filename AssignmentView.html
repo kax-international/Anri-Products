@@ -162,18 +162,28 @@ onAuthStateChanged(auth, async (user) => {
 async function getMyRequestStatus(assignmentId){
 
     const ref = doc(
-        db,
-        "featureRequests",
-        `${assignmentId}_${currentUser.uid}`
-    );
+    db,
+    "featureRequests",
+    `${assignmentId}_${currentUser.uid}`
+);
 
-    const snap = await getDoc(ref);
+await setDoc(ref, {
 
-    if(!snap.exists()){
-        return "none";
-    }
+    requesterUid: currentUser.uid,
+    requesterName: currentUser.displayName || "Unknown",
 
-    return snap.data().status;
+    ownerUid: currentUser.uid, // ← ★ここに変更（重要）
+
+    teamId: data.teamId || teamId,
+    teamName: data.teamName || "",
+
+    featureType: "inputForm",
+    assignmentId: assignmentId,
+    assignmentTitle: data.title || "",
+
+    status: "pending",
+    createdAt: Date.now()
+});
 }
 
 // ============================
