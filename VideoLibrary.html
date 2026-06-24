@@ -222,12 +222,11 @@ async function loadPlaylistSubtitles(playlistId){
 
         item.onclick = ()=>{
 
-            loadVideos(
-    playlistId,
-    subtitle
-)
+            item.onclick = ()=>{
 
-        };
+    loadVideos(playlistId);
+
+};
 
         subtitleDiv.appendChild(item);
 
@@ -238,10 +237,7 @@ async function loadPlaylistSubtitles(playlistId){
 /* =======================
    LOAD VIDEOS
 ======================= */
-async function loadVideos(
-    playlistId,
-    selectedSubtitle
-){
+async function loadVideos(playlistId){
 
     const snap =
         await getDocs(
@@ -257,17 +253,17 @@ async function loadVideos(
 
     snap.forEach(docSnap=>{
 
-        const data =
-            docSnap.data();
-
-        if(
-            data.subtitle ===
-            selectedSubtitle
-        ){
-            allVideos.push(data);
-        }
+        allVideos.push({
+            id: docSnap.id,
+            ...docSnap.data()
+        });
 
     });
+
+    console.log(
+        "videos found:",
+        allVideos.length
+    );
 
     renderVideos(allVideos);
 }
@@ -326,7 +322,9 @@ function renderVideos(videos){
         div.className = "video-card";
 
         div.innerHTML = `
-            <div>🎬 VIDEO</div>
+            <div>
+    ${data.subtitle || "VIDEO"}
+</div>
             <div style="font-size:12px;color:#aaa;">
                 ${data.subtitle || "No Subtitle"}
             </div>
