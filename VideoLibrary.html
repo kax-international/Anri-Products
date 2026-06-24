@@ -98,12 +98,25 @@ video{
         <div class="player">
             <video id="videoPlayer" controls></video>
         </div>
+        <div id="subtitleBar"
+     style="
+        padding:10px;
+        background:#1a1a1a;
+        border-bottom:1px solid #333;
+        display:flex;
+        gap:10px;
+        overflow-x:auto;
+">
+</div>
+
+<div class="video-list" id="videoList"></div>
 
     </div>
 
 </div>
 
 <script type="module">
+let allVideos = [];
 const rawTeamId = new URLSearchParams(location.search).get("teamId");
 const teamId = rawTeamId ? rawTeamId.trim() : null;
 
@@ -176,27 +189,82 @@ async function loadVideos(playlistId){
 
     const snap = await getDocs(q);
 
-    console.log("videos found:", snap.size);
-
-    const container = document.getElementById("videoList");
-    container.innerHTML = "";
+    allVideos = [];
 
     snap.forEach(docSnap => {
+        allVideos.push(docSnap.data());
+    });
 
-        const data = docSnap.data();
+    createSubtitleButtons();
+
+    renderVideos(allVideos);
+}
+function createSubtitleButtons(){
+
+    const bar = document.getElementById("subtitleBar");
+
+    bar.innerHTML = "";
+
+    const subtitles = [...new Set(
+        allVideos.map(v => v.subtitle || "No Subtitle")
+    )];
+
+    const allBtn = document.createElement("button");
+    allBtn.textContent = "All";
+
+    allBtn.onclick = () => {
+        renderVideos(allVideos);
+    };
+
+    bar.appendChild(allBtn);
+
+    subtitles.forEach(subtitle => {
+
+        const btn = document.createElement("button");
+
+        btn.textContent = subtitle;
+
+        btn.onclick = () => {
+
+            const filtered =
+                allVideos.filter(v =>
+                    (v.subtitle || "No Subtitle") === subtitle
+                );
+
+            renderVideos(filtered);
+        };
+
+        bar.appendChild(btn);
+    });
+}
+function renderVideos(videos){
+
+    const container =
+        document.getElementById("videoList");
+
+    container.innerHTML = "";
+
+    videos.forEach(data => {
 
         const div = document.createElement("div");
+
         div.className = "video-card";
 
         div.innerHTML = `
             <div>🎬 VIDEO</div>
             <div style="font-size:12px;color:#aaa;">
-                ${data.subtitle || "no subtitle"}
+                ${data.subtitle || "No Subtitle"}
             </div>
         `;
 
         div.onclick = () => {
-            document.getElementById("videoPlayer").src = data.videoUrl;
+
+            const player =
+                document.getElementById("videoPlayer");
+
+            player.src = data.videoUrl;
+
+            player.play();
         };
 
         container.appendChild(div);
