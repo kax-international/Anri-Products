@@ -136,13 +136,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-const ownerUid = data.ownerUid;
-
-if (!ownerUid) {
-    console.error("ownerUid is missing in assignment:", data);
-    alert("Error: ownerUid is missing in assignment");
-    return;
-}
 const teamId =
 new URLSearchParams(location.search).get("teamId");
 
