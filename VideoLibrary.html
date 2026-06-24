@@ -126,6 +126,8 @@ import {
     collection,
     getDocs,
     query,
+    getDoc,
+    doc,
     where
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
@@ -178,6 +180,14 @@ async function loadPlaylists(){
    LOAD VIDEOS
 ======================= */
 async function loadVideos(playlistId){
+    const playlistDoc = await getDoc(
+    doc(db,"playlists",playlistId)
+);
+
+const playlistData = playlistDoc.data();
+
+playlistSubtitles =
+    playlistData.subtitles || [];
 
     console.log("loading playlist:", playlistId);
 
@@ -211,15 +221,15 @@ async function loadVideos(playlistId){
 }
 function createSubtitleButtons(){
 
-    const bar = document.getElementById("subtitleBar");
+    const bar =
+        document.getElementById("subtitleBar");
 
     bar.innerHTML = "";
 
-    const subtitles = [...new Set(
-        allVideos.map(v => v.subtitle || "No Subtitle")
-    )];
+    // ALL
+    const allBtn =
+        document.createElement("button");
 
-    const allBtn = document.createElement("button");
     allBtn.textContent = "All";
 
     allBtn.onclick = () => {
@@ -228,9 +238,11 @@ function createSubtitleButtons(){
 
     bar.appendChild(allBtn);
 
-    subtitles.forEach(subtitle => {
+    // Playlistのsubtitle一覧
+    playlistSubtitles.forEach(subtitle => {
 
-        const btn = document.createElement("button");
+        const btn =
+            document.createElement("button");
 
         btn.textContent = subtitle;
 
@@ -238,13 +250,14 @@ function createSubtitleButtons(){
 
             const filtered =
                 allVideos.filter(v =>
-                    (v.subtitle || "No Subtitle") === subtitle
+                    v.subtitle === subtitle
                 );
 
             renderVideos(filtered);
         };
 
         bar.appendChild(btn);
+
     });
 }
 function renderVideos(videos){
