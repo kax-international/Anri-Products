@@ -192,32 +192,24 @@ async function sendRequest(assignmentId){
 
     const data = assignmentSnap.data();
 
-    const ownerUid = data.ownerUid; // ← ここで取る（正しい）
+    const ownerUid = data.ownerUid;
 
-    if(!ownerUid){
-        console.error("ownerUid missing:", data);
-        return;
+    if (!ownerUid) {
+        console.error("ownerUid missing");
+        return; // ← OK（関数の中だから）
     }
 
-    const ref = doc(
-        db,
-        "featureRequests",
-        `${assignmentId}_${currentUser.uid}`
-    );
+    const ref = doc(db, "featureRequests", `${assignmentId}_${currentUser.uid}`);
 
     await setDoc(ref, {
         requesterUid: currentUser.uid,
-        requesterName: currentUser.displayName || currentUser.email || "Unknown",
-
+        requesterName: currentUser.displayName || "Unknown",
         ownerUid: ownerUid,
-
         teamId: data.teamId || teamId,
         teamName: data.teamName || "",
-
         featureType: "inputForm",
         assignmentId,
         assignmentTitle: data.title || "",
-
         status: "pending",
         createdAt: Date.now()
     });
