@@ -174,23 +174,7 @@ const snap = await getDoc(ref);
 
     return snap.data().status;
 }
-await setDoc(ref, {
 
-    requesterUid: currentUser.uid,
-    requesterName: currentUser.email || currentUser.uid,
-
-    ownerUid: currentUser.uid, // ← ★カンマ必須
-
-    teamId: data.teamId,
-    teamName: data.teamName || "",
-
-    featureType: "inputForm",
-    assignmentId: assignmentId,
-    assignmentTitle: data.title || "",
-
-    status: "pending",
-    createdAt: Date.now()
-});
 
 // ============================
 // Request送信
