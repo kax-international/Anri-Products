@@ -380,7 +380,8 @@ async function loadFeatureRequests(user){
 
         const req = docSnap.data();
 
-        if(req.ownerUid !== user.uid || req.status !== "pending") return;
+        if(req.ownerUid !== user.uid) return;
+if(req.status !== "pending") return;
 
         found = true;
 
