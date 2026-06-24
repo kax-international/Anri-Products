@@ -304,58 +304,34 @@ function getMedia(r){
 
     for(const k in r.answers){
 
-    const value = r.answers[k];
+        const v = r.answers[k];
 
-    let displayValue = value;
-
-    if(
-        typeof value === "string" &&
-        value.includes("cloudinary")
-    ){
-
-        // VIDEO
         if(
-            value.includes("/video/") ||
-            value.match(/\.(mp4|mov|webm)$/i)
+            typeof v === "string" &&
+            v.includes("cloudinary")
         ){
 
-            displayValue = `
-                <video
-                    controls
-                    style="
-                        width:100%;
-                        max-height:500px;
-                        margin-top:10px;
-                    ">
-                    <source src="${value}">
-                </video>
-            `;
-        }
+            if(
+                v.includes("/video/") ||
+                v.match(/\.(mp4|mov|webm)$/i)
+            ){
+                return {
+                    type:"video",
+                    url:v
+                };
+            }
 
-        // IMAGE
-        else{
-
-            displayValue = `
-                <img
-                    src="${value}"
-                    style="
-                        width:100%;
-                        max-width:600px;
-                        margin-top:10px;
-                    ">
-            `;
+            return {
+                type:"image",
+                url:v
+            };
         }
     }
 
-    html += `
-        <p>
-            <b>${questionMap[k] || k}:</b><br>
-            ${displayValue}
-        </p>
-    `;
-}
-
-    return {type:"none", url:"https://via.placeholder.com/600x400?text=No+Image"};
+    return {
+        type:"none",
+        url:"https://via.placeholder.com/600x400?text=No+Image"
+    };
 }
 
 /* TITLE */
