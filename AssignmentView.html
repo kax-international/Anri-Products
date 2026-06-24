@@ -166,7 +166,14 @@ async function getMyRequestStatus(assignmentId){
     "featureRequests",
     `${assignmentId}_${currentUser.uid}`
 );
+const snap = await getDoc(ref);
 
+    if (!snap.exists()) {
+        return "none";
+    }
+
+    return snap.data().status;
+}
 await setDoc(ref, {
 
     requesterUid: currentUser.uid,
@@ -312,7 +319,7 @@ window.requestForm = async function(assignmentId){
 
 window.openForm = openForm;
 
-}
+
 </script>
 
 </body>
