@@ -127,107 +127,100 @@ import {
 const firebaseConfig = {
     apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
     authDomain: "athletic-cloud-33538.firebaseapp.com",
-    projectId: "athletic-cloud-33538",
-    storageBucket: "athletic-cloud-33538.firebasestorage.app",
-    messagingSenderId: "1020993809301",
-    appId: "1:1020993809301:web:a31e28377788bef965249c"
+    projectId: "athletic-cloud-33538"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-const teamId =
-new URLSearchParams(location.search).get("teamId");
+
+const teamId = new URLSearchParams(location.search).get("teamId");
 
 let currentUser = null;
 
+/* =========================
+   AUTH
+========================= */
 onAuthStateChanged(auth, async (user) => {
-
-    if(!user){
-        alert("Login required");
+    if (!user) {
         location.href = "login.html";
         return;
     }
 
     currentUser = user;
-    await loadAssignments();
-
+    loadAssignments();
 });
 
-
-// ============================
-// Request状態取得
-// ============================
-async function getMyRequestStatus(assignmentId){
+/* =========================
+   REQUEST STATUS
+========================= */
+async function getMyRequestStatus(assignmentId) {
 
     const ref = doc(
-    db,
-    "featureRequests",
-    `${assignmentId}_${currentUser.uid}`
-);
-const snap = await getDoc(ref);
+        db,
+        "featureRequests",
+        `${assignmentId}_${currentUser.uid}`
+    );
 
-    if (!snap.exists()) {
-        return "none";
-    }
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) return "none";
 
     return snap.data().status;
 }
 
-
-// ============================
-// Request送信
-// ============================
-async function sendRequest(assignmentId){
+/* =========================
+   SEND REQUEST（ここが本体）
+========================= */
+async function sendRequest(assignmentId) {
 
     const assignmentRef = doc(db, "assignments", assignmentId);
     const assignmentSnap = await getDoc(assignmentRef);
 
-    const data = assignmentSnap.data();
-
-    const ownerUid = data.ownerUid;
-
-    if (!ownerUid) {
-        console.error("ownerUid missing");
-        return; // ← OK（関数の中だから）
+    if (!assignmentSnap.exists()) {
+        console.error("assignment not found");
+        return;
     }
 
-    const ref = doc(db, "featureRequests", `${assignmentId}_${currentUser.uid}`);
+    const data = assignmentSnap.data();
+
+    // ★ここが重要（undefined防止）
+    const ownerUid = data.ownerUid;
+    if (!ownerUid) {
+        console.error("ownerUid missing in assignment:", data);
+        alert("この課題にownerUidがありません（作成側バグ）");
+        return;
+    }
+
+    const ref = doc(
+        db,
+        "featureRequests",
+        `${assignmentId}_${currentUser.uid}`
+    );
 
     await setDoc(ref, {
         requesterUid: currentUser.uid,
-        requesterName: currentUser.displayName || "Unknown",
+        requesterName: currentUser.displayName || currentUser.email || "Unknown",
+
         ownerUid: ownerUid,
-        teamId: data.teamId || teamId,
+
+        teamId: data.teamId,
         teamName: data.teamName || "",
-        featureType: "inputForm",
+
         assignmentId,
         assignmentTitle: data.title || "",
+
+        featureType: "inputForm",
         status: "pending",
         createdAt: Date.now()
     });
-    await setDoc(doc(db,"assignments",id),{
-    title,
-    teamId,
-    ownerUid: currentUser.uid, // ←これ必須
-});
 
     await loadAssignments();
 }
 
-
-// ============================
-// open form
-// ============================
-function openForm(assignmentId){
-    location.href =
-    `AssignmentInput.html?id=${assignmentId}&teamId=${teamId}`;
-}
-
-
-// ============================
-// assignments読み込み
-// ============================
+/* =========================
+   LOAD
+========================= */
 async function loadAssignments() {
 
     const list = document.getElementById("assignmentList");
@@ -246,9 +239,6 @@ async function loadAssignments() {
         found = true;
 
         const status = await getMyRequestStatus(docSnap.id);
-
-        const card = document.createElement("div");
-        card.className = "assignment-card";
 
         let buttonHTML = "";
 
@@ -278,11 +268,13 @@ async function loadAssignments() {
             `;
         }
 
+        const card = document.createElement("div");
+        card.className = "assignment-card";
+
         card.innerHTML = `
             <div class="left">
                 <h3>${data.title}</h3>
                 <p>${data.description || ""}</p>
-                <small>${data.questions?.length || 0} Questions</small>
             </div>
             <div class="right">
                 ${buttonHTML}
@@ -297,16 +289,16 @@ async function loadAssignments() {
     }
 }
 
-
-// ============================
-// グローバル公開（onclick用）
-// ============================
-window.requestForm = async function(assignmentId){
-    await sendRequest(assignmentId);
+/* =========================
+   GLOBAL
+========================= */
+window.requestForm = async (id) => {
+    await sendRequest(id);
 };
 
-window.openForm = openForm;
-
+window.openForm = (id) => {
+    location.href = `AssignmentInput.html?id=${id}&teamId=${teamId}`;
+};
 
 </script>
 
