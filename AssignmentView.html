@@ -177,19 +177,16 @@ async function sendRequest(assignmentId) {
     const assignmentRef = doc(db, "assignments", assignmentId);
     const assignmentSnap = await getDoc(assignmentRef);
 
-    if (!assignmentSnap.exists()) {
-        console.error("assignment not found");
-        return;
-    }
-
     const data = assignmentSnap.data();
 
-    // ★ここが重要（undefined防止）
-    const ownerUid = data.ownerUid;
-    if (!ownerUid) {
-        console.error("ownerUid missing in assignment:", data);
-        alert("この課題にownerUidがありません（作成側バグ）");
-        return;
+    // 🔥 teamNameをteamsから取得（ここが重要）
+    const teamRef = doc(db, "teams", data.teamId);
+    const teamSnap = await getDoc(teamRef);
+
+    let teamName = "";
+
+    if (teamSnap.exists()) {
+        teamName = teamSnap.data().name || "";
     }
 
     const ref = doc(
@@ -202,15 +199,15 @@ async function sendRequest(assignmentId) {
         requesterUid: currentUser.uid,
         requesterName: currentUser.displayName || currentUser.email || "Unknown",
 
-        ownerUid: ownerUid,
+        ownerUid: data.ownerUid || null,
 
-        teamId: data.teamId,
-        teamName: data.teamName || "",
+        teamId: data.teamId || "",
+        teamName: teamName,   // ← ★ここで確実に入る
 
+        featureType: "inputForm",
         assignmentId,
         assignmentTitle: data.title || "",
 
-        featureType: "inputForm",
         status: "pending",
         createdAt: Date.now()
     });
