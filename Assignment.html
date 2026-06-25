@@ -45,6 +45,31 @@ header{
 .card:hover{
     transform:translateY(-2px);
 }
+.request-btn{
+    background:#111;
+    color:white;
+    border:none;
+    padding:10px 14px;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.requested-btn{
+    background:#aaa;
+    color:white;
+    border:none;
+    padding:10px 14px;
+    border-radius:8px;
+}
+
+.open-btn{
+    background:#2d7ef7;
+    color:white;
+    border:none;
+    padding:10px 14px;
+    border-radius:8px;
+    cursor:pointer;
+}
 </style>
 </head>
 
@@ -183,8 +208,7 @@ async function sendRequest(
             currentTeam?.name || "",
 
             featureType:
-            "assignmentMap",
-
+"searchEngine",
             assignmentId:
             assignmentId,
 
