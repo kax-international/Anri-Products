@@ -302,68 +302,104 @@ async function loadMyTeams(user){
 
 async function loadJoinRequests(user){
 
-    const requestList = document.getElementById("requestList");
+    const requestList =
+    document.getElementById("requestList");
+
     requestList.innerHTML = "";
 
-    const snapshot = await getDocs(collection(db,"joinRequests"));
+    const requestSnapshot =
+    await getDocs(collection(db,"joinRequests"));
 
     let found = false;
 
-    snapshot.forEach(docSnap => {
+    for(const docSnap of requestSnapshot.docs){
 
         const req = docSnap.data();
 
-        if(req.ownerUid !== user.uid || req.status !== "pending") return;
+        if(req.status !== "pending") continue;
+
+        // チーム取得
+        const teamRef =
+        doc(db,"teams",req.teamId);
+
+        const teamSnap =
+        await getDoc(teamRef);
+
+        if(!teamSnap.exists()) continue;
+
+        const teamData =
+        teamSnap.data();
+
+        // Ownerだけ表示
+        if(teamData.ownerUid !== user.uid){
+            continue;
+        }
 
         found = true;
 
-        const div = document.createElement("div");
+        const div =
+        document.createElement("div");
+
         div.className = "team-card";
 
         div.innerHTML = `
             <strong>${req.requesterEmail}</strong><br>
-            Team: ${req.teamName}<br>
+            Team: ${teamData.name}<br>
             Role: ${req.requestedRole}<br><br>
 
-            <button class="approve-btn">Approve</button>
-            <button class="reject-btn">Reject</button>
+            <button class="approve-btn">
+                Approve
+            </button>
+
+            <button class="reject-btn">
+                Reject
+            </button>
         `;
 
-        const ref = doc(db,"joinRequests",docSnap.id);
+        const requestRef =
+        doc(db,"joinRequests",docSnap.id);
 
-        div.querySelector(".approve-btn").onclick = async () => {
+        div.querySelector(".approve-btn").onclick =
+        async ()=>{
 
-            await updateDoc(ref,{ status:"approved" });
+            await updateDoc(
+                requestRef,
+                { status:"approved" }
+            );
 
-            const teamRef = doc(db,"teams",req.teamId);
-            const teamSnap = await getDoc(teamRef);
-            const teamData = teamSnap.data();
+            const members =
+            teamData.members || {};
 
-            const members = teamData.members || {};
-            members[req.requesterUid] = req.requestedRole;
+            members[req.requesterUid] =
+            req.requestedRole;
 
-            await updateDoc(teamRef,{ members });
-            if (teamData.ownerUid !== currentUser.uid) {
-    alert("Only owner can manage members");
-    return;
-}
+            await updateDoc(
+                teamRef,
+                { members }
+            );
 
             loadJoinRequests(user);
             loadMyTeams(user);
         };
 
-        div.querySelector(".reject-btn").onclick = async () => {
+        div.querySelector(".reject-btn").onclick =
+        async ()=>{
 
-            await updateDoc(ref,{ status:"rejected" });
+            await updateDoc(
+                requestRef,
+                { status:"rejected" }
+            );
 
             loadJoinRequests(user);
         };
 
         requestList.appendChild(div);
-    });
+    }
 
     if(!found){
-        requestList.innerHTML = "No Join Requests";
+
+        requestList.innerHTML =
+        "No Join Requests";
     }
 }
 
