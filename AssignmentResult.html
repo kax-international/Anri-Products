@@ -47,6 +47,19 @@ header{
 h2{
     margin-bottom:20px;
 }
+.requestBtn{
+    background:#111;
+    color:white;
+    border:none;
+    padding:10px 16px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.requestBtn:hover{
+    background:#333;
+}
 </style>
 </head>
 
@@ -212,25 +225,27 @@ async function loadAssignments(){
             "card";
 
             card.innerHTML = `
-                <h3>${data.title}</h3>
+    <h3>${data.title}</h3>
 
-                <p>
-                    ${data.description || ""}
-                </p>
+    <p>${data.description || ""}</p>
 
-                <small>
-                    ${data.questions?.length || 0}
-                    questions
-                </small>
+    <small>
+        ${data.questions?.length || 0}
+        questions
+    </small>
 
-                <br><br>
+    <br>
+    <small>
+        Team:
+        ${currentTeam.name || "-"}
+    </small>
 
-                <button
-                    class="requestBtn">
-                    Request Access
-                </button>
-            `;
+    <br><br>
 
+    <button class="requestBtn">
+        Request Search Database
+    </button>
+`;
             card.onclick = () => {
 
                 location.href =
