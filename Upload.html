@@ -107,6 +107,7 @@ button:hover{
 </div>
 
 <script type="module">
+document.getElementById("addVideoBtn").click();
 import {
     getAuth,
     onAuthStateChanged
@@ -443,11 +444,10 @@ if(!playlistSnap.exists()){
         ".video-title"
     ).value.trim();
 
-const subtitles =
+const playlistSubtitle =
     block.querySelector(
         ".playlist-subtitle"
     ).value;
-
         if(!file) continue;
 
         setStatus(
@@ -500,8 +500,8 @@ const subtitles =
         videoTitle:
             videoTitle,
 
-        subtitles:
-            subtitles,
+        playlistSubtitle:
+            playlistSubtitle,
 
         videoUrl:
             data.secure_url,
