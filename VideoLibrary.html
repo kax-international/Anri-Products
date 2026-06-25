@@ -222,9 +222,13 @@ async function loadPlaylists(){
         div.className = "playlist";
         div.textContent = data.title;
 
-        div.onclick = () => {
+       div.onclick = async () => {
+
     currentPlaylistId = docSnap.id;
-    loadPlaylistSubtitles(docSnap.id);
+
+    await loadVideos(docSnap.id);
+
+    await loadPlaylistSubtitles(docSnap.id);
 };
 
         container.appendChild(div);
