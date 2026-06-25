@@ -196,6 +196,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 let currentUser = null;
 let currentTeam = null;
 /* =======================
@@ -492,7 +493,25 @@ document
 .getElementById("saveCommentBtn")
 .onclick = saveComment;
 
-loadPlaylists();
+onAuthStateChanged(auth,(user)=>{
+
+    if(!user){
+
+        location.href =
+        "login.html";
+
+        return;
+    }
+
+    currentUser = user;
+
+    console.log(
+        "Logged in:",
+        user.uid
+    );
+
+    loadPlaylists();
+});
 
 </script>
 
