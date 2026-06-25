@@ -71,7 +71,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebas
 import {
     getFirestore,
     collection,
-    getDocs
+    getDocs,
+    doc,
+    getDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 import {
@@ -88,59 +90,152 @@ const firebaseConfig = {
     appId: "1:1020993809301:web:a31e28377788bef965249c"
 };
 
-// ✅ ① 必ず最初に app
 const app = initializeApp(firebaseConfig);
-
-// ✅ ② 次に db / auth
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-const teamId = new URLSearchParams(location.search).get("teamId");
+const teamId =
+new URLSearchParams(location.search)
+.get("teamId");
 
-const list = document.getElementById("assignmentList");
+const list =
+document.getElementById("assignmentList");
 
-// ✅ ③ authガード
-onAuthStateChanged(auth, (user) => {
+/* =========================
+   AUTH + ROLE CHECK
+========================= */
+
+onAuthStateChanged(auth, async (user) => {
 
     if (!user) {
         location.href = "login.html";
         return;
     }
 
-    load();
+    try {
+
+        const teamRef =
+        doc(db, "teams", teamId);
+
+        const teamSnap =
+        await getDoc(teamRef);
+
+        if (!teamSnap.exists()) {
+
+            alert("Team not found");
+
+            location.href =
+            "dashboard.html";
+
+            return;
+        }
+
+        const teamData =
+        teamSnap.data();
+
+        const role =
+        teamData.members?.[user.uid];
+
+        // owner / coachのみ許可
+        if (
+            role !== "owner" &&
+            role !== "coach"
+        ) {
+
+            alert(
+                "Permission denied"
+            );
+
+            location.href =
+            `team.html?teamId=${teamId}`;
+
+            return;
+        }
+
+        loadAssignments();
+
+    }
+    catch (err) {
+
+        console.error(err);
+
+        alert(
+            "Permission check failed"
+        );
+    }
 });
 
-async function load() {
+/* =========================
+   LOAD ASSIGNMENTS
+========================= */
+
+async function loadAssignments() {
 
     try {
 
-        list.innerHTML = "Loading...";
+        list.innerHTML =
+        "Loading...";
 
-        const snap = await getDocs(collection(db, "assignments"));
+        const snapshot =
+        await getDocs(
+            collection(
+                db,
+                "assignments"
+            )
+        );
 
         list.innerHTML = "";
 
         let found = false;
 
-        snap.forEach(docSnap => {
+        snapshot.forEach(docSnap => {
 
-            const data = docSnap.data();
+            const data =
+            docSnap.data();
 
-            if (teamId && data.teamId !== teamId) return;
+            // チーム一致
+            if (
+                teamId &&
+                data.teamId !== teamId
+            ) return;
+
+            // 新スキーマ防御
+            if (!data.ownerUid)
+                return;
 
             found = true;
 
-            const card = document.createElement("div");
-            card.className = "card";
+            const card =
+            document.createElement("div");
+
+            card.className =
+            "card";
 
             card.innerHTML = `
-                <h3>${data.title}</h3>
-                <p>${data.description || ""}</p>
-                <small>${data.questions?.length || 0} questions</small>
+                <h3>
+                    ${data.title}
+                </h3>
+
+                <p>
+                    ${data.description || ""}
+                </p>
+
+                <small>
+                    ${data.questions?.length || 0}
+                    questions
+                </small>
+
+                <br>
+
+                <small>
+                    Owner:
+                    ${data.ownerUid}
+                </small>
             `;
 
             card.onclick = () => {
-                window.location.href =
+
+                location.href =
                 `AssignmentDatabase.html?id=${docSnap.id}&teamId=${teamId}`;
             };
 
@@ -148,12 +243,24 @@ async function load() {
         });
 
         if (!found) {
-            list.innerHTML = "<p>No assignments found</p>";
+
+            list.innerHTML = `
+                <p>
+                    No assignments found
+                </p>
+            `;
         }
 
-    } catch (err) {
+    }
+    catch (err) {
+
         console.error(err);
-        list.innerHTML = "<p>Error loading assignments</p>";
+
+        list.innerHTML = `
+            <p>
+                Error loading assignments
+            </p>
+        `;
     }
 }
 
