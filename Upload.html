@@ -118,10 +118,13 @@ import {
     doc,
     getDoc,
     setDoc,
+    updateDoc,
     addDoc,
     collection,
-    serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+    serverTimestamp,
+    arrayUnion
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 /* =========================
    CONFIG（ここに統一）
@@ -286,30 +289,53 @@ if (!currentUser) {
     try {
 
     // playlist document
-    const playlistRef = doc(db, "playlists", playlistId);
+    const playlistRef =
+doc(db,"playlists",playlistId);
 
-    await setDoc(playlistRef, {
+const playlistSnap =
+await getDoc(playlistRef);
 
-    teamId,
+if(!playlistSnap.exists()){
 
-    ownerUid:
-        currentUser?.uid || "",
+    await setDoc(
+        playlistRef,
+        {
+            teamId,
 
-    ownerName:
-        currentUser?.displayName ||
-        currentUser?.email ||
-        "Unknown",
+            ownerUid:
+                currentUser?.uid || "",
 
-    title,
+            ownerName:
+                currentUser?.displayName ||
+                currentUser?.email ||
+                "Unknown",
 
-    subtitles,
+            title,
 
-    serviceType:
-        "video",
+            subtitles,
 
-    createdAt:
-        serverTimestamp()
-});
+            serviceType:
+                "video",
+
+            createdAt:
+                serverTimestamp()
+        }
+    );
+
+}else{
+
+    for(const subtitle of subtitles){
+
+        await updateDoc(
+            playlistRef,
+            {
+                subtitles:
+                arrayUnion(subtitle)
+            }
+        );
+    }
+
+}
 
     // videos subcollection
     for(let i = 0; i < videoBlocks.length; i++){
