@@ -111,9 +111,7 @@ import {
     getAuth,
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-const auth = getAuth(app);
 
-let currentUser = null;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
     getFirestore,
@@ -140,7 +138,12 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
 const db = getFirestore(app);
+
+const auth = getAuth(app);
+
+let currentUser = null;
 
 /* =========================
    PARAMS
@@ -197,7 +200,10 @@ document.getElementById("addSubtitle").onclick = () => {
    UPLOAD
 ========================= */
 document.getElementById("uploadBtn").onclick = async () => {
-
+if (!currentUser) {
+    alert("Please wait until login completes");
+    return;
+}
     const title = document.getElementById("playlistTitle").value;
     const videoBlocks = document.querySelectorAll(".video-block");
 
