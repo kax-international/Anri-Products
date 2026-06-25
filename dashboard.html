@@ -343,7 +343,7 @@ async function loadJoinRequests(user){
             members[req.requesterUid] = req.requestedRole;
 
             await updateDoc(teamRef,{ members });
-            if (teamData.ownerId !== currentUser.uid) {
+            if (teamData.ownerUid !== currentUser.uid) {
     alert("Only owner can manage members");
     return;
 }
