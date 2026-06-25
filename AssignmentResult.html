@@ -73,7 +73,11 @@ import {
     collection,
     getDocs,
     doc,
-    getDoc
+    getDoc,
+    addDoc,
+    query,
+    where,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 import {
@@ -101,6 +105,9 @@ new URLSearchParams(location.search)
 const list =
 document.getElementById("assignmentList");
 
+let currentUser = null;
+let currentTeam = null;
+
 /* =========================
    AUTH + ROLE CHECK
 ========================= */
@@ -112,39 +119,34 @@ onAuthStateChanged(auth, async (user) => {
         return;
     }
 
+    currentUser = user;
+
     try {
 
         const teamRef =
-        doc(db, "teams", teamId);
+        doc(db,"teams",teamId);
 
         const teamSnap =
         await getDoc(teamRef);
 
-        if (!teamSnap.exists()) {
+        if(!teamSnap.exists()){
 
             alert("Team not found");
-
-            location.href =
-            "dashboard.html";
-
+            location.href = "dashboard.html";
             return;
         }
 
-        const teamData =
+        currentTeam =
         teamSnap.data();
 
         const role =
-        teamData.members?.[user.uid];
+        currentTeam.members?.[user.uid];
 
-        // owner / coachのみ許可
-        if (
+        if(
             role !== "owner" &&
             role !== "coach"
-        ) {
-
-            alert(
-                "Permission denied"
-            );
+        ){
+            alert("Permission denied");
 
             location.href =
             `team.html?teamId=${teamId}`;
@@ -155,7 +157,7 @@ onAuthStateChanged(auth, async (user) => {
         loadAssignments();
 
     }
-    catch (err) {
+    catch(err){
 
         console.error(err);
 
@@ -169,9 +171,9 @@ onAuthStateChanged(auth, async (user) => {
    LOAD ASSIGNMENTS
 ========================= */
 
-async function loadAssignments() {
+async function loadAssignments(){
 
-    try {
+    try{
 
         list.innerHTML =
         "Loading...";
@@ -188,19 +190,17 @@ async function loadAssignments() {
 
         let found = false;
 
-        snapshot.forEach(docSnap => {
+        snapshot.forEach(docSnap=>{
 
             const data =
             docSnap.data();
 
-            // チーム一致
-            if (
+            if(
                 teamId &&
                 data.teamId !== teamId
             ) return;
 
-            // 新スキーマ防御
-            if (!data.ownerUid)
+            if(!data.ownerUid)
                 return;
 
             found = true;
@@ -212,9 +212,7 @@ async function loadAssignments() {
             "card";
 
             card.innerHTML = `
-                <h3>
-                    ${data.title}
-                </h3>
+                <h3>${data.title}</h3>
 
                 <p>
                     ${data.description || ""}
@@ -225,42 +223,131 @@ async function loadAssignments() {
                     questions
                 </small>
 
-                <br>
+                <br><br>
 
-                <small>
-                    Owner:
-                    ${data.ownerUid}
-                </small>
+                <button
+                    class="requestBtn">
+                    Request Access
+                </button>
             `;
 
             card.onclick = () => {
 
                 location.href =
-                `AssignmentDatabase.html?id=${docSnap.id}&teamId=${teamId}`;
+                \`AssignmentDatabase.html?id=${docSnap.id}&teamId=${teamId}\`;
+            };
+
+            card.querySelector(".requestBtn")
+            .onclick = async (e) => {
+
+                e.stopPropagation();
+
+                try{
+
+                    const existing =
+                    await getDocs(
+                        query(
+                            collection(
+                                db,
+                                "featureRequests"
+                            ),
+                            where(
+                                "assignmentId",
+                                "==",
+                                docSnap.id
+                            ),
+                            where(
+                                "requesterUid",
+                                "==",
+                                currentUser.uid
+                            ),
+                            where(
+                                "status",
+                                "==",
+                                "pending"
+                            )
+                        )
+                    );
+
+                    if(
+                        !existing.empty
+                    ){
+                        alert(
+                            "Request already sent"
+                        );
+                        return;
+                    }
+
+                    await addDoc(
+                        collection(
+                            db,
+                            "featureRequests"
+                        ),
+                        {
+
+                            teamId:
+                            teamId,
+
+                            teamName:
+                            currentTeam.name || "",
+
+                            assignmentId:
+                            docSnap.id,
+
+                            assignmentTitle:
+                            data.title,
+
+                            requesterUid:
+                            currentUser.uid,
+
+                            requesterName:
+                            currentUser.email,
+
+                            ownerUid:
+                            data.ownerUid,
+
+                            featureType:
+                            "searchDatabase",
+
+                            status:
+                            "pending",
+
+                            createdAt:
+                            serverTimestamp()
+                        }
+                    );
+
+                    alert(
+                        "Request sent"
+                    );
+
+                }
+                catch(err){
+
+                    console.error(err);
+
+                    alert(
+                        "Request failed"
+                    );
+                }
             };
 
             list.appendChild(card);
         });
 
-        if (!found) {
+        if(!found){
 
-            list.innerHTML = `
-                <p>
-                    No assignments found
-                </p>
-            `;
+            list.innerHTML =
+            "<p>No assignments found</p>";
         }
 
     }
-    catch (err) {
+    catch(err){
 
         console.error(err);
 
-        list.innerHTML = `
-            <p>
-                Error loading assignments
-            </p>
-        `;
+        list.innerHTML =
+        "<p>Error loading assignments</p>";
     }
 }
 
