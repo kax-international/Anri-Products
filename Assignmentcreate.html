@@ -175,7 +175,61 @@ document.getElementById("addQuestionBtn").onclick = () => {
 
     document.getElementById("questionContainer").appendChild(card);
 };
+function addQuestion() {
 
+    const card = document.createElement("div");
+    card.className = "question-card";
+
+    card.innerHTML = `
+        <input class="question-text" placeholder="Question">
+
+        <select class="question-type">
+            <option value="short">Short</option>
+            <option value="long">Long</option>
+            <option value="multiple">Multiple Choice</option>
+            <option value="checkbox">Checkbox</option>
+            <option value="image">Image Upload</option>
+            <option value="video">Video Upload</option>
+        </select>
+
+        <label>
+            Required
+            <input type="checkbox" class="question-required">
+        </label>
+
+        <div class="option-box"></div>
+    `;
+
+    const typeSelect = card.querySelector(".question-type");
+    const optionBox = card.querySelector(".option-box");
+
+    typeSelect.addEventListener("change", () => {
+
+        optionBox.innerHTML = "";
+
+        if (typeSelect.value === "multiple" || typeSelect.value === "checkbox") {
+
+            optionBox.innerHTML = `
+                <div class="options"></div>
+                <button type="button" class="addOptionBtn">+ Add Option</button>
+            `;
+
+            const optionsDiv = optionBox.querySelector(".options");
+
+            optionBox.querySelector(".addOptionBtn").onclick = () => {
+
+                const input = document.createElement("input");
+                input.type = "text";
+                input.className = "option-input";
+                input.placeholder = "Option";
+
+                optionsDiv.appendChild(input);
+            };
+        }
+    });
+
+    document.getElementById("questionContainer").appendChild(card);
+}
 /* =========================
    SAVE
 ========================= */
@@ -193,14 +247,33 @@ document.getElementById("saveBtn").onclick = async () => {
 
     const questions = [];
 
-    document.querySelectorAll(".question-card").forEach(card => {
+document.querySelectorAll(".question-card").forEach(card => {
 
-        questions.push({
-            text: card.querySelector(".question-text").value,
-            type: card.querySelector(".question-type").value,
-            required: card.querySelector(".question-required").checked
+    const text = card.querySelector(".question-text").value.trim();
+    const type = card.querySelector(".question-type").value;
+    const required = card.querySelector(".question-required").checked;
+
+    const question = {
+        text,
+        type,
+        required
+    };
+
+    // 🔥 ここが重要
+    if (type === "multiple" || type === "checkbox") {
+
+        const options = [];
+
+        card.querySelectorAll(".option-input").forEach(input => {
+            const val = input.value.trim();
+            if (val) options.push(val);
         });
-    });
+
+        question.options = options;
+    }
+
+    questions.push(question);
+});
 
     const assignmentData = {
         title,
