@@ -229,27 +229,61 @@ function setStatus(msg){
    ADD VIDEO UI
 ========================= */
 document.getElementById("addVideoBtn").onclick = () => {
-    const container = document.getElementById("videoContainer");
 
-    const block = document.createElement("div");
-    block.className = "video-block";
+    const container =
+        document.getElementById(
+            "videoContainer"
+        );
+
+    const block =
+        document.createElement("div");
+
+    block.className =
+        "video-block";
 
     block.innerHTML = `
-<input
-    type="file"
-    class="video-file">
+        <input
+            type="file"
+            class="video-file"
+            accept="video/*">
 
-<input
-    type="text"
-    class="video-title"
-    placeholder="Video Title">
+        <input
+            type="text"
+            class="video-title"
+            placeholder="Video Title">
 
-<select
-    class="playlist-subtitle">
-</select>
+        <select
+            class="playlist-subtitle">
+        </select>
 
-<hr>
-`;
+        <hr>
+    `;
+
+    const select =
+        block.querySelector(
+            ".playlist-subtitle"
+        );
+
+    document
+    .querySelectorAll(".subtitle-box")
+    .forEach(input => {
+
+        const value =
+            input.value.trim();
+
+        if(!value) return;
+
+        const option =
+            document.createElement(
+                "option"
+            );
+
+        option.value = value;
+        option.textContent = value;
+
+        select.appendChild(option);
+
+    });
 
     container.appendChild(block);
 };
@@ -258,12 +292,60 @@ document.getElementById("addVideoBtn").onclick = () => {
    ADD SUBTITLE
 ========================= */
 document.getElementById("addSubtitle").onclick = () => {
-    const input = document.createElement("input");
-    input.className = "subtitle-box";
-    input.placeholder = "ex. Quarter back";
-    document.getElementById("subtitleContainer").appendChild(input);
-};
 
+    const input =
+        document.createElement(
+            "input"
+        );
+
+    input.className =
+        "subtitle-box";
+
+    input.placeholder =
+        "ex. Quarter back";
+
+    document
+    .getElementById(
+        "subtitleContainer"
+    )
+    .appendChild(input);
+
+    document
+    .querySelectorAll(
+        ".playlist-subtitle"
+    )
+    .forEach(select => {
+
+        select.innerHTML = "";
+
+        document
+        .querySelectorAll(
+            ".subtitle-box"
+        )
+        .forEach(subInput => {
+
+            const value =
+                subInput.value.trim();
+
+            if(!value) return;
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                value;
+
+            option.textContent =
+                value;
+
+            select.appendChild(
+                option
+            );
+        });
+    });
+};
 /* =========================
    UPLOAD
 ========================= */
@@ -356,14 +438,29 @@ if(!playlistSnap.exists()){
         const file =
             block.querySelector(".video-file").files[0];
 
-        const subtitle =
-            block.querySelector(".video-subtitle").value.trim();
+        const videoTitle =
+    block.querySelector(
+        ".video-title"
+    ).value.trim();
+
+const playlistSubtitle =
+    block.querySelector(
+        ".playlist-subtitle"
+    ).value;
 
         if(!file) continue;
 
         setStatus(
             `Uploading ${i+1}/${videoBlocks.length}...`
         );
+        if(!videoTitle){
+
+    alert(
+        `Video ${i+1} needs title`
+    );
+
+    return;
+}
 
         // Cloudinary
         const formData = new FormData();
@@ -386,7 +483,7 @@ if(!playlistSnap.exists()){
         }
 
         // playlists/{playlistId}/videos
-        await addDoc(
+    await addDoc(
     collection(
         db,
         "playlists",
@@ -400,11 +497,14 @@ if(!playlistSnap.exists()){
 
         teamId,
 
+        videoTitle:
+            videoTitle,
+
+        playlistSubtitle:
+            playlistSubtitle,
+
         videoUrl:
             data.secure_url,
-
-        subtitle:
-            subtitle,
 
         thumbnailUrl:
             data.thumbnail_url || "",
