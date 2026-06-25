@@ -443,7 +443,7 @@ if(!playlistSnap.exists()){
         ".video-title"
     ).value.trim();
 
-const playlistSubtitle =
+const subtitles =
     block.querySelector(
         ".playlist-subtitle"
     ).value;
@@ -500,8 +500,8 @@ const playlistSubtitle =
         videoTitle:
             videoTitle,
 
-        playlistSubtitle:
-            playlistSubtitle,
+        subtitles:
+            subtitles,
 
         videoUrl:
             data.secure_url,
