@@ -116,6 +116,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebas
 import {
     getFirestore,
     doc,
+    getDoc,
     setDoc,
     addDoc,
     collection,
@@ -150,7 +151,7 @@ let currentUser = null;
 ========================= */
 const params = new URLSearchParams(location.search);
 const teamId = params.get("teamId");
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
 
     if (!user) {
 
@@ -159,6 +160,59 @@ onAuthStateChanged(auth, (user) => {
     }
 
     currentUser = user;
+
+    try{
+
+        const teamRef =
+        doc(db,"teams",teamId);
+
+        const teamSnap =
+        await getDoc(teamRef);
+
+        if(!teamSnap.exists()){
+
+            alert("Team not found");
+
+            location.href =
+            "dashboard.html";
+
+            return;
+        }
+
+        const teamData =
+        teamSnap.data();
+
+        const role =
+        teamData.members?.[user.uid];
+
+        if(
+            role !== "owner" &&
+            role !== "coach" &&
+            role !== "staff"
+        ){
+
+            alert(
+                "Permission denied"
+            );
+
+            location.href =
+            `team.html?teamId=${teamId}`;
+
+            return;
+        }
+
+    }
+    catch(err){
+
+        console.error(err);
+
+        alert(
+            "Permission check failed"
+        );
+
+        location.href =
+        `team.html?teamId=${teamId}`;
+    }
 });
 /* =========================
    STATUS
