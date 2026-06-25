@@ -450,30 +450,23 @@ async function loadFeatureRequests(user){
 
         div.querySelector(".approve-btn").onclick = async () => {
 
-            await updateDoc(ref, { status: "approved" });
+    try {
 
-            const teamRef = doc(db, "teams", req.teamId);
-            const teamSnap = await getDoc(teamRef);
-
-            if (teamSnap.exists()) {
-
-                const teamData = teamSnap.data();
-                const members = teamData.members || {};
-
-                if (!members[req.requesterUid]) {
-                    members[req.requesterUid] = {
-                        role: "member",
-                        permissions: {}
-                    };
-                }
-
-                members[req.requesterUid].permissions[req.assignmentId] = true;
-
-                await updateDoc(teamRef, { members });
+        await updateDoc(
+            ref,
+            {
+                status: "approved"
             }
+        );
 
-            loadFeatureRequests(user);
-        };
+        await loadFeatureRequests(user);
+
+    } catch(err) {
+
+        console.error(err);
+        alert("Approve failed");
+    }
+};
 
         div.querySelector(".reject-btn").onclick = async () => {
 
