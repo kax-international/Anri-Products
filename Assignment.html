@@ -242,67 +242,81 @@ async function render(data) {
     listEl.innerHTML = "";
 
     if (data.length === 0) {
-        listEl.innerHTML = "<p>No assignments found</p>";
+
+        listEl.innerHTML =
+        "<p>No assignments found</p>";
+
         return;
     }
 
-    data.forEach(a => {
+    for (const a of data) {
 
-        const div = document.createElement("div");
+        const div =
+        document.createElement("div");
+
         div.className = "card";
 
         const status =
-await getMyRequestStatus(a.id);
+        await getMyRequestStatus(a.id);
 
-let buttonHTML = "";
+        let buttonHTML = "";
 
-if(
-    status === "none" ||
-    status === "rejected"
-){
+        if (
+            status === "none" ||
+            status === "rejected"
+        ) {
 
-    buttonHTML = `
-        <button
-            onclick="window.requestMap('${a.id}')">
-            Request
-        </button>
-    `;
-}
+            buttonHTML = `
+                <button
+                    class="request-btn"
+                    onclick="event.stopPropagation(); window.requestMap('${a.id}')">
+                    Request
+                </button>
+            `;
+        }
 
-if(status === "pending"){
+        if (status === "pending") {
 
-    buttonHTML = `
-        <button disabled>
-            Requested
-        </button>
-    `;
-}
+            buttonHTML = `
+                <button
+                    class="requested-btn"
+                    disabled>
+                    Requested
+                </button>
+            `;
+        }
 
-if(status === "approved"){
+        if (status === "approved") {
 
-    buttonHTML = `
-        <button
-            onclick="window.openMap('${a.id}')">
-            Open
-        </button>
-    `;
-}
+            buttonHTML = `
+                <button
+                    class="open-btn"
+                    onclick="event.stopPropagation(); window.openMap('${a.id}')">
+                    Open
+                </button>
+            `;
+        }
 
-div.innerHTML = `
-    <h3>${a.title || ""}</h3>
+        div.innerHTML = `
+            <h3>${a.title || ""}</h3>
 
-    <p>
-        ${a.description || ""}
-    </p>
+            <p>
+                ${a.description || ""}
+            </p>
 
-    ${buttonHTML}
-`;
+            <div style="margin-top:10px;">
+                ${buttonHTML}
+            </div>
+        `;
+
         div.onclick = () => {
-            location.href = `AssignmentMap.html?id=${a.id}&teamId=${teamId}`;
+
+            location.href =
+            \`AssignmentMap.html?id=${a.id}&teamId=${teamId}\`;
         };
 
         listEl.appendChild(div);
-    });
+    }
 }
 
 /* -----------------------------
