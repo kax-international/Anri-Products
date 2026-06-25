@@ -235,10 +235,21 @@ document.getElementById("addVideoBtn").onclick = () => {
     block.className = "video-block";
 
     block.innerHTML = `
-        <input type="file" class="video-file" accept="video/*">
-        <input type="text" class="video-subtitle" placeholder="subtitle (optional)">
-        <hr>
-    `;
+<input
+    type="file"
+    class="video-file">
+
+<input
+    type="text"
+    class="video-title"
+    placeholder="Video Title">
+
+<select
+    class="playlist-subtitle">
+</select>
+
+<hr>
+`;
 
     container.appendChild(block);
 };
