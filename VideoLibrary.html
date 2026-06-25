@@ -222,13 +222,19 @@ async function loadPlaylists(){
         div.className = "playlist";
         div.textContent = data.title;
 
-       div.onclick = async () => {
+        div.onclick = async () => {
 
     currentPlaylistId = docSnap.id;
 
-    await loadVideos(docSnap.id);
+    await loadPlaylistSubtitles(
+        docSnap.id
+    );
 
-    await loadPlaylistSubtitles(docSnap.id);
+    await loadVideos(
+        docSnap.id
+    );
+
+    createSubtitleButtons();
 };
 
         container.appendChild(div);
@@ -279,9 +285,9 @@ async function loadPlaylistSubtitles(playlistId){
         item.onclick = ()=>{
 
     const filtered =
-        allVideos.filter(v =>
-            v.subtitle === subtitle
-        );
+    allVideos.filter(v =>
+        v.playlistSubtitle === subtitle
+    );
 
     renderVideos(filtered);
 };
@@ -323,8 +329,6 @@ async function loadVideos(playlistId){
         allVideos.length
     );
 
-    createSubtitleButtons();
-
     renderVideos(allVideos);
 }
 function createSubtitleButtons(){
@@ -356,10 +360,9 @@ function createSubtitleButtons(){
         btn.onclick = () => {
 
             const filtered =
-                allVideos.filter(v =>
-                    v.subtitle === subtitle
-                );
-
+    allVideos.filter(v =>
+        v.playlistSubtitle === subtitle
+    );
             renderVideos(filtered);
         };
 
@@ -381,13 +384,19 @@ function renderVideos(videos){
         div.className = "video-card";
 
         div.innerHTML = `
-            <div>
-    ${data.subtitle || "VIDEO"}
-</div>
-            <div style="font-size:12px;color:#aaa;">
-                ${data.subtitle || "No Subtitle"}
-            </div>
-        `;
+    <div>
+        ${data.videoTitle || "VIDEO"}
+    </div>
+
+    <div
+        style="
+            font-size:12px;
+            color:#aaa;
+        "
+    >
+        ${data.playlistSubtitle || "No Group"}
+    </div>
+`;
 
         div.onclick = () => {
 
