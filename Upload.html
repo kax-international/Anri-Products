@@ -107,7 +107,13 @@ button:hover{
 </div>
 
 <script type="module">
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+const auth = getAuth(app);
 
+let currentUser = null;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
     getFirestore,
@@ -141,7 +147,16 @@ const db = getFirestore(app);
 ========================= */
 const params = new URLSearchParams(location.search);
 const teamId = params.get("teamId");
+onAuthStateChanged(auth, (user) => {
 
+    if (!user) {
+
+        location.href = "login.html";
+        return;
+    }
+
+    currentUser = user;
+});
 /* =========================
    STATUS
 ========================= */
@@ -214,11 +229,27 @@ document.getElementById("uploadBtn").onclick = async () => {
     const playlistRef = doc(db, "playlists", playlistId);
 
     await setDoc(playlistRef, {
-        teamId,
-        title,
-        subtitles,
-        createdAt: serverTimestamp()
-    });
+
+    teamId,
+
+    ownerUid:
+        currentUser?.uid || "",
+
+    ownerName:
+        currentUser?.displayName ||
+        currentUser?.email ||
+        "Unknown",
+
+    title,
+
+    subtitles,
+
+    serviceType:
+        "video",
+
+    createdAt:
+        serverTimestamp()
+});
 
     // videos subcollection
     for(let i = 0; i < videoBlocks.length; i++){
@@ -259,20 +290,32 @@ document.getElementById("uploadBtn").onclick = async () => {
 
         // playlists/{playlistId}/videos
         await addDoc(
-            collection(
-                db,
-                "playlists",
-                playlistId,
-                "videos"
-            ),
-            {
-                videoUrl: data.secure_url,
-                subtitle: subtitle,
-                thumbnailUrl:
-                    data.thumbnail_url || "",
-                createdAt: serverTimestamp()
-            }
-        );
+    collection(
+        db,
+        "playlists",
+        playlistId,
+        "videos"
+    ),
+    {
+
+        ownerUid:
+            currentUser?.uid || "",
+
+        teamId,
+
+        videoUrl:
+            data.secure_url,
+
+        subtitle:
+            subtitle,
+
+        thumbnailUrl:
+            data.thumbnail_url || "",
+
+        createdAt:
+            serverTimestamp()
+    }
+);
     }
 setStatus("All uploads complete!");
 
