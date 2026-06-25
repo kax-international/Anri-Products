@@ -87,10 +87,7 @@ import {
     getDocs,
     doc,
     getDoc,
-    addDoc,
-    query,
-    where,
-    serverTimestamp
+    setDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 import {
@@ -173,12 +170,100 @@ onAuthStateChanged(auth, async (user) => {
     catch(err){
 
         console.error(err);
-
-        alert(
-            "Permission check failed"
-        );
+        alert("Permission check failed");
     }
 });
+
+/* =========================
+   REQUEST STATUS
+========================= */
+
+async function getMyRequestStatus(
+    assignmentId
+){
+
+    const ref = doc(
+        db,
+        "featureRequests",
+        `${assignmentId}_${currentUser.uid}`
+    );
+
+    const snap =
+    await getDoc(ref);
+
+    if(!snap.exists()){
+        return "none";
+    }
+
+    return snap.data().status;
+}
+
+/* =========================
+   SEND REQUEST
+========================= */
+
+async function sendRequest(
+    assignmentId
+){
+
+    const assignmentRef =
+    doc(
+        db,
+        "assignments",
+        assignmentId
+    );
+
+    const assignmentSnap =
+    await getDoc(
+        assignmentRef
+    );
+
+    const data =
+    assignmentSnap.data();
+
+    const ref = doc(
+        db,
+        "featureRequests",
+        `${assignmentId}_${currentUser.uid}`
+    );
+
+    await setDoc(ref,{
+
+        requesterUid:
+        currentUser.uid,
+
+        requesterName:
+        currentUser.displayName ||
+        currentUser.email ||
+        "Unknown",
+
+        ownerUid:
+        data.ownerUid || "",
+
+        teamId:
+        data.teamId || "",
+
+        teamName:
+        currentTeam.name || "",
+
+        featureType:
+        "searchDatabase",
+
+        assignmentId:
+        assignmentId,
+
+        assignmentTitle:
+        data.title || "",
+
+        status:
+        "pending",
+
+        createdAt:
+        Date.now()
+    });
+
+    await loadAssignments();
+}
 
 /* =========================
    LOAD ASSIGNMENTS
@@ -186,185 +271,126 @@ onAuthStateChanged(auth, async (user) => {
 
 async function loadAssignments(){
 
-    try{
+    list.innerHTML = "Loading...";
 
-        list.innerHTML =
-        "Loading...";
+    const snapshot =
+    await getDocs(
+        collection(
+            db,
+            "assignments"
+        )
+    );
 
-        const snapshot =
-        await getDocs(
-            collection(
-                db,
-                "assignments"
-            )
+    list.innerHTML = "";
+
+    let found = false;
+
+    for(const docSnap of snapshot.docs){
+
+        const data =
+        docSnap.data();
+
+        if(
+            data.teamId !== teamId
+        ) continue;
+
+        found = true;
+
+        const status =
+        await getMyRequestStatus(
+            docSnap.id
         );
 
-        list.innerHTML = "";
+        let buttonHTML = "";
 
-        let found = false;
-
-        snapshot.forEach(docSnap=>{
-
-            const data =
-            docSnap.data();
-
-            if(
-                teamId &&
-                data.teamId !== teamId
-            ) return;
-
-            if(!data.ownerUid)
-                return;
-
-            found = true;
-
-            const card =
-            document.createElement("div");
-
-            card.className =
-            "card";
-
-            card.innerHTML = `
-    <h3>${data.title}</h3>
-
-    <p>${data.description || ""}</p>
-
-    <small>
-        ${data.questions?.length || 0}
-        questions
-    </small>
-
-    <br>
-    <small>
-        Team:
-        ${currentTeam.name || "-"}
-    </small>
-
-    <br><br>
-
-    <button class="requestBtn">
-        Request Search Database
-    </button>
-`;
-            card.onclick = () => {
-
-                location.href =
-`AssignmentDatabase.html?id=${docSnap.id}&teamId=${teamId}`;
-            };
-
-            card.querySelector(".requestBtn")
-            .onclick = async (e) => {
-
-                e.stopPropagation();
-
-                try{
-
-                    const existing =
-                    await getDocs(
-                        query(
-                            collection(
-                                db,
-                                "featureRequests"
-                            ),
-                            where(
-                                "assignmentId",
-                                "==",
-                                docSnap.id
-                            ),
-                            where(
-                                "requesterUid",
-                                "==",
-                                currentUser.uid
-                            ),
-                            where(
-                                "status",
-                                "==",
-                                "pending"
-                            )
-                        )
-                    );
-
-                    if(
-                        !existing.empty
-                    ){
-                        alert(
-                            "Request already sent"
-                        );
-                        return;
-                    }
-
-                    await addDoc(
-                        collection(
-                            db,
-                            "featureRequests"
-                        ),
-                        {
-
-                            teamId:
-                            teamId,
-
-                            teamName:
-                            currentTeam.name || "",
-
-                            assignmentId:
-                            docSnap.id,
-
-                            assignmentTitle:
-                            data.title,
-
-                            requesterUid:
-                            currentUser.uid,
-
-                            requesterName:
-                            currentUser.email,
-
-                            ownerUid:
-                            data.ownerUid,
-
-                            featureType:
-                            "searchDatabase",
-
-                            status:
-                            "pending",
-
-                            createdAt:
-                            serverTimestamp()
-                        }
-                    );
-
-                    alert(
-                        "Request sent"
-                    );
-
-                }
-                catch(err){
-
-                    console.error(err);
-
-                    alert(
-                        "Request failed"
-                    );
-                }
-            };
-
-            list.appendChild(card);
-        });
-
-        if(!found){
-
-            list.innerHTML =
-            "<p>No assignments found</p>";
+        if(
+            status === "none" ||
+            status === "rejected"
+        ){
+            buttonHTML = `
+                <button class="requestBtn"
+                    onclick="window.requestDatabase('${docSnap.id}')">
+                    Request
+                </button>
+            `;
         }
 
-    }
-    catch(err){
+        if(status === "pending"){
+            buttonHTML = `
+                <button
+                    class="requestBtn"
+                    disabled>
+                    Requested
+                </button>
+            `;
+        }
 
-        console.error(err);
+        if(status === "approved"){
+            buttonHTML = `
+                <button
+                    class="requestBtn"
+                    onclick="window.openDatabase('${docSnap.id}')">
+                    Open
+                </button>
+            `;
+        }
+
+        const card =
+        document.createElement("div");
+
+        card.className =
+        "card";
+
+        card.innerHTML = `
+            <h3>${data.title}</h3>
+
+            <p>
+                ${data.description || ""}
+            </p>
+
+            <small>
+                ${data.questions?.length || 0}
+                questions
+            </small>
+
+            <br>
+
+            <small>
+                Team:
+                ${currentTeam.name || "-"}
+            </small>
+
+            <br><br>
+
+            ${buttonHTML}
+        `;
+
+        list.appendChild(card);
+    }
+
+    if(!found){
 
         list.innerHTML =
-        "<p>Error loading assignments</p>";
+        "<p>No assignments found</p>";
     }
 }
+
+/* =========================
+   GLOBAL
+========================= */
+
+window.requestDatabase =
+async (id) => {
+
+    await sendRequest(id);
+};
+
+window.openDatabase =
+(id) => {
+
+    location.href =
+    `AssignmentDatabase.html?id=${id}&teamId=${teamId}`;
+};
 
 </script>
 
