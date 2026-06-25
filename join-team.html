@@ -262,188 +262,117 @@ Dashboard
 </div>
 
 <script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
     getFirestore,
+    doc,
+    getDoc,
     collection,
     addDoc,
-    serverTimestamp,
-    query,
-    where,
-    getDocs
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-    
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 import {
     getAuth,
     onAuthStateChanged
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 const firebaseConfig = {
-
-  apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
-
-  authDomain:
-  "athletic-cloud-33538.firebaseapp.com",
-
-  projectId:
-  "athletic-cloud-33538",
-
-  storageBucket:
-  "athletic-cloud-33538.firebasestorage.app",
-
-  messagingSenderId:
-  "1020993809301",
-
-  appId:
-  "1:1020993809301:web:a31e28377788bef965249c"
-
+    apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
+    authDomain: "athletic-cloud-33538.firebaseapp.com",
+    projectId: "athletic-cloud-33538",
+    storageBucket: "athletic-cloud-33538.firebasestorage.app",
+    messagingSenderId: "1020993809301",
+    appId: "1:1020993809301:web:a31e28377788bef965249c"
 };
 
-const app =
-initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-const auth =
-getAuth(app);
+let currentUser = null;
 
-onAuthStateChanged(auth,(user)=>{
+/* =========================
+   AUTH
+========================= */
+onAuthStateChanged(auth, (user) => {
 
-    if(!user){
-
-        window.location.href =
-        "login.html";
-    }
-
-});
-    
-const db =
-getFirestore(app);
-    
-document
-.getElementById("backBtn")
-.addEventListener("click",()=>{
-
-    window.location.href =
-    "dashboard.html";
-
-});
-
-document
-.getElementById("requestBtn")
-.addEventListener("click", async ()=>{
-
-    const teamId =
-    document.getElementById("teamId").value.trim();
-
-    const role =
-    document.getElementById("role").value;
-
-    const message =
-    document.getElementById("message");
-
-    const user =
-    auth.currentUser;
-
-    if(!teamId){
-
-        message.textContent =
-        "Team ID required";
-
-        message.className =
-        "message error";
-
+    if (!user) {
+        window.location.href = "login.html";
         return;
     }
 
-    try{
+    currentUser = user;
+});
 
-        // チーム存在確認
 
-        const teamQuery =
-        query(
-            collection(db,"teams")
-        );
+/* =========================
+   BACK BUTTON
+========================= */
+document.getElementById("backBtn").addEventListener("click", () => {
+    window.location.href = "dashboard.html";
+});
 
-        const teamSnapshot =
-        await getDocs(teamQuery);
 
-        let teamExists =
-        false;
+/* =========================
+   JOIN REQUEST
+========================= */
+document.getElementById("requestBtn").addEventListener("click", async () => {
 
-        teamSnapshot.forEach(doc=>{
+    const teamId = document.getElementById("teamId").value.trim();
+    const role = document.getElementById("role").value;
+    const message = document.getElementById("message");
 
-            if(doc.id === teamId){
+    if (!currentUser) {
+        message.textContent = "Not logged in";
+        message.className = "message error";
+        return;
+    }
 
-                teamExists = true;
+    if (!teamId) {
+        message.textContent = "Team ID required";
+        message.className = "message error";
+        return;
+    }
 
-            }
+    try {
 
-        });
+        // ✔ teamを直接取得（ここが修正ポイント）
+        const teamRef = doc(db, "teams", teamId);
+        const teamSnap = await getDoc(teamRef);
 
-        if(!teamExists){
-
-            message.textContent =
-            "Team not found";
-
-            message.className =
-            "message error";
-
+        if (!teamSnap.exists()) {
+            message.textContent = "Team not found";
+            message.className = "message error";
             return;
         }
 
-        // Join Request保存
+        const teamData = teamSnap.data();
 
-        await addDoc(
-            collection(
-                db,
-                "joinRequests"
-            ),
-            {
+        // ✔ join request 保存
+        await addDoc(collection(db, "joinRequests"), {
 
-                teamId:
-                teamId,
+            teamId: teamId,
+            teamName: teamData.name || "",
 
-                requesterUid:
-                user.uid,
+            requesterUid: currentUser.uid,
+            requesterEmail: currentUser.email || "",
 
-                requesterEmail:
-                user.email,
+            requestedRole: role,
 
-                requestedRole:
-                role,
+            status: "pending",
+            createdAt: serverTimestamp()
+        });
 
-                status:
-                "pending",
+        message.textContent = "Request sent";
+        message.className = "message success";
 
-                createdAt:
-                serverTimestamp()
-
-            }
-        );
-
-        message.textContent =
-        "Request sent";
-
-        message.className =
-        "message success";
-
-    }
-
-    catch(err){
-
+    } catch (err) {
         console.error(err);
-
-        message.textContent =
-        "Request failed";
-
-        message.className =
-        "message error";
-
+        message.textContent = "Request failed";
+        message.className = "message error";
     }
-
 });
 
 </script>
