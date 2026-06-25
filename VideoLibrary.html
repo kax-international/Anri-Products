@@ -154,8 +154,6 @@ video{
 ">
 </div>
 
-<div class="video-list" id="videoList"></div>
-
     </div>
 
 </div>
@@ -276,8 +274,12 @@ async function loadPlaylistSubtitles(playlistId){
 
         item.onclick = ()=>{
 
-    loadVideos(playlistId);
+    const filtered =
+        allVideos.filter(v =>
+            v.subtitle === subtitle
+        );
 
+    renderVideos(filtered);
 };
 
 subtitleDiv.appendChild(item);
@@ -317,6 +319,8 @@ async function loadVideos(playlistId){
         allVideos.length
     );
 
+    createSubtitleButtons();
+
     renderVideos(allVideos);
 }
 function createSubtitleButtons(){
@@ -326,19 +330,18 @@ function createSubtitleButtons(){
 
     bar.innerHTML = "";
 
-    // ALL
     const allBtn =
         document.createElement("button");
 
     allBtn.textContent = "All";
 
     allBtn.onclick = () => {
+
         renderVideos(allVideos);
     };
 
     bar.appendChild(allBtn);
 
-    // Playlistのsubtitle一覧
     playlistSubtitles.forEach(subtitle => {
 
         const btn =
