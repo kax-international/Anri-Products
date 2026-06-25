@@ -198,7 +198,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebas
 import {
     getFirestore,
     collection,
-    addDoc
+    addDoc,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 import {
@@ -206,59 +207,70 @@ import {
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
-
-// 🔥 Firebase設定（←自分のやつに置き換え）
 const firebaseConfig = {
   apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
   authDomain: "athletic-cloud-33538.firebaseapp.com",
-  projectId: "athletic-cloud-33538",
-  storageBucket: "athletic-cloud-33538.firebasestorage.app",
-  messagingSenderId: "1020993809301",
-  appId: "1:1020993809301:web:a31e28377788bef965249c",
+  projectId: "athletic-cloud-33538"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+let currentUser = null;
 
-// 👇 フォーム処理
+/* =========================
+   AUTH
+========================= */
+onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+});
+
+/* =========================
+   CREATE TEAM
+========================= */
 document.getElementById("createTeamForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const teamName = document.getElementById("teamName").value;
+    const teamName = document.getElementById("teamName").value.trim();
     const message = document.getElementById("message");
 
-    // ログインチェック
-    const user = auth.currentUser;
-
-    if (!user) {
+    if (!currentUser) {
         message.textContent = "Need to login";
         message.className = "message error";
         return;
     }
 
-    try {
-        // 🔥 Firestoreに保存
-        const teamRef = await addDoc(
-    collection(db,"teams"),
-    {
-        name: teamName,
-
-        ownerId: user.uid,
-
-        members: {
-            [user.uid]: "owner"
-        },
-
-        createdAt: new Date()
+    if (!teamName) {
+        message.textContent = "Team name required";
+        message.className = "message error";
+        return;
     }
-);
-        // 成功メッセージ
+
+    try {
+
+        const teamData = {
+            name: teamName,
+
+            // 🔥 統一フィールド（最重要）
+            ownerUid: currentUser.uid,
+            createdBy: currentUser.uid,
+
+            members: {
+                [currentUser.uid]: "owner"
+            },
+
+            createdAt: serverTimestamp()
+        };
+
+        const teamRef = await addDoc(
+            collection(db, "teams"),
+            teamData
+        );
+
         message.textContent = "Team Created!";
         message.className = "message success";
 
-        // 👉 少し待って遷移（UX改善）
         setTimeout(() => {
             window.location.href = `team.html?teamId=${teamRef.id}`;
         }, 500);
