@@ -167,7 +167,11 @@ let currentPlaylistId = null;
 let currentVideoId = null;
 const rawTeamId = new URLSearchParams(location.search).get("teamId");
 const teamId = rawTeamId ? rawTeamId.trim() : null;
-
+import {
+    getAuth,
+    onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
     getFirestore,
@@ -192,7 +196,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
+let currentUser = null;
+let currentTeam = null;
 /* =======================
    LOAD PLAYLISTS
 ======================= */
