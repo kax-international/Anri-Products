@@ -61,7 +61,17 @@ header{
 </div>
 
 <script type="module">
-
+import {
+    getFirestore,
+    collection,
+    getDocs,
+    doc,
+    getDoc,
+    setDoc
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+let currentUser = null;
+let currentTeam = null;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
     getFirestore,
@@ -107,9 +117,96 @@ onAuthStateChanged(auth, async (user) => {
         return;
     }
 
+    currentUser = user;
+
+    const teamRef =
+    doc(db,"teams",teamId);
+
+    const teamSnap =
+    await getDoc(teamRef);
+
+    if(teamSnap.exists()){
+        currentTeam =
+        teamSnap.data();
+    }
+
     await loadAssignments();
 });
+async function getMyRequestStatus(
+    assignmentId
+){
 
+    const ref = doc(
+        db,
+        "featureRequests",
+        `${assignmentId}_${currentUser.uid}`
+    );
+
+    const snap =
+    await getDoc(ref);
+
+    if(!snap.exists()){
+        return "none";
+    }
+
+    return snap.data().status;
+}
+async function sendRequest(
+    assignmentId
+){
+
+    const assignmentRef =
+    doc(db,"assignments",assignmentId);
+
+    const assignmentSnap =
+    await getDoc(assignmentRef);
+
+    const data =
+    assignmentSnap.data();
+
+    await setDoc(
+        doc(
+            db,
+            "featureRequests",
+            `${assignmentId}_${currentUser.uid}`
+        ),
+        {
+
+            requesterUid:
+            currentUser.uid,
+
+            requesterName:
+            currentUser.displayName ||
+            currentUser.email,
+
+            ownerUid:
+            data.ownerUid,
+
+            teamId:
+            data.teamId,
+
+            teamName:
+            currentTeam?.name || "",
+
+            featureType:
+            "assignmentMap",
+
+            assignmentId:
+            assignmentId,
+
+            assignmentTitle:
+            data.title,
+
+            status:
+            "pending",
+
+            createdAt:
+            Date.now()
+        }
+    );
+
+    await loadAssignments();
+}
 /* -----------------------------
    LOAD DATA
 ----------------------------- */
@@ -135,7 +232,7 @@ async function loadAssignments() {
             });
         });
 
-        render(assignments);
+        await render(assignments);
 
     } catch (err) {
         console.error(err);
@@ -146,7 +243,7 @@ async function loadAssignments() {
 /* -----------------------------
    RENDER
 ----------------------------- */
-function render(data) {
+async function render(data) {
 
     listEl.innerHTML = "";
 
@@ -160,11 +257,52 @@ function render(data) {
         const div = document.createElement("div");
         div.className = "card";
 
-        div.innerHTML = `
-            <h3>${a.title || ""}</h3>
-            <p>${a.description || ""}</p>
-        `;
+        const status =
+await getMyRequestStatus(a.id);
 
+let buttonHTML = "";
+
+if(
+    status === "none" ||
+    status === "rejected"
+){
+
+    buttonHTML = `
+        <button
+            onclick="window.requestMap('${a.id}')">
+            Request
+        </button>
+    `;
+}
+
+if(status === "pending"){
+
+    buttonHTML = `
+        <button disabled>
+            Requested
+        </button>
+    `;
+}
+
+if(status === "approved"){
+
+    buttonHTML = `
+        <button
+            onclick="window.openMap('${a.id}')">
+            Open
+        </button>
+    `;
+}
+
+div.innerHTML = `
+    <h3>${a.title || ""}</h3>
+
+    <p>
+        ${a.description || ""}
+    </p>
+
+    ${buttonHTML}
+`;
         div.onclick = () => {
             location.href = `AssignmentMap.html?id=${a.id}&teamId=${teamId}`;
         };
@@ -176,7 +314,9 @@ function render(data) {
 /* -----------------------------
    SEARCH
 ----------------------------- */
-searchEl.addEventListener("input", (e) => {
+searchEl.addEventListener(
+    "input",
+    async (e)=>{
 
     const q = e.target.value.toLowerCase();
 
@@ -185,9 +325,20 @@ searchEl.addEventListener("input", (e) => {
         (a.description || "").toLowerCase().includes(q)
     );
 
-    render(filtered);
+    await render(filtered);
 });
+window.requestMap =
+async (id)=>{
 
+    await sendRequest(id);
+};
+
+window.openMap =
+(id)=>{
+
+    location.href =
+    `AssignmentMap.html?id=${id}&teamId=${teamId}`;
+};
 </script>
 
 </body>
