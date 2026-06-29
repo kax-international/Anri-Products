@@ -199,7 +199,9 @@ import {
     getFirestore,
     collection,
     addDoc,
-    serverTimestamp
+    serverTimestamp,
+    doc,
+    getDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 import {
@@ -222,8 +224,35 @@ let currentUser = null;
 /* =========================
    AUTH
 ========================= */
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
+
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
+
     currentUser = user;
+
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+        alert("User data not found.");
+        window.location.href = "dashboard.html";
+        return;
+    }
+
+    const userData = userSnap.data();
+
+    if (
+        userData.plan !== "core" &&
+        userData.plan !== "premium"
+    ) {
+        alert("Create Team is available only for Core and Premium members.");
+        window.location.href = "dashboard.html";
+        return;
+    }
+
 });
 
 /* =========================
