@@ -468,14 +468,21 @@ const playlistSubtitle =
         formData.append("upload_preset", UPLOAD_PRESET);
 
         const res = await fetch(
-            `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`,
-            {
-                method:"POST",
-                body:formData
-            }
-        );
+    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`,
+    {
+        method:"POST",
+        body:formData
+    }
+);
 
-        const data = await res.json();
+console.log("HTTP Status:", res.status);
+
+const responseText = await res.text();
+
+console.log("Cloudinary Response:");
+console.log(responseText);
+
+const data = JSON.parse(responseText);
 
         if(!data.secure_url){
             console.error(data);
