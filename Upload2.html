@@ -1,1 +1,334 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Upload | Athletic Cloud</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+
+    font-family:Arial,sans-serif;
+    background:#f4f6f9;
+    color:#222;
+
+}
+
+.container{
+
+    width:95%;
+    max-width:1100px;
+
+    margin:40px auto;
+
+    background:#fff;
+
+    border-radius:12px;
+
+    box-shadow:0 5px 20px rgba(0,0,0,.08);
+
+    padding:30px;
+
+}
+
+h1{
+
+    margin-bottom:30px;
+
+}
+
+/* ==========================
+   SECTION
+========================== */
+
+.section{
+
+    margin-bottom:35px;
+
+}
+
+.section h2{
+
+    font-size:18px;
+
+    margin-bottom:15px;
+
+}
+
+/* ==========================
+   INPUT
+========================== */
+
+input,
+select{
+
+    width:100%;
+
+    padding:12px;
+
+    border:1px solid #ccc;
+
+    border-radius:8px;
+
+    margin-bottom:12px;
+
+    font-size:15px;
+
+}
+
+button{
+
+    padding:12px 22px;
+
+    border:none;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    background:#111;
+
+    color:white;
+
+    font-size:15px;
+
+}
+
+button:hover{
+
+    background:#333;
+
+}
+
+.addBtn{
+
+    background:#555;
+
+}
+
+.addBtn:hover{
+
+    background:#666;
+
+}
+
+/* ==========================
+   VIDEO QUEUE
+========================== */
+
+#videoQueue{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:15px;
+
+}
+
+.video-card{
+
+    border:1px solid #ddd;
+
+    border-radius:10px;
+
+    padding:15px;
+
+    background:#fafafa;
+
+}
+
+/* ==========================
+   PROGRESS
+========================== */
+
+.progress-area{
+
+    margin-top:20px;
+
+}
+
+progress{
+
+    width:100%;
+
+    height:28px;
+
+}
+
+#progressText{
+
+    margin-top:10px;
+
+    font-weight:bold;
+
+}
+
+#statusText{
+
+    margin-top:8px;
+
+    color:#666;
+
+}
+
+/* ==========================
+   FOOTER BUTTON
+========================== */
+
+.footer{
+
+    text-align:right;
+
+    margin-top:40px;
+
+}
+
+#uploadBtn{
+
+    padding:15px 35px;
+
+    font-size:18px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Upload Video</h1>
+
+<!-- ==========================
+     PLAYLIST
+========================== -->
+
+<div class="section">
+
+<h2>Playlist</h2>
+
+<input
+    id="playlistTitle"
+    placeholder="Playlist Title">
+
+</div>
+
+<!-- ==========================
+     PLAYLIST SUBTITLE
+========================== -->
+
+<div class="section">
+
+<h2>Playlist Subtitles</h2>
+
+<div id="subtitleContainer">
+
+<input
+    class="subtitle-box"
+    placeholder="ex. 1Q">
+
+</div>
+
+<button
+    id="addSubtitleBtn"
+    class="addBtn">
+
++ Add Subtitle
+
+</button>
+
+</div>
+
+<!-- ==========================
+     VIDEOS
+========================== -->
+
+<div class="section">
+
+<h2>Videos</h2>
+
+<button
+    id="addVideoBtn"
+    class="addBtn">
+
++ Add Videos
+
+</button>
+
+</div>
+
+<!-- ==========================
+     VIDEO QUEUE
+========================== -->
+
+<div class="section">
+
+<h2>Upload Queue</h2>
+
+<div id="videoQueue">
+
+<!-- upload-ui.js が生成 -->
+
+</div>
+
+</div>
+
+<!-- ==========================
+     PROGRESS
+========================== -->
+
+<div class="section progress-area">
+
+<h2>Progress</h2>
+
+<progress
+    id="progressBar"
+    value="0"
+    max="100">
+</progress>
+
+<div id="progressText">
+
+0 / 0
+
+</div>
+
+<div id="statusText">
+
+Waiting...
+
+</div>
+
+</div>
+
+<!-- ==========================
+     UPLOAD
+========================== -->
+
+<div class="footer">
+
+<button id="uploadBtn">
+
+Upload
+
+</button>
+
+</div>
+
+</div>
+
+<script type="module" src="upload-ui.js"></script>
+
+</body>
+</html>
