@@ -261,7 +261,7 @@ await startUpload({
 
     teamId,
 
-    currentUser:null,
+    currentUser:,
 
     onProgress:(done,total,title)=>{
 
@@ -287,7 +287,6 @@ await startUpload({
         alert(err.message);
 
     }
-}
 });
 
 };
