@@ -1,3 +1,5 @@
+import { startUpload }
+from "./upload-engine.js";
 /* ==========================================
    Athletic Cloud Upload UI
 ========================================== */
@@ -214,31 +216,66 @@ uploadBtn.onclick = ()=>{
 
     console.log("Videos");
 
-    cards.forEach(card=>{
+   const videos = [];
 
-        console.log({
+cards.forEach(card=>{
 
-            file:
-                card.querySelector(".videoFile").files[0],
+    const file =
+        card.querySelector(".videoFile").files[0];
 
-            videoTitle:
-                card.querySelector(".videoTitle").value,
+    if(!file) return;
 
-            playlistSubtitle:
-                card.querySelector(".playlistSubtitleSelect").value
+    videos.push({
 
-        });
+        file,
+
+        videoTitle:
+            card.querySelector(".videoTitle").value.trim(),
+
+        playlistSubtitle:
+            card.querySelector(".playlistSubtitleSelect").value
 
     });
 
-    /*
-        次回ここで
+});
 
-        upload-engine.js
+await startUpload({
 
-        を呼ぶ
-    */
+    playlistTitle,
 
-    alert("UI completed.");
+    subtitles:getPlaylistSubtitles(),
+
+    videos,
+
+    teamId,
+
+    currentUser:null,
+
+    onProgress:(done,total,title)=>{
+
+        console.log(
+            `${done}/${total}`,
+            title
+        );
+
+    },
+
+    onFinish:(result)=>{
+
+        alert(
+            `Upload Complete\n\n${result.uploaded} uploaded`
+        );
+
+    },
+
+    onError:(err)=>{
+
+        console.error(err);
+
+        alert(err.message);
+
+    }
+
+});
 
 };
