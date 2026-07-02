@@ -1,5 +1,12 @@
 import { startUpload }
 from "./upload-engine.js";
+import {
+    getAuth
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+const auth = getAuth();
+const currentUser = auth.currentUser;
 /* ==========================================
    Athletic Cloud Upload UI
 ========================================== */
@@ -18,6 +25,11 @@ const videoQueue =
 
 const uploadBtn =
     document.getElementById("uploadBtn");
+const params =
+    new URLSearchParams(location.search);
+
+const teamId =
+    params.get("teamId");
 
 
 /* ==========================================
@@ -179,7 +191,7 @@ Waiting
    Upload
 ========================================== */
 
-uploadBtn.onclick = ()=>{
+uploadBtn.onclick = async ()=>{
 
     const playlistTitle =
         document
@@ -275,7 +287,7 @@ await startUpload({
         alert(err.message);
 
     }
-
+}
 });
 
 };
