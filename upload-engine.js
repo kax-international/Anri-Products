@@ -3,9 +3,8 @@
    Athletic Cloud Upload Engine Ver2
 ========================================== */
 
-import { uploadVideoToCloudinary }
+import { uploadVideo }
 from "./cloudinary.js";
-
 import {
 
     savePlaylist,
@@ -102,12 +101,9 @@ export async function startUpload({
                     /* Cloudinary */
 
                     const cloudinary =
-
-                        await uploadVideoToCloudinary(
-
-                            item.file
-
-                        );
+    await uploadVideo(
+        item.file
+    );
 
                     /* Firestore */
 
