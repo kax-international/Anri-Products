@@ -1,6 +1,10 @@
 import { auth, db }
 from "./firebase.js";
 import {
+    onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import {
     doc,
     getDoc
 }
@@ -32,19 +36,9 @@ const teamId =
    Permission Check
 ========================================== */
 
-async function checkPermission(){
-
-    const currentUser = auth.currentUser;
-
-    if(!currentUser){
-
-        location.href = "login.html";
-        return false;
-
-    }
+async function checkPermission(user){
 
     try{
-
         const teamSnap =
             await getDoc(
                 doc(db,"teams",teamId)
@@ -53,33 +47,23 @@ async function checkPermission(){
         if(!teamSnap.exists()){
 
             alert("Team not found");
-
             location.href = "dashboard.html";
-
             return false;
-
         }
-
-        const role =
-            teamSnap.data().members?.[currentUser.uid];
-
+       const role =
+    teamSnap.data().members?.[user.uid];
         if(
             role !== "owner" &&
             role !== "coach" &&
             role !== "staff"
         ){
-
             alert("Permission denied");
 
             location.href =
                 `team.html?teamId=${teamId}`;
-
             return false;
-
         }
-
         return true;
-
     }
     catch(err){
 
@@ -362,13 +346,19 @@ await startUpload({
 });
 
 };
-(async()=>{
+onAuthStateChanged(auth, async(user)=>{
+
+    if(!user){
+
+        location.href = "login.html";
+        return;
+
+    }
 
     const allow =
-        await checkPermission();
-
+    await checkPermission(currentUser);
     if(!allow){
         return;
     }
 
-})();
+});
