@@ -241,8 +241,8 @@ Waiting
 ========================================== */
 
 uploadBtn.onclick = async ()=>{
-    const allow =
-        await checkPermission();
+   const allow =
+    await checkPermission(currentUser);
     if(!allow){
         return;}
 const currentUser = auth.currentUser;
