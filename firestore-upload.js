@@ -2,6 +2,17 @@
    firestore-upload.js
    Athletic Cloud Upload Ver2
 ========================================== */
+import {
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    addDoc,
+    setDoc,
+    updateDoc,
+    serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 import { db }
 from "./firebase.js";
 
