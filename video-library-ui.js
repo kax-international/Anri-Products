@@ -61,6 +61,8 @@ const commentInput =
 
 const saveCommentBtn =
     document.getElementById("saveCommentBtn");
+const videoList =
+    document.getElementById("videoList");
 /* ==========================================
    State
 ========================================== */
@@ -143,8 +145,6 @@ async function loadPlaylists(){
 
         const playlists =
             await getPlaylists(teamId);
-      const videoList =
-    document.getElementById("videoList");
 
         playlistList.innerHTML = "";
 
@@ -249,9 +249,8 @@ currentVideo = video;
     else{
 
         infoCreatedAt.textContent = "-";
-loadComments();
     }
-
+loadComments();
 }
 /* ==========================================
    Video List
@@ -315,20 +314,20 @@ ${video.ownerName || ""}
 };
 
                 // Part3で動画再生
-            };
+            
 /* -----------------------------
    First Video
 ----------------------------- */
 
+
+            videoList.appendChild(card);
+
+        });
 if(videos.length){
 
     playVideo(videos[0]);
 
 }
-            videoList.appendChild(card);
-
-        });
-
     }
 
     catch(err){
@@ -339,7 +338,7 @@ if(videos.length){
             "<p>Load Failed</p>";
 
     }
-
+}
 
 /* ==========================================
    Comments
