@@ -20,10 +20,11 @@ from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 import {
     getPlaylists,
-   getVideos
+    getVideos,
+    getComments,
+    saveComment
 }
 from "./firestore-video.js";
-
 /* ==========================================
    URL
 ========================================== */
@@ -38,7 +39,28 @@ const teamId = params.get("teamId");
 
 const playlistList =
     document.getElementById("playlistList");
+const videoPlayer =
+    document.getElementById("videoPlayer");
 
+const infoVideoTitle =
+    document.getElementById("infoVideoTitle");
+
+const infoPlaylistSubtitle =
+    document.getElementById("infoPlaylistSubtitle");
+
+const infoUploader =
+    document.getElementById("infoUploader");
+
+const infoCreatedAt =
+    document.getElementById("infoCreatedAt");
+const commentList =
+    document.getElementById("commentList");
+
+const commentInput =
+    document.getElementById("commentInput");
+
+const saveCommentBtn =
+    document.getElementById("saveCommentBtn");
 /* ==========================================
    State
 ========================================== */
@@ -46,7 +68,7 @@ const playlistList =
 let currentUser = null;
 
 let currentPlaylist = null;
-
+let currentVideo = null;
 /* ==========================================
    Permission
 ========================================== */
@@ -181,6 +203,57 @@ async function loadPlaylists(){
 
 }
 /* ==========================================
+   Video Player
+========================================== */
+
+function playVideo(video){
+currentVideo = video;
+    if(!video) return;
+
+    /* -----------------------------
+       Player
+    ----------------------------- */
+
+    videoPlayer.src =
+        video.videoUrl;
+
+    videoPlayer.load();
+
+    /* autoplayしたいなら解除
+
+    videoPlayer.play();
+
+    */
+
+    /* -----------------------------
+       Information
+    ----------------------------- */
+
+    infoVideoTitle.textContent =
+        video.videoTitle || "-";
+
+    infoPlaylistSubtitle.textContent =
+        video.playlistSubtitle || "-";
+
+    infoUploader.textContent =
+        video.ownerName || "-";
+
+    if(video.createdAt?.toDate){
+
+        infoCreatedAt.textContent =
+            video.createdAt
+                .toDate()
+                .toLocaleString();
+
+    }
+    else{
+
+        infoCreatedAt.textContent = "-";
+loadComments();
+    }
+
+}
+/* ==========================================
    Video List
 ========================================== */
 
@@ -237,14 +310,21 @@ ${video.ownerName || ""}
 
             card.onclick = ()=>{
 
-                console.log(
-                    "Video Selected",
-                    video
-                );
+    playVideo(video);
+
+};
 
                 // Part3で動画再生
             };
+/* -----------------------------
+   First Video
+----------------------------- */
 
+if(videos.length){
+
+    playVideo(videos[0]);
+
+}
             videoList.appendChild(card);
 
         });
@@ -260,7 +340,143 @@ ${video.ownerName || ""}
 
     }
 
+
+/* ==========================================
+   Comments
+========================================== */
+
+async function loadComments(){
+
+    if(
+        !currentPlaylist ||
+        !currentVideo
+    ){
+        return;
+    }
+
+    commentList.innerHTML =
+        "Loading...";
+
+    try{
+
+        const comments =
+            await getComments(
+
+                currentPlaylist.id,
+
+                currentVideo.id
+
+            );
+
+        commentList.innerHTML = "";
+
+        if(comments.length===0){
+
+            commentList.innerHTML =
+                "<p>No Comments</p>";
+
+            return;
+
+        }
+
+        comments.forEach(comment=>{
+
+            const div =
+                document.createElement("div");
+
+            div.style.marginBottom =
+                "12px";
+
+            div.style.padding =
+                "10px";
+
+            div.style.borderBottom =
+                "1px solid #444";
+
+            div.innerHTML = `
+
+<strong>
+
+${comment.userName}
+
+</strong>
+
+<br>
+
+${comment.text}
+
+`;
+
+            commentList.appendChild(div);
+
+        });
+
+    }
+
+    catch(err){
+
+        console.error(err);
+
+        commentList.innerHTML =
+            "Load Failed";
+
+    }
+
 }
+/* ==========================================
+   Save Comment
+========================================== */
+
+saveCommentBtn.onclick =
+async ()=>{
+
+    if(
+        !currentPlaylist ||
+        !currentVideo
+    ){
+        return;
+    }
+
+    const text =
+        commentInput.value.trim();
+
+    if(!text){
+
+        return;
+
+    }
+
+    try{
+
+        await saveComment(
+
+            currentPlaylist.id,
+
+            currentVideo.id,
+
+            currentUser,
+
+            text
+
+        );
+
+        commentInput.value = "";
+
+        await loadComments();
+
+    }
+
+    catch(err){
+
+        console.error(err);
+
+        alert(
+            "Comment Save Failed"
+        );
+
+    }
+
+};
 /* ==========================================
    Auth
 ========================================== */
