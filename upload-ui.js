@@ -6,7 +6,6 @@ import {
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 const auth = getAuth();
-const currentUser = auth.currentUser;
 /* ==========================================
    Athletic Cloud Upload UI
 ========================================== */
@@ -192,7 +191,12 @@ Waiting
 ========================================== */
 
 uploadBtn.onclick = async ()=>{
+const currentUser = auth.currentUser;
 
+if(!currentUser){
+    alert("ログイン情報が取得できません。ページを再読み込みしてください。");
+    return;
+}
     const playlistTitle =
         document
         .getElementById("playlistTitle")
