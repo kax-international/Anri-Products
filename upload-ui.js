@@ -1,11 +1,14 @@
-import { startUpload }
-from "./upload-engine.js";
 import {
     getAuth
 }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
-const auth = getAuth();
+import {
+    getFirestore,
+    doc,
+    getDoc
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 /* ==========================================
    Athletic Cloud Upload UI
 ========================================== */
@@ -24,12 +27,80 @@ const videoQueue =
 
 const uploadBtn =
     document.getElementById("uploadBtn");
+const auth = getAuth();
+const db = getFirestore();
 const params =
     new URLSearchParams(location.search);
 
 const teamId =
     params.get("teamId");
+/* ==========================================
+   Permission Check
+========================================== */
 
+async function checkPermission(){
+
+    const currentUser = auth.currentUser;
+
+    if(!currentUser){
+
+        location.href = "login.html";
+        return false;
+
+    }
+
+    try{
+
+        const teamSnap =
+            await getDoc(
+                doc(db,"teams",teamId)
+            );
+
+        if(!teamSnap.exists()){
+
+            alert("Team not found");
+
+            location.href = "dashboard.html";
+
+            return false;
+
+        }
+
+        const role =
+            teamSnap.data().members?.[currentUser.uid];
+
+        if(
+            role !== "owner" &&
+            role !== "coach" &&
+            role !== "staff"
+        ){
+
+            alert("Permission denied");
+
+            location.href =
+                `team.html?teamId=${teamId}`;
+
+            return false;
+
+        }
+
+        return true;
+
+    }
+    catch(err){
+
+        console.error(err);
+
+        alert("Permission check failed");
+
+        location.href =
+            `team.html?teamId=${teamId}`;
+
+        return false;
+
+    }
+
+}
 
 /* ==========================================
    Playlist Subtitle取得
@@ -191,8 +262,11 @@ Waiting
 ========================================== */
 
 uploadBtn.onclick = async ()=>{
+    const allow =
+        await checkPermission();
+    if(!allow){
+        return;}
 const currentUser = auth.currentUser;
-
 if(!currentUser){
     alert("ログイン情報が取得できません。ページを再読み込みしてください。");
     return;
