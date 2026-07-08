@@ -2,28 +2,8 @@
    firestore-upload.js
    Athletic Cloud Upload Ver2
 ========================================== */
-
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-
-import {
-
-    getFirestore,
-
-    doc,
-    getDoc,
-    setDoc,
-    updateDoc,
-
-    collection,
-    addDoc,
-
-    serverTimestamp,
-
-    arrayUnion
-
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+import { db }
+from "./firebase.js";
 
 /* ==========================================
    Firebase
@@ -44,10 +24,6 @@ const firebaseConfig = {
     appId: "1:1020993809301:web:a31e28377788bef965249c"
 
 };
-
-const app = initializeApp(firebaseConfig);
-
-const db = getFirestore(app);
 
 /* ==========================================
    Playlist Save
