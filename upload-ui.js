@@ -1,10 +1,6 @@
+import { auth, db }
+from "./firebase.js";
 import {
-    getAuth
-}
-from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-
-import {
-    getFirestore,
     doc,
     getDoc
 }
@@ -27,8 +23,6 @@ const videoQueue =
 
 const uploadBtn =
     document.getElementById("uploadBtn");
-const auth = getAuth();
-const db = getFirestore();
 const params =
     new URLSearchParams(location.search);
 
