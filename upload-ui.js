@@ -368,3 +368,13 @@ await startUpload({
 });
 
 };
+(async()=>{
+
+    const allow =
+        await checkPermission();
+
+    if(!allow){
+        return;
+    }
+
+})();
