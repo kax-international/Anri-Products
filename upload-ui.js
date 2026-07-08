@@ -32,6 +32,7 @@ const params =
 
 const teamId =
     params.get("teamId");
+let currentUser = null;
 /* ==========================================
    Permission Check
 ========================================== */
@@ -354,7 +355,7 @@ onAuthStateChanged(auth, async(user)=>{
         return;
 
     }
-
+currentUser = user;
     const allow =
     await checkPermission(currentUser);
     if(!allow){
