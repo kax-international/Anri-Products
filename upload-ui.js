@@ -241,15 +241,22 @@ Waiting
 ========================================== */
 
 uploadBtn.onclick = async ()=>{
-   const allow =
-    await checkPermission(currentUser);
+
+    const currentUser = auth.currentUser;
+
+    if(!currentUser){
+
+        alert("ログイン情報が取得できません。");
+        return;
+    }
+
+    const allow =
+        await checkPermission(currentUser);
+
     if(!allow){
-        return;}
-const currentUser = auth.currentUser;
-if(!currentUser){
-    alert("ログイン情報が取得できません。ページを再読み込みしてください。");
-    return;
-}
+        return;
+    }
+
     const playlistTitle =
         document
         .getElementById("playlistTitle")
