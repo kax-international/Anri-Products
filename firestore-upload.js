@@ -10,32 +10,13 @@ import {
     addDoc,
     setDoc,
     updateDoc,
-    serverTimestamp
+    serverTimestamp,
+    arrayUnion
 }
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 import { db }
 from "./firebase.js";
-
-/* ==========================================
-   Firebase
-========================================== */
-
-const firebaseConfig = {
-
-    apiKey: "AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
-
-    authDomain: "athletic-cloud-33538.firebaseapp.com",
-
-    projectId: "athletic-cloud-33538",
-
-    storageBucket: "athletic-cloud-33538.firebasestorage.app",
-
-    messagingSenderId: "1020993809301",
-
-    appId: "1:1020993809301:web:a31e28377788bef965249c"
-
-};
-
 /* ==========================================
    Playlist Save
 ========================================== */
