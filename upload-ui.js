@@ -36,9 +36,9 @@ let currentUser = null;
 /* ==========================================
    Permission Check
 ========================================== */
-
 async function checkPermission(user){
-
+console.log("user =", user);
+    console.log("teamId =", teamId);
     try{
         const teamSnap =
             await getDoc(
@@ -66,18 +66,18 @@ async function checkPermission(user){
         }
         return true;
     }
-    catch(err){
+   catch(err){
 
-        console.error(err);
+    console.error("Permission Error:", err);
 
-        alert("Permission check failed");
+    alert(err.message);
 
-        location.href =
-            `team.html?teamId=${teamId}`;
+    location.href =
+        `team.html?teamId=${teamId}`;
 
-        return false;
+    return false;
 
-    }
+}
 
 }
 
