@@ -1,1 +1,535 @@
+<!DOCTYPE html>
+<html lang="ja">
 
+<head>
+
+<meta charset="UTF-8">
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+<title>Video Library | Athletic Cloud</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+
+    font-family:Arial,sans-serif;
+    background:#111;
+    color:white;
+
+}
+
+/* ===================================
+   Layout
+=================================== */
+
+.container{
+
+    display:flex;
+
+    height:100vh;
+
+}
+
+/* ===================================
+   Sidebar
+=================================== */
+
+.sidebar{
+
+    width:280px;
+
+    background:#000;
+
+    border-right:1px solid #333;
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.sidebar-header{
+
+    padding:20px;
+
+    border-bottom:1px solid #333;
+
+}
+
+.sidebar-header h2{
+
+    font-size:22px;
+
+}
+
+#playlistList{
+
+    flex:1;
+
+    overflow-y:auto;
+
+    padding:15px;
+
+}
+
+.playlist-item{
+
+    background:#1d1d1d;
+
+    padding:12px;
+
+    border-radius:8px;
+
+    margin-bottom:10px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+.playlist-item:hover{
+
+    background:#2f2f2f;
+
+}
+
+/* ===================================
+   Main
+=================================== */
+
+.main{
+
+    flex:1;
+
+    display:flex;
+
+    flex-direction:column;
+
+    overflow:hidden;
+
+}
+
+/* ===================================
+   Top Bar
+=================================== */
+
+.topbar{
+
+    padding:20px;
+
+    border-bottom:1px solid #333;
+
+    background:#181818;
+
+}
+
+.search-box{
+
+    width:100%;
+
+    padding:12px;
+
+    border:none;
+
+    border-radius:8px;
+
+    font-size:15px;
+
+}
+
+/* ===================================
+   Subtitle Filter
+=================================== */
+
+.subtitle-area{
+
+    display:flex;
+
+    gap:10px;
+
+    overflow-x:auto;
+
+    padding:15px;
+
+    background:#1b1b1b;
+
+    border-bottom:1px solid #333;
+
+}
+
+.subtitle-btn{
+
+    padding:8px 18px;
+
+    border:none;
+
+    border-radius:20px;
+
+    background:#333;
+
+    color:white;
+
+    cursor:pointer;
+
+    white-space:nowrap;
+
+}
+
+.subtitle-btn:hover{
+
+    background:#555;
+
+}
+
+/* ===================================
+   Video List
+=================================== */
+
+.video-area{
+
+    flex:1;
+
+    overflow-y:auto;
+
+    padding:20px;
+
+}
+
+#videoList{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(auto-fill,minmax(240px,1fr));
+
+    gap:15px;
+
+}
+
+.video-card{
+
+    background:#222;
+
+    border-radius:10px;
+
+    padding:15px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+.video-card:hover{
+
+    background:#333;
+
+}
+
+.video-title{
+
+    font-size:16px;
+
+    font-weight:bold;
+
+    margin-bottom:8px;
+
+}
+
+.video-subtitle{
+
+    color:#aaa;
+
+    font-size:13px;
+
+}
+
+.video-date{
+
+    margin-top:10px;
+
+    font-size:12px;
+
+    color:#777;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- ==========================
+         Sidebar
+    =========================== -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-header">
+
+            <h2>Playlists</h2>
+
+        </div>
+
+        <div id="playlistList">
+
+            <!-- video-library-ui.js -->
+
+        </div>
+
+    </aside>
+
+    <!-- ==========================
+         Main
+    =========================== -->
+
+    <main class="main">
+
+        <!-- Search -->
+
+        <div class="topbar">
+
+            <input
+
+                id="searchInput"
+
+                class="search-box"
+
+                placeholder="Search Video Title...">
+
+        </div>
+
+        <!-- Playlist Subtitle -->
+
+        <div
+
+            id="subtitleBar"
+
+            class="subtitle-area">
+
+        </div>
+
+        <!-- Video List -->
+
+        <div class="video-area">
+
+            <div id="videoList">
+
+                <!-- video-library-ui.js -->
+
+            </div>
+
+        </div>
+              <!-- ==================================
+             Video Player
+        =================================== -->
+
+        <div
+            style="
+                display:flex;
+                flex-direction:column;
+                border-top:1px solid #333;
+                background:#000;
+            "
+        >
+
+            <div
+                style="
+                    display:flex;
+                    justify-content:center;
+                    align-items:center;
+                    background:black;
+                    min-height:420px;
+                "
+            >
+
+                <video
+
+                    id="videoPlayer"
+
+                    controls
+
+                    style="
+                        max-width:100%;
+                        max-height:420px;
+                    "
+
+                ></video>
+
+            </div>
+
+            <!-- ==================================
+                 Video Information
+            =================================== -->
+
+            <div
+
+                style="
+                    background:#181818;
+                    padding:20px;
+                    border-top:1px solid #333;
+                "
+
+            >
+
+                <h2
+                    style="
+                        margin-bottom:15px;
+                    "
+                >
+                    Video Information
+                </h2>
+
+                <div
+                    style="
+                        display:grid;
+                        grid-template-columns:170px 1fr;
+                        row-gap:10px;
+                    "
+                >
+
+                    <strong>Video Title</strong>
+
+                    <span id="infoVideoTitle">
+                        -
+                    </span>
+
+                    <strong>Playlist Subtitle</strong>
+
+                    <span id="infoPlaylistSubtitle">
+                        -
+                    </span>
+
+                    <strong>Uploader</strong>
+
+                    <span id="infoUploader">
+                        -
+                    </span>
+
+                    <strong>Created At</strong>
+
+                    <span id="infoCreatedAt">
+                        -
+                    </span>
+
+                </div>
+
+            </div>
+
+            <!-- ==================================
+                 Comments
+            =================================== -->
+
+            <div
+
+                style="
+                    background:#1f1f1f;
+                    padding:20px;
+                    border-top:1px solid #333;
+                "
+
+            >
+
+                <h2
+                    style="
+                        margin-bottom:15px;
+                    "
+                >
+                    Comments
+                </h2>
+
+                <div
+
+                    id="commentList"
+
+                    style="
+                        max-height:220px;
+                        overflow-y:auto;
+                        margin-bottom:15px;
+                    "
+
+                >
+
+                    <!-- firestore-video.js -->
+
+                </div>
+
+                <textarea
+
+                    id="commentInput"
+
+                    placeholder="Write comment..."
+
+                    style="
+                        width:100%;
+                        height:90px;
+                        resize:none;
+                        padding:12px;
+                        border-radius:8px;
+                        border:1px solid #444;
+                        background:#222;
+                        color:white;
+                    "
+
+                ></textarea>
+
+                <div
+                    style="
+                        margin-top:15px;
+                        text-align:right;
+                    "
+                >
+
+                    <button
+
+                        id="saveCommentBtn"
+
+                        style="
+                            padding:12px 28px;
+                            border:none;
+                            border-radius:8px;
+                            background:#1976d2;
+                            color:white;
+                            cursor:pointer;
+                        "
+
+                    >
+
+                        Post Comment
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+<!-- ==================================
+     UI
+=================================== -->
+
+<script
+    type="module"
+    src="video-library-ui.js">
+</script>
+
+</body>
+
+</html>
