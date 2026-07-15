@@ -68,7 +68,7 @@ const videoList =
 ========================================== */
 
 let currentUser = null;
-
+let currentSubtitle = "All";
 let currentPlaylist = null;
 let currentVideo = null;
 /* ==========================================
@@ -177,8 +177,13 @@ async function loadPlaylists(){
 
            item.onclick = async ()=>{
 
-    currentPlaylist =
-        playlist;
+    currentPlaylist = playlist;
+
+    currentSubtitle = "All";
+
+    renderSubtitleBar(
+        playlist.subtitles || []
+    );
 
     await loadVideos(
         playlist.id
@@ -252,6 +257,52 @@ currentVideo = video;
     }
 loadComments();
 }
+function renderSubtitleBar(subtitles){
+
+    const subtitleBar =
+        document.getElementById("subtitleBar");
+
+    subtitleBar.innerHTML = "";
+
+    // All
+    const allBtn =
+        document.createElement("button");
+
+    allBtn.className = "subtitle-btn";
+    allBtn.textContent = "All";
+
+    allBtn.onclick = ()=>{
+
+        currentSubtitle = "All";
+
+        loadVideos(currentPlaylist.id);
+
+    };
+
+    subtitleBar.appendChild(allBtn);
+
+    subtitles.forEach(sub=>{
+
+        const btn =
+            document.createElement("button");
+
+        btn.className = "subtitle-btn";
+
+        btn.textContent = sub;
+
+        btn.onclick = ()=>{
+
+            currentSubtitle = sub;
+
+            loadVideos(currentPlaylist.id);
+
+        };
+
+        subtitleBar.appendChild(btn);
+
+    });
+
+}
 /* ==========================================
    Video List
 ========================================== */
@@ -265,6 +316,18 @@ async function loadVideos(playlistId){
 
         const videos =
             await getVideos(playlistId);
+       let filteredVideos = videos;
+
+if(currentSubtitle !== "All"){
+
+    filteredVideos =
+        videos.filter(video=>{
+
+            return video.playlistSubtitle === currentSubtitle;
+
+        });
+
+}
 
         videoList.innerHTML = "";
 
@@ -277,7 +340,7 @@ async function loadVideos(playlistId){
 
         }
 
-        videos.forEach(video=>{
+        filteredVideos.forEach(video=>{
 
             const card =
                 document.createElement("div");
@@ -323,9 +386,9 @@ ${video.ownerName || ""}
             videoList.appendChild(card);
 
         });
-if(videos.length){
+if(filteredVideos.length){
 
-    playVideo(videos[0]);
+    playVideo(filteredVideos[0]);
 
 }
     }
