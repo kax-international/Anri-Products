@@ -61,6 +61,8 @@ const commentInput =
 
 const saveCommentBtn =
     document.getElementById("saveCommentBtn");
+const searchInput =
+    document.getElementById("searchInput");
 const videoList =
     document.getElementById("videoList");
 /* ==========================================
@@ -71,6 +73,7 @@ let currentUser = null;
 let currentSubtitle = "All";
 let currentPlaylist = null;
 let currentVideo = null;
+let allVideos = [];
 /* ==========================================
    Permission
 ========================================== */
@@ -303,6 +306,20 @@ function renderSubtitleBar(subtitles){
     });
 
 }
+function renderVideos(videos){
+
+    videoList.innerHTML = "";
+
+    if(videos.length===0){
+
+        videoList.innerHTML =
+            "<p>No Videos</p>";
+
+        return;
+
+    }
+
+}
 /* ==========================================
    Video List
 ========================================== */
@@ -315,7 +332,17 @@ async function loadVideos(playlistId){
     try{
 
         const videos =
-            await getVideos(playlistId);
+    await getVideos(playlistId);
+
+allVideos = videos;
+
+renderVideos(videos);
+
+if(videos.length){
+
+    playVideo(videos[0]);
+
+}
        let filteredVideos = videos;
 
 if(currentSubtitle !== "All"){
@@ -574,3 +601,22 @@ onAuthStateChanged(
     }
 
 );
+searchInput.addEventListener("input", ()=>{
+
+    const keyword =
+        searchInput.value
+        .trim()
+        .toLowerCase();
+
+    const filtered =
+        allVideos.filter(video=>{
+
+            return (video.videoTitle || "")
+                .toLowerCase()
+                .includes(keyword);
+
+        });
+
+    renderVideos(filtered);
+
+});
