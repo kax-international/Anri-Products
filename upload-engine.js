@@ -79,77 +79,66 @@ export async function startUpload({
         let uploaded = 0;
 
         let failed = 0;
+async function worker(){
 
-        async function worker(){
+    while(queue.length){
 
-            while(queue.length){
+        const item = queue.shift();
 
-                const item = queue.shift();
+        try{
 
-                try{
+            status = `Uploading ${item.videoTitle}`;
 
-                    onProgress?.(
+            onProgress?.(
+                uploaded,
+                videos.length,
+                item.videoTitle
+            );
 
-                        uploaded,
+            // Cloudinary
+            const cloudinary =
+                await uploadVideo(item.file);
 
-                        videos.length,
+            // Firestore
+            await saveVideo({
 
-                        item.videoTitle
+                playlistId,
 
-                    );
+                teamId,
 
-                    /* Cloudinary */
+                currentUser,
 
-                    const cloudinary =
-    await uploadVideo(
-        item.file
-    );
+                playlistSubtitle:
+                    item.playlistSubtitle,
 
-                    /* Firestore */
+                videoTitle:
+                    item.videoTitle,
 
-                    await saveVideo({
+                cloudinary
 
-                        playlistId,
+            });
 
-                        teamId,
+            uploaded++;
 
-                        currentUser,
-
-                        playlistSubtitle:
-                            item.playlistSubtitle,
-
-                        videoTitle:
-                            item.videoTitle,
-
-                        cloudinary
-
-                    });
-
-                    uploaded++;
-
-                    onProgress?.(
-
-                        uploaded,
-
-                        videos.length,
-
-                        item.videoTitle
-
-                    );
-
-                }
-
-                catch(err){
-
-                    console.error(err);
-
-                    failed++;
-
-                }
-
-            }
+            onProgress?.(
+                uploaded,
+                videos.length,
+                item.videoTitle
+            );
 
         }
+
+        catch(err){
+
+            failed++;
+
+            console.error(err);
+
+        }
+
+    }
+
+}
 
         /* -----------------------------
            Worker生成
