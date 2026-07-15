@@ -31,7 +31,14 @@ const uploadBtn =
     document.getElementById("uploadBtn");
 const params =
     new URLSearchParams(location.search);
+const progressBar =
+    document.getElementById("progressBar");
 
+const progressText =
+    document.getElementById("progressText");
+
+const statusText =
+    document.getElementById("statusText");
 const teamId =
     params.get("teamId");
 let currentUser = null;
@@ -329,30 +336,49 @@ await startUpload({
 
     currentUser,
 
-    onProgress:(done,total,title)=>{
+   onProgress:(done,total,title)=>{
 
-        console.log(
-            `${done}/${total}`,
-            title
-        );
+    const percent =
+        total === 0
+        ? 0
+        : Math.round(done / total * 100);
 
-    },
+    progressBar.value = percent;
+
+    progressText.textContent =
+        `${done} / ${total}`;
+
+    statusText.textContent =
+        `Uploading : ${title}`;
+
+},
 
     onFinish:(result)=>{
 
-        alert(
-            `Upload Complete\n\n${result.uploaded} uploaded`
-        );
+    progressBar.value = 100;
 
-    },
+    progressText.textContent =
+        `${result.total} / ${result.total}`;
+
+    statusText.textContent =
+        "Upload Complete";
+
+    alert(
+        `Upload Complete\n\n${result.uploaded} uploaded`
+    );
+
+},
 
     onError:(err)=>{
 
-        console.error(err);
+    statusText.textContent =
+        "Upload Failed";
 
-        alert(err.message);
+    console.error(err);
 
-    }
+    alert(err.message);
+
+}
 });
 
 };
