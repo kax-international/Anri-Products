@@ -70,10 +70,10 @@ const videoList =
 ========================================== */
 
 let currentUser = null;
-let currentSubtitle = "All";
 let currentPlaylist = null;
 let currentVideo = null;
-let allVideos = [];
+let allVideos = [];           // 全動画
+let currentSubtitle = "ALL";  // Subtitleフィルタ
 /* ==========================================
    Permission
 ========================================== */
@@ -278,8 +278,7 @@ function renderSubtitleBar(subtitles){
 
         currentSubtitle = "All";
 
-        loadVideos(currentPlaylist.id);
-
+        renderVideos();
     };
 
     subtitleBar.appendChild(allBtn);
@@ -297,8 +296,7 @@ function renderSubtitleBar(subtitles){
 
             currentSubtitle = sub;
 
-            loadVideos(currentPlaylist.id);
-
+           renderVideos();
         };
 
         subtitleBar.appendChild(btn);
@@ -306,11 +304,32 @@ function renderSubtitleBar(subtitles){
     });
 
 }
-function renderVideos(videos){
+function renderVideos(){
 
     videoList.innerHTML = "";
 
-    if(videos.length===0){
+    const keyword =
+        searchInput.value
+        .trim()
+        .toLowerCase();
+
+    const filteredVideos =
+        allVideos.filter(video=>{
+
+            const matchTitle =
+                (video.videoTitle || "")
+                .toLowerCase()
+                .includes(keyword);
+
+            const matchSubtitle =
+                currentSubtitle === "All" ||
+                video.playlistSubtitle === currentSubtitle;
+
+            return matchTitle && matchSubtitle;
+
+        });
+
+    if(filteredVideos.length===0){
 
         videoList.innerHTML =
             "<p>No Videos</p>";
@@ -318,6 +337,41 @@ function renderVideos(videos){
         return;
 
     }
+
+    filteredVideos.forEach(video=>{
+
+        const card =
+            document.createElement("div");
+
+        card.className = "video-card";
+
+        card.innerHTML = `
+
+<div class="video-title">
+${video.videoTitle || "Untitled"}
+</div>
+
+<div class="video-subtitle">
+${video.playlistSubtitle || "-"}
+</div>
+
+<div class="video-date">
+${video.ownerName || ""}
+</div>
+
+`;
+
+        card.onclick = ()=>{
+
+            playVideo(video);
+
+        };
+
+        videoList.appendChild(card);
+
+    });
+
+    playVideo(filteredVideos[0]);
 
 }
 /* ==========================================
@@ -329,97 +383,14 @@ async function loadVideos(playlistId){
     videoList.innerHTML =
         "<p>Loading...</p>";
 
-    try{
+try{
 
-        const videos =
-    await getVideos(playlistId);
+    allVideos =
+        await getVideos(playlistId);
 
-allVideos = videos;
-
-renderVideos(videos);
-
-if(videos.length){
-
-    playVideo(videos[0]);
+    renderVideos();
 
 }
-       let filteredVideos = videos;
-
-if(currentSubtitle !== "All"){
-
-    filteredVideos =
-        videos.filter(video=>{
-
-            return video.playlistSubtitle === currentSubtitle;
-
-        });
-
-}
-
-        videoList.innerHTML = "";
-
-        if(videos.length===0){
-
-            videoList.innerHTML =
-                "<p>No Videos</p>";
-
-            return;
-
-        }
-
-        filteredVideos.forEach(video=>{
-
-            const card =
-                document.createElement("div");
-
-            card.className =
-                "video-card";
-
-            card.innerHTML = `
-
-<div class="video-title">
-
-${video.videoTitle || "Untitled"}
-
-</div>
-
-<div class="video-subtitle">
-
-${video.playlistSubtitle || "-"}
-
-</div>
-
-<div class="video-date">
-
-${video.ownerName || ""}
-
-</div>
-
-`;
-
-            card.onclick = ()=>{
-
-    playVideo(video);
-
-};
-
-                // Part3で動画再生
-            
-/* -----------------------------
-   First Video
------------------------------ */
-
-
-            videoList.appendChild(card);
-
-        });
-if(filteredVideos.length){
-
-    playVideo(filteredVideos[0]);
-
-}
-    }
-
     catch(err){
 
         console.error(err);
@@ -603,20 +574,6 @@ onAuthStateChanged(
 );
 searchInput.addEventListener("input", ()=>{
 
-    const keyword =
-        searchInput.value
-        .trim()
-        .toLowerCase();
-
-    const filtered =
-        allVideos.filter(video=>{
-
-            return (video.videoTitle || "")
-                .toLowerCase()
-                .includes(keyword);
-
-        });
-
-    renderVideos(filtered);
+    renderVideos();
 
 });
