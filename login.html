@@ -279,7 +279,7 @@ import {
 import {
     getFirestore,
     doc,
-    setDoc
+    getDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 
@@ -316,14 +316,47 @@ document
 
        
 
-       const result = await signInWithEmailAndPassword(auth, email, password);
+const result =
+    await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+    );
 
 const user = result.user;
 
-// users作成（ここが重要）
+/* Firestoreからユーザー情報取得 */
 
+const userSnap =
+    await getDoc(
+        doc(db,"users",user.uid)
+    );
 
-window.location.href = "dashboard.html";
+if(!userSnap.exists()){
+
+    alert("User data not found.");
+    return;
+
+}
+
+const userData =
+    userSnap.data();
+
+/* 決済待ちならCheckoutへ */
+
+if(userData.planStatus === "pending"){
+
+    window.location.href =
+        `checkout.html?plan=${userData.plan}`;
+
+    return;
+
+}
+
+/* 通常ログイン */
+
+window.location.href =
+    "dashboard.html";
         }
 
     catch(error){
