@@ -339,13 +339,6 @@ document
 
     const plan =
     document.querySelector('input[name="plan"]:checked').value;
-
-    const params =
-    new URLSearchParams(location.search);
-
-const plan =
-    params.get("plan");
-
     if(password !== confirmPassword){
 
         errorMessage.style.display = "block";
