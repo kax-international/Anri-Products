@@ -1,1 +1,351 @@
+<!DOCTYPE html>
+<html lang="ja">
 
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width,initial-scale=1.0">
+
+<title>Checkout | Athletic Cloud</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+
+    font-family:Arial,sans-serif;
+
+    background:#f4f6f8;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    min-height:100vh;
+
+}
+
+.container{
+
+    width:100%;
+    max-width:700px;
+
+    background:white;
+
+    border-radius:20px;
+
+    padding:45px;
+
+    box-shadow:
+        0 15px 40px rgba(0,0,0,.15);
+
+}
+
+h1{
+
+    text-align:center;
+
+    margin-bottom:10px;
+
+}
+
+.subtitle{
+
+    text-align:center;
+
+    color:#666;
+
+    margin-bottom:40px;
+
+}
+
+.section{
+
+    margin-bottom:30px;
+
+}
+
+.section h2{
+
+    margin-bottom:15px;
+
+}
+
+.info{
+
+    display:grid;
+
+    grid-template-columns:180px 1fr;
+
+    row-gap:15px;
+
+}
+
+.info div{
+
+    padding:5px 0;
+
+}
+
+.priceBox{
+
+    background:#f8f8f8;
+
+    border:1px solid #ddd;
+
+    border-radius:12px;
+
+    padding:20px;
+
+}
+
+.price{
+
+    font-size:34px;
+
+    font-weight:bold;
+
+    color:#111;
+
+    margin-bottom:10px;
+
+}
+
+.description{
+
+    color:#666;
+
+}
+
+button{
+
+    width:100%;
+
+    padding:18px;
+
+    font-size:18px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#111;
+
+    color:white;
+
+    cursor:pointer;
+
+}
+
+button:hover{
+
+    background:#333;
+
+}
+
+.notice{
+
+    margin-top:20px;
+
+    text-align:center;
+
+    color:#777;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Checkout</h1>
+
+<div class="subtitle">
+
+Athletic Cloud Membership
+
+</div>
+
+<div class="section">
+
+<h2>User Information</h2>
+
+<div class="info">
+
+<div>Name</div>
+<div id="userName">Loading...</div>
+
+<div>Email</div>
+<div id="userEmail">Loading...</div>
+
+<div>Selected Plan</div>
+<div id="planName">Loading...</div>
+
+</div>
+
+</div>
+
+<div class="section">
+
+<h2>Plan</h2>
+
+<div class="priceBox">
+
+<div
+id="planPrice"
+class="price">
+
+Coming Soon
+
+</div>
+
+<div
+id="planDescription"
+class="description">
+
+Coming Soon
+
+</div>
+
+</div>
+
+</div>
+
+<button id="checkoutButton">
+
+Proceed to Payment
+
+</button>
+
+<div class="notice">
+
+Stripe Checkout will be connected here.
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+    getAuth
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+    getFirestore,
+    doc,
+    getDoc
+}
+from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig = {
+
+apiKey:"AIzaSyBzAHkf9LIYgCxx9sV5WvUqaxwmIWnLc8Q",
+
+authDomain:"athletic-cloud-33538.firebaseapp.com",
+
+projectId:"athletic-cloud-33538",
+
+storageBucket:"athletic-cloud-33538.firebasestorage.app",
+
+messagingSenderId:"1020993809301",
+
+appId:"1:1020993809301:web:a31e28377788bef965249c"
+
+};
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const db = getFirestore(app);
+
+const user = auth.currentUser;
+
+if(!user){
+
+    location.href="login.html";
+
+}
+
+const snap = await getDoc(
+
+doc(db,"users",user.uid)
+
+);
+
+const data = snap.data();
+
+document.getElementById("userName").textContent =
+data.name;
+
+document.getElementById("userEmail").textContent =
+data.email;
+
+document.getElementById("planName").textContent =
+data.plan;
+
+const price =
+document.getElementById("planPrice");
+
+const description =
+document.getElementById("planDescription");
+
+switch(data.plan){
+
+case "core":
+
+price.textContent =
+"Coming Soon";
+
+description.textContent =
+"Coming Soon";
+
+break;
+
+case "premium":
+
+price.textContent =
+"Coming Soon";
+
+description.textContent =
+"Coming Soon";
+
+break;
+
+default:
+
+price.textContent =
+"Free";
+
+description.textContent =
+"Starter Plan";
+
+}
+
+document
+.getElementById("checkoutButton")
+.onclick=()=>{
+
+alert("Stripe Checkout Coming Soon");
+
+};
+
+</script>
+
+</body>
+
+</html>
