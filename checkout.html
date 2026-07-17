@@ -240,7 +240,8 @@ import { initializeApp }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
 import {
-    getAuth
+    getAuth,
+    onAuthStateChanged
 }
 from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
@@ -268,73 +269,68 @@ appId:"1:1020993809301:web:a31e28377788bef965249c"
 };
 
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
-
 const db = getFirestore(app);
 
-const user = auth.currentUser;
+onAuthStateChanged(auth, async(user)=>{
 
-if(!user){
+    if(!user){
 
-    location.href="login.html";
+        location.href = "login.html";
+        return;
 
-}
+    }
 
-const snap = await getDoc(
+    const snap = await getDoc(
+        doc(db,"users",user.uid)
+    );
 
-doc(db,"users",user.uid)
+    if(!snap.exists()){
 
-);
+        alert("User data not found.");
+        return;
 
-const data = snap.data();
+    }
 
-document.getElementById("userName").textContent =
-data.name;
+    const data = snap.data();
 
-document.getElementById("userEmail").textContent =
-data.email;
+    document.getElementById("userName").textContent =
+        data.name;
 
-document.getElementById("planName").textContent =
-data.plan;
+    document.getElementById("userEmail").textContent =
+        data.email;
 
-const price =
-document.getElementById("planPrice");
+    document.getElementById("planName").textContent =
+        data.plan;
 
-const description =
-document.getElementById("planDescription");
+    const price =
+        document.getElementById("planPrice");
 
-switch(data.plan){
+    const description =
+        document.getElementById("planDescription");
 
-case "core":
+    switch(data.plan){
 
-price.textContent =
-"Coming Soon";
+        case "core":
 
-description.textContent =
-"Coming Soon";
+            price.textContent = "Coming Soon";
+            description.textContent = "Coming Soon";
+            break;
 
-break;
+        case "premium":
 
-case "premium":
+            price.textContent = "Coming Soon";
+            description.textContent = "Coming Soon";
+            break;
 
-price.textContent =
-"Coming Soon";
+        default:
 
-description.textContent =
-"Coming Soon";
+            price.textContent = "Free";
+            description.textContent = "Starter Plan";
 
-break;
+    }
 
-default:
-
-price.textContent =
-"Free";
-
-description.textContent =
-"Starter Plan";
-
-}
+});
 
 document
 .getElementById("checkoutButton")
