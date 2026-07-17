@@ -340,6 +340,12 @@ document
     const plan =
     document.querySelector('input[name="plan"]:checked').value;
 
+    const params =
+    new URLSearchParams(location.search);
+
+const plan =
+    params.get("plan");
+
     if(password !== confirmPassword){
 
         errorMessage.style.display = "block";
@@ -359,25 +365,42 @@ document
 
 const user = userCredential.user;
 
+const planStatus =
+    plan === "starter"
+        ? "active"
+        : "pending";
+
 await setDoc(doc(db, "users", user.uid), {
-    name: name,
-    email: email,
+
+    name,
+    email,
+
     role: "user",
 
-    plan: plan,
-    planStatus: "active",
+    plan,
+    planStatus,
 
     createdAt: new Date()
-});
 
+});
 const planLevels = {
     starter: 0,
     core: 1,
     premium: 2
 };
 
-window.location.href = "dashboard.html";
+if(plan === "starter"){
 
+    window.location.href =
+        "dashboard.html";
+
+}
+else{
+
+    window.location.href =
+        `checkout.html?plan=${plan}`;
+
+}
     }
     catch(error){
 
